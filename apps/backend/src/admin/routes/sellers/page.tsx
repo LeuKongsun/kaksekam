@@ -1,0 +1,260 @@
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import {
+  Button,
+  Container,
+  Heading,
+  StatusBadge,
+  Table,
+  Text,
+  toast,
+} from "@medusajs/ui"
+import { useEffect, useMemo, useState } from "react"
+
+type AdminSeller = {
+  id: string
+  display_name: string
+  handle: string
+  email: string | null
+  phone: string | null
+  location: string | null
+  bio: string | null
+  status: "active" | "suspended"
+  verification_status: "unverified" | "verified"
+  created_at: string
+  listing_stats: {
+    total: number
+    active: number
+    pending: number
+    rejected: number
+  }
+  inquiry_stats: {
+    total: number
+    replied: number
+    reply_rate: number | null
+  }
+}
+
+type SellersResponse = {
+  sellers: AdminSeller[]
+}
+
+const statusColor: Record<AdminSeller["status"], "green" | "red"> = {
+  active: "green",
+  suspended: "red",
+}
+
+const SellersPage = () => {
+  const [sellers, setSellers] = useState<AdminSeller[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+
+  const sellerCounts = useMemo(
+    () => ({
+      active: sellers.filter((seller) => seller.status === "active").length,
+      suspended: sellers.filter((seller) => seller.status === "suspended")
+        .length,
+      verified: sellers.filter(
+        (seller) => seller.verification_status === "verified"
+      ).length,
+    }),
+    [sellers]
+  )
+
+  const loadSellers = async () => {
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("/admin/sellers")
+
+      if (!response.ok) {
+        throw new Error("Could not load sellers")
+      }
+
+      const data = (await response.json()) as SellersResponse
+      setSellers(data.sellers)
+    } catch (error) {
+      toast.error("Unable to load sellers", {
+        description: error instanceof Error ? error.message : undefined,
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const updateSeller = async (
+    seller: AdminSeller,
+    update: Pick<Partial<AdminSeller>, "status" | "verification_status">
+  ) => {
+    setUpdatingId(seller.id)
+
+    try {
+      const response = await fetch(`/admin/sellers/${seller.id}`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(update),
+      })
+
+      if (!response.ok) {
+        throw new Error("Could not update seller")
+      }
+
+      toast.success("Seller updated", {
+        description: seller.display_name,
+      })
+
+      await loadSellers()
+    } catch (error) {
+      toast.error("Unable to update seller", {
+        description: error instanceof Error ? error.message : undefined,
+      })
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  useEffect(() => {
+    void loadSellers()
+  }, [])
+
+  return (
+    <Container className="divide-y p-0">
+      <div className="flex items-center justify-between px-6 py-4">
+        <div>
+          <Heading>Marketplace sellers</Heading>
+          <Text className="text-ui-fg-subtle" size="small">
+            {sellerCounts.active} active, {sellerCounts.verified} verified,{" "}
+            {sellerCounts.suspended} suspended
+          </Text>
+        </div>
+        <Button
+          size="small"
+          variant="secondary"
+          onClick={() => void loadSellers()}
+          isLoading={isLoading}
+        >
+          Refresh
+        </Button>
+      </div>
+
+      {sellers.length === 0 ? (
+        <div className="px-6 py-10">
+          <Text className="text-ui-fg-subtle">
+            {isLoading ? "Loading sellers..." : "No sellers yet."}
+          </Text>
+        </div>
+      ) : (
+        <Table>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Seller</Table.HeaderCell>
+              <Table.HeaderCell>Listings</Table.HeaderCell>
+              <Table.HeaderCell>Inquiries</Table.HeaderCell>
+              <Table.HeaderCell>Status</Table.HeaderCell>
+              <Table.HeaderCell className="text-right">Actions</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {sellers.map((seller) => (
+              <Table.Row key={seller.id}>
+                <Table.Cell>
+                  <div className="flex max-w-[360px] flex-col gap-y-1">
+                    <div className="flex items-center gap-x-2">
+                      <Text weight="plus">{seller.display_name}</Text>
+                      {seller.verification_status === "verified" && (
+                        <StatusBadge color="green">Verified</StatusBadge>
+                      )}
+                    </div>
+                    <Text className="text-ui-fg-subtle" size="small">
+                      @{seller.handle}
+                    </Text>
+                    <Text className="text-ui-fg-subtle" size="small">
+                      {seller.email ??
+                        seller.phone ??
+                        seller.location ??
+                        "No contact"}
+                    </Text>
+                  </div>
+                </Table.Cell>
+                <Table.Cell>
+                  <Text size="small">
+                    {seller.listing_stats.active} active /{" "}
+                    {seller.listing_stats.total} total
+                  </Text>
+                  <Text className="text-ui-fg-subtle" size="small">
+                    {seller.listing_stats.pending} pending,{" "}
+                    {seller.listing_stats.rejected} rejected
+                  </Text>
+                </Table.Cell>
+                <Table.Cell>
+                  <Text size="small">{seller.inquiry_stats.total} received</Text>
+                  <Text className="text-ui-fg-subtle" size="small">
+                    {seller.inquiry_stats.reply_rate === null
+                      ? "No reply history"
+                      : `${seller.inquiry_stats.reply_rate}% reply rate`}
+                  </Text>
+                </Table.Cell>
+                <Table.Cell>
+                  <StatusBadge color={statusColor[seller.status]}>
+                    {seller.status === "active" ? "Active" : "Suspended"}
+                  </StatusBadge>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="flex min-w-[260px] justify-end gap-x-2">
+                    <Button
+                      size="small"
+                      variant="secondary"
+                      disabled={seller.verification_status === "verified"}
+                      isLoading={updatingId === seller.id}
+                      onClick={() =>
+                        void updateSeller(seller, {
+                          verification_status: "verified",
+                        })
+                      }
+                    >
+                      Verify
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="secondary"
+                      disabled={seller.verification_status === "unverified"}
+                      isLoading={updatingId === seller.id}
+                      onClick={() =>
+                        void updateSeller(seller, {
+                          verification_status: "unverified",
+                        })
+                      }
+                    >
+                      Unverify
+                    </Button>
+                    <Button
+                      size="small"
+                      variant={seller.status === "active" ? "danger" : "secondary"}
+                      isLoading={updatingId === seller.id}
+                      onClick={() =>
+                        void updateSeller(seller, {
+                          status:
+                            seller.status === "active" ? "suspended" : "active",
+                        })
+                      }
+                    >
+                      {seller.status === "active" ? "Suspend" : "Reactivate"}
+                    </Button>
+                  </div>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
+      )}
+    </Container>
+  )
+}
+
+export const config = defineRouteConfig({
+  label: "Marketplace sellers",
+  rank: 46,
+})
+
+export default SellersPage

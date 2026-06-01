@@ -1,0 +1,16 @@
+import { model } from "@medusajs/framework/utils"
+
+const Seller = model.define("seller", {
+  id: model.id().primaryKey(),
+  display_name: model.text().searchable(),
+  handle: model.text().unique(),
+  customer_id: model.text().nullable(),
+  email: model.text().nullable(),
+  phone: model.text().nullable(),
+  location: model.text().nullable(),
+  bio: model.text().nullable(),
+  status: model.enum(["active", "suspended"]).default("active"),
+  verification_status: model.enum(["unverified", "verified"]).default("unverified"),
+})
+
+export default Seller
