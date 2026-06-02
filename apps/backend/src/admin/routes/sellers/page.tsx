@@ -38,6 +38,9 @@ type SellersResponse = {
   sellers: AdminSeller[]
 }
 
+type SellerStatusFilter = "all" | AdminSeller["status"]
+type VerificationFilter = "all" | AdminSeller["verification_status"]
+
 const statusColor: Record<AdminSeller["status"], "green" | "red"> = {
   active: "green",
   suspended: "red",
@@ -47,6 +50,10 @@ const SellersPage = () => {
   const [sellers, setSellers] = useState<AdminSeller[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<SellerStatusFilter>("all")
+  const [verificationFilter, setVerificationFilter] =
+    useState<VerificationFilter>("all")
 
   const sellerCounts = useMemo(
     () => ({
@@ -59,6 +66,32 @@ const SellersPage = () => {
     }),
     [sellers]
   )
+  const filteredSellers = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+
+    return sellers.filter((seller) => {
+      const statusMatches =
+        statusFilter === "all" || seller.status === statusFilter
+      const verificationMatches =
+        verificationFilter === "all" ||
+        seller.verification_status === verificationFilter
+      const searchable = [
+        seller.display_name,
+        seller.handle,
+        seller.email,
+        seller.phone,
+        seller.location,
+        seller.bio,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+      const searchMatches =
+        !normalizedSearch || searchable.includes(normalizedSearch)
+
+      return statusMatches && verificationMatches && searchMatches
+    })
+  }, [searchTerm, sellers, statusFilter, verificationFilter])
 
   const loadSellers = async () => {
     setIsLoading(true)
@@ -137,11 +170,62 @@ const SellersPage = () => {
           Refresh
         </Button>
       </div>
+      <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[1fr_180px_180px]">
+        <label className="flex flex-col gap-y-1">
+          <Text className="text-ui-fg-subtle" size="small">
+            Search
+          </Text>
+          <input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Seller, handle, contact, location"
+            className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+          />
+        </label>
+        <label className="flex flex-col gap-y-1">
+          <Text className="text-ui-fg-subtle" size="small">
+            Status
+          </Text>
+          <select
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as SellerStatusFilter)
+            }
+            className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+          >
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-y-1">
+          <Text className="text-ui-fg-subtle" size="small">
+            Verification
+          </Text>
+          <select
+            value={verificationFilter}
+            onChange={(event) =>
+              setVerificationFilter(event.target.value as VerificationFilter)
+            }
+            className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+          >
+            <option value="all">All sellers</option>
+            <option value="verified">Verified</option>
+            <option value="unverified">Unverified</option>
+          </select>
+        </label>
+      </div>
 
       {sellers.length === 0 ? (
         <div className="px-6 py-10">
           <Text className="text-ui-fg-subtle">
             {isLoading ? "Loading sellers..." : "No sellers yet."}
+          </Text>
+        </div>
+      ) : filteredSellers.length === 0 ? (
+        <div className="px-6 py-10">
+          <Text className="text-ui-fg-subtle">
+            No sellers match the current filters.
           </Text>
         </div>
       ) : (
@@ -156,7 +240,7 @@ const SellersPage = () => {
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {sellers.map((seller) => (
+            {filteredSellers.map((seller) => (
               <Table.Row key={seller.id}>
                 <Table.Cell>
                   <div className="flex max-w-[360px] flex-col gap-y-1">

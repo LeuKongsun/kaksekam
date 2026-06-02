@@ -13,6 +13,12 @@ type UpdateListingStatusBody = {
   moderation_note?: string
 }
 
+type AdminAuthenticatedRequest<TBody> = MedusaRequest<TBody> & {
+  auth_context?: {
+    actor_id?: string
+  }
+}
+
 const ALLOWED_STATUSES = new Set(["active", "rejected"])
 const PAGE_SIZE = 100
 
@@ -56,7 +62,7 @@ async function findProductForListing(query: any, listingId: string) {
 }
 
 export async function POST(
-  req: MedusaRequest<UpdateListingStatusBody>,
+  req: AdminAuthenticatedRequest<UpdateListingStatusBody>,
   res: MedusaResponse
 ) {
   const listingId = req.params.id
@@ -85,6 +91,8 @@ export async function POST(
     status: nextStatus,
     moderation_note:
       nextStatus === "rejected" ? req.body.moderation_note?.trim() || null : null,
+    reviewed_at: new Date(),
+    reviewer_id: req.auth_context?.actor_id ?? null,
   })
 
   await updateProductsWorkflow(req.scope).run({

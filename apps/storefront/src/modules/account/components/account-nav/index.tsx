@@ -11,6 +11,49 @@ import ChevronDown from "@modules/common/icons/chevron-down"
 import MapPin from "@modules/common/icons/map-pin"
 import User from "@modules/common/icons/user"
 
+const marketplaceLinks = [
+  {
+    href: "/account/seller-profile",
+    label: "Seller profile",
+    testId: "seller-profile-link",
+  },
+  {
+    href: "/account/listings",
+    label: "My listings",
+    testId: "listings-link",
+  },
+  {
+    href: "/account/inquiries",
+    label: "Seller inquiries",
+    testId: "inquiries-link",
+  },
+  {
+    href: "/account/saved",
+    label: "Saved listings",
+    testId: "saved-listings-link",
+  },
+  {
+    href: "/account/buyer-inquiries",
+    label: "Sent inquiries",
+    testId: "buyer-inquiries-link",
+  },
+]
+
+const settingsLinks = [
+  {
+    href: "/account/profile",
+    label: "Profile",
+    testId: "profile-link",
+    icon: User,
+  },
+  {
+    href: "/account/addresses",
+    label: "Contact addresses",
+    testId: "addresses-link",
+    icon: MapPin,
+  },
+]
+
 const AccountNav = ({
   customer,
 }: {
@@ -46,109 +89,57 @@ const AccountNav = ({
               <ul>
                 <li>
                   <LocalizedClientLink
-                    href="/account/profile"
+                    href="/account"
                     className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="profile-link"
+                    data-testid="overview-link"
                   >
                     <>
                       <div className="flex items-center gap-x-2">
                         <User size={20} />
-                        <span>Profile</span>
+                        <span>Overview</span>
                       </div>
                       <ChevronDown className="transform -rotate-90" />
                     </>
                   </LocalizedClientLink>
                 </li>
-                <li>
-                  <LocalizedClientLink
-                    href="/account/seller-profile"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="seller-profile-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <User size={20} />
-                        <span>Seller profile</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    href="/account/saved"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="saved-listings-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <User size={20} />
-                        <span>Saved listings</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    href="/account/listings"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="listings-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <User size={20} />
-                        <span>Listings</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    href="/account/inquiries"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="inquiries-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <User size={20} />
-                        <span>Inquiries</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    href="/account/buyer-inquiries"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="buyer-inquiries-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <User size={20} />
-                        <span>Buyer inquiries</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    href="/account/addresses"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="addresses-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <MapPin size={20} />
-                        <span>Addresses</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
+                {marketplaceLinks.map((link) => (
+                  <li key={link.href}>
+                    <LocalizedClientLink
+                      href={link.href}
+                      className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                      data-testid={link.testId}
+                    >
+                      <>
+                        <div className="flex items-center gap-x-2">
+                          <User size={20} />
+                          <span>{link.label}</span>
+                        </div>
+                        <ChevronDown className="transform -rotate-90" />
+                      </>
+                    </LocalizedClientLink>
+                  </li>
+                ))}
+                {settingsLinks.map((link) => {
+                  const Icon = link.icon
+
+                  return (
+                    <li key={link.href}>
+                      <LocalizedClientLink
+                        href={link.href}
+                        className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                        data-testid={link.testId}
+                      >
+                        <>
+                          <div className="flex items-center gap-x-2">
+                            <Icon size={20} />
+                            <span>{link.label}</span>
+                          </div>
+                          <ChevronDown className="transform -rotate-90" />
+                        </>
+                      </LocalizedClientLink>
+                    </li>
+                  )
+                })}
                 <li>
                   <button
                     type="button"
@@ -169,12 +160,15 @@ const AccountNav = ({
         )}
       </div>
       <div className="hidden small:block" data-testid="account-nav">
-        <div>
+        <div className="rounded-md border border-gray-200 bg-white p-4">
           <div className="pb-4">
-            <h3 className="text-base-semi">Account</h3>
+            <h3 className="text-base-semi">Marketplace</h3>
+            <p className="mt-1 text-small-regular text-ui-fg-subtle">
+              Buyer and seller tools
+            </p>
           </div>
           <div className="text-base-regular">
-            <ul className="flex mb-0 justify-start items-start flex-col gap-y-4">
+            <ul className="flex mb-0 justify-start items-start flex-col gap-y-3">
               <li>
                 <AccountNavLink
                   href="/account"
@@ -184,69 +178,36 @@ const AccountNav = ({
                   Overview
                 </AccountNavLink>
               </li>
-              <li>
-                <AccountNavLink
-                  href="/account/profile"
-                  route={route!}
-                  data-testid="profile-link"
-                >
-                  Profile
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/seller-profile"
-                  route={route!}
-                  data-testid="seller-profile-link"
-                >
-                  Seller profile
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/saved"
-                  route={route!}
-                  data-testid="saved-listings-link"
-                >
-                  Saved listings
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/listings"
-                  route={route!}
-                  data-testid="listings-link"
-                >
-                  Listings
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/inquiries"
-                  route={route!}
-                  data-testid="inquiries-link"
-                >
-                  Inquiries
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/buyer-inquiries"
-                  route={route!}
-                  data-testid="buyer-inquiries-link"
-                >
-                  Buyer inquiries
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/addresses"
-                  route={route!}
-                  data-testid="addresses-link"
-                >
-                  Addresses
-                </AccountNavLink>
-              </li>
+              {marketplaceLinks.map((link) => (
+                <li key={link.href}>
+                  <AccountNavLink
+                    href={link.href}
+                    route={route!}
+                    data-testid={link.testId}
+                  >
+                    {link.label}
+                  </AccountNavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-6 border-t border-gray-200 pt-4 text-base-regular">
+            <p className="mb-3 text-small-semi uppercase text-ui-fg-muted">
+              Settings
+            </p>
+            <ul className="flex mb-0 justify-start items-start flex-col gap-y-3">
+              {settingsLinks.map((link) => (
+                <li key={link.href}>
+                  <AccountNavLink
+                    href={link.href}
+                    route={route!}
+                    data-testid={link.testId}
+                  >
+                    {link.label}
+                  </AccountNavLink>
+                </li>
+              ))}
               <li className="text-grey-700">
                 <button
                   type="button"

@@ -25,7 +25,31 @@ const formatListingDetails = (listing: SellerListing) =>
       : listing.quantity,
     listing.availability,
     listing.condition,
+    listing.variety,
+    listing.production_method,
+    listing.harvest_date,
+    listing.breed,
+    listing.age,
+    listing.sex,
+    listing.health_notes,
+    listing.brand,
+    listing.equipment_model,
+    listing.year,
+    listing.pack_size,
+    listing.expiry_date,
+    listing.service_area,
   ].filter(Boolean)
+
+const formatReviewedAt = (value: string | null) => {
+  if (!value) {
+    return null
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value))
+}
 
 const SellerListings = ({ listings }: SellerListingsProps) => {
   return (
@@ -103,8 +127,11 @@ const SellerListings = ({ listings }: SellerListingsProps) => {
                     )}
                     {listing.status === "active" && (
                       <p className="mt-2 text-small-regular text-ui-fg-subtle">
-                        Edits to active listings require review before they
-                        appear again.
+                        {formatReviewedAt(listing.reviewed_at)
+                          ? `Reviewed ${formatReviewedAt(listing.reviewed_at)}. `
+                          : ""}
+                        Edits to active listings require review before they appear
+                        again.
                       </p>
                     )}
                     {listing.status === "sold" && (
@@ -114,6 +141,11 @@ const SellerListings = ({ listings }: SellerListingsProps) => {
                     )}
                     {listing.status === "rejected" && listing.moderation_note && (
                       <div className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-3 text-small-regular text-rose-700">
+                        {formatReviewedAt(listing.reviewed_at) && (
+                          <div className="mb-1 text-rose-600">
+                            Reviewed {formatReviewedAt(listing.reviewed_at)}
+                          </div>
+                        )}
                         {listing.moderation_note}
                       </div>
                     )}

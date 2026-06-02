@@ -18,6 +18,14 @@ type ModerationListing = {
   description: string | null
   status: "pending_review" | "active" | "rejected"
   moderation_note: string | null
+  reviewed_at: string | null
+  reviewer_id: string | null
+  reviewer: {
+    id: string
+    email: string | null
+    first_name: string | null
+    last_name: string | null
+  } | null
   category: string | null
   location: string | null
   quantity: string | null
@@ -25,6 +33,19 @@ type ModerationListing = {
   availability: string | null
   condition: string | null
   contact_preference: string | null
+  variety: string | null
+  production_method: string | null
+  harvest_date: string | null
+  breed: string | null
+  age: string | null
+  sex: string | null
+  health_notes: string | null
+  brand: string | null
+  equipment_model: string | null
+  year: string | null
+  pack_size: string | null
+  expiry_date: string | null
+  service_area: string | null
   created_at: string
   seller: {
     id: string
@@ -68,6 +89,29 @@ const formatPrice = (price: ModerationListing["price"]) => {
   ).toUpperCase()}`
 }
 
+const formatReviewedAt = (value: string | null) => {
+  if (!value) {
+    return null
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value))
+}
+
+const formatReviewer = (listing: ModerationListing) => {
+  if (!listing.reviewer) {
+    return listing.reviewer_id
+  }
+
+  const name = [listing.reviewer.first_name, listing.reviewer.last_name]
+    .filter(Boolean)
+    .join(" ")
+
+  return listing.reviewer.email ?? (name || listing.reviewer.id)
+}
+
 const formatListingDetails = (listing: ModerationListing) =>
   [
     listing.category,
@@ -77,6 +121,19 @@ const formatListingDetails = (listing: ModerationListing) =>
       : listing.quantity,
     listing.availability,
     listing.condition,
+    listing.variety,
+    listing.production_method,
+    listing.harvest_date,
+    listing.breed,
+    listing.age,
+    listing.sex,
+    listing.health_notes,
+    listing.brand,
+    listing.equipment_model,
+    listing.year,
+    listing.pack_size,
+    listing.expiry_date,
+    listing.service_area,
   ].filter(Boolean)
 
 const ListingModerationPage = () => {
@@ -362,6 +419,14 @@ const ListingModerationPage = () => {
                     {listing.moderation_note && (
                       <Text className="text-ui-fg-subtle" size="small">
                         Note: {listing.moderation_note}
+                      </Text>
+                    )}
+                    {formatReviewedAt(listing.reviewed_at) && (
+                      <Text className="text-ui-fg-subtle" size="small">
+                        Reviewed {formatReviewedAt(listing.reviewed_at)}
+                        {formatReviewer(listing)
+                          ? ` by ${formatReviewer(listing)}`
+                          : ""}
                       </Text>
                     )}
                     {formatListingDetails(listing).length > 0 && (

@@ -24,6 +24,19 @@ const formatListingDetails = (listing: SellerProfile["listings"][number]) =>
       : listing.quantity,
     listing.availability,
     listing.condition,
+    listing.variety,
+    listing.production_method,
+    listing.harvest_date,
+    listing.breed,
+    listing.age,
+    listing.sex,
+    listing.health_notes,
+    listing.brand,
+    listing.equipment_model,
+    listing.year,
+    listing.pack_size,
+    listing.expiry_date,
+    listing.service_area,
   ].filter(Boolean)
 
 const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {

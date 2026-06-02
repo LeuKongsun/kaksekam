@@ -37,6 +37,19 @@ export type StoreProductWithListing = HttpTypes.StoreProduct & {
     availability: string | null
     condition: string | null
     contact_preference: string | null
+    variety: string | null
+    production_method: string | null
+    harvest_date: string | null
+    breed: string | null
+    age: string | null
+    sex: string | null
+    health_notes: string | null
+    brand: string | null
+    equipment_model: string | null
+    year: string | null
+    pack_size: string | null
+    expiry_date: string | null
+    service_area: string | null
   } | null
 }
 
@@ -96,7 +109,7 @@ export const listProducts = async ({
           offset,
           region_id: region?.id,
           fields:
-            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,+listing.id,+listing.status,+listing.category,+listing.location,+listing.quantity,+listing.unit,+listing.availability,+listing.condition,+listing.contact_preference,",
+            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,+listing.id,+listing.status,+listing.category,+listing.location,+listing.quantity,+listing.unit,+listing.availability,+listing.condition,+listing.contact_preference,+listing.variety,+listing.production_method,+listing.harvest_date,+listing.breed,+listing.age,+listing.sex,+listing.health_notes,+listing.brand,+listing.equipment_model,+listing.year,+listing.pack_size,+listing.expiry_date,+listing.service_area,",
           ...queryParams,
         },
         headers,
@@ -195,6 +208,19 @@ export const listProductsWithSort = async ({
       product.listing?.availability,
       product.listing?.condition,
       product.listing?.contact_preference,
+      product.listing?.variety,
+      product.listing?.production_method,
+      product.listing?.harvest_date,
+      product.listing?.breed,
+      product.listing?.age,
+      product.listing?.sex,
+      product.listing?.health_notes,
+      product.listing?.brand,
+      product.listing?.equipment_model,
+      product.listing?.year,
+      product.listing?.pack_size,
+      product.listing?.expiry_date,
+      product.listing?.service_area,
       ...(product.tags?.map((tag) => tag.value) ?? []),
     ]
       .filter(Boolean)

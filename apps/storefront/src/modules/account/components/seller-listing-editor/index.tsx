@@ -44,6 +44,7 @@ const categoryOptions = [
 const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const [category, setCategory] = useState(listing.category ?? "Produce")
   const [withdrawError, setWithdrawError] = useState<string | null>(null)
   const [soldError, setSoldError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -222,7 +223,8 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
                 Farming category
                 <select
                   name="category"
-                  defaultValue={listing.category ?? "Produce"}
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
                   className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
                 >
                   {categoryOptions.map((category) => (
@@ -280,6 +282,8 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
               </label>
             </div>
 
+            <CategorySpecificFields listing={listing} category={category} />
+
             <SubmitButton data-testid="update-listing-button">
               Save changes
             </SubmitButton>
@@ -288,6 +292,105 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
       )}
     </div>
   )
+}
+
+const CategorySpecificFields = ({
+  listing,
+  category,
+}: {
+  listing: SellerListing
+  category: string
+}) => {
+  if (category === "Produce") {
+    return (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+        <Input label="Variety" name="variety" defaultValue={listing.variety ?? ""} />
+        <Input
+          label="Harvest date or season"
+          name="harvest_date"
+          defaultValue={listing.harvest_date ?? ""}
+        />
+        <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
+          Production method
+          <select
+            name="production_method"
+            defaultValue={listing.production_method ?? ""}
+            className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
+          >
+            <option value="">Not specified</option>
+            <option value="Organic">Organic</option>
+            <option value="Conventional">Conventional</option>
+            <option value="Regenerative">Regenerative</option>
+          </select>
+        </label>
+      </div>
+    )
+  }
+
+  if (category === "Livestock") {
+    return (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+        <Input label="Breed" name="breed" defaultValue={listing.breed ?? ""} />
+        <Input label="Age" name="age" defaultValue={listing.age ?? ""} />
+        <Input label="Sex" name="sex" defaultValue={listing.sex ?? ""} />
+        <Input
+          label="Health or vaccination notes"
+          name="health_notes"
+          defaultValue={listing.health_notes ?? ""}
+        />
+      </div>
+    )
+  }
+
+  if (category === "Equipment" || category === "Tools") {
+    return (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+        <Input label="Brand" name="brand" defaultValue={listing.brand ?? ""} />
+        <Input
+          label="Model"
+          name="equipment_model"
+          defaultValue={listing.equipment_model ?? ""}
+        />
+        <Input label="Year" name="year" defaultValue={listing.year ?? ""} />
+      </div>
+    )
+  }
+
+  if (category === "Seeds" || category === "Fertilizer") {
+    return (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+        <Input
+          label="Variety or type"
+          name="variety"
+          defaultValue={listing.variety ?? ""}
+        />
+        <Input
+          label="Pack size"
+          name="pack_size"
+          defaultValue={listing.pack_size ?? ""}
+        />
+        <Input
+          label="Expiry or production date"
+          name="expiry_date"
+          defaultValue={listing.expiry_date ?? ""}
+        />
+      </div>
+    )
+  }
+
+  if (category === "Services") {
+    return (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+        <Input
+          label="Service area"
+          name="service_area"
+          defaultValue={listing.service_area ?? ""}
+        />
+      </div>
+    )
+  }
+
+  return null
 }
 
 export default SellerListingEditor

@@ -3,7 +3,7 @@
 import { createSellerListing } from "@lib/data/seller-listings"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
-import { useActionState } from "react"
+import { useActionState, useState } from "react"
 
 const categoryOptions = [
   "Produce",
@@ -17,6 +17,7 @@ const categoryOptions = [
 ]
 
 const SellerListingForm = () => {
+  const [category, setCategory] = useState("Produce")
   const [state, formAction] = useActionState(createSellerListing, {
     success: false,
     error: null as string | null,
@@ -96,7 +97,8 @@ const SellerListingForm = () => {
             Farming category
             <select
               name="category"
-              defaultValue="Produce"
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
               className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
             >
               {categoryOptions.map((category) => (
@@ -138,12 +140,79 @@ const SellerListingForm = () => {
           </label>
         </div>
 
+        <CategorySpecificFields category={category} />
+
         <SubmitButton data-testid="create-listing-button">
           Submit for review
         </SubmitButton>
       </div>
     </form>
   )
+}
+
+const CategorySpecificFields = ({ category }: { category: string }) => {
+  if (category === "Produce") {
+    return (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+        <Input label="Variety" name="variety" />
+        <Input label="Harvest date or season" name="harvest_date" />
+        <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
+          Production method
+          <select
+            name="production_method"
+            defaultValue=""
+            className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
+          >
+            <option value="">Not specified</option>
+            <option value="Organic">Organic</option>
+            <option value="Conventional">Conventional</option>
+            <option value="Regenerative">Regenerative</option>
+          </select>
+        </label>
+      </div>
+    )
+  }
+
+  if (category === "Livestock") {
+    return (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+        <Input label="Breed" name="breed" />
+        <Input label="Age" name="age" />
+        <Input label="Sex" name="sex" />
+        <Input label="Health or vaccination notes" name="health_notes" />
+      </div>
+    )
+  }
+
+  if (category === "Equipment" || category === "Tools") {
+    return (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+        <Input label="Brand" name="brand" />
+        <Input label="Model" name="equipment_model" />
+        <Input label="Year" name="year" />
+      </div>
+    )
+  }
+
+  if (category === "Seeds" || category === "Fertilizer") {
+    return (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+        <Input label="Variety or type" name="variety" />
+        <Input label="Pack size" name="pack_size" />
+        <Input label="Expiry or production date" name="expiry_date" />
+      </div>
+    )
+  }
+
+  if (category === "Services") {
+    return (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+        <Input label="Service area" name="service_area" />
+      </div>
+    )
+  }
+
+  return null
 }
 
 export default SellerListingForm

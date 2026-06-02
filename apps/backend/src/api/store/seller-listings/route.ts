@@ -25,6 +25,19 @@ type CreateSellerListingBody = {
   availability?: string
   condition?: string
   contact_preference?: string
+  variety?: string
+  production_method?: string
+  harvest_date?: string
+  breed?: string
+  age?: string
+  sex?: string
+  health_notes?: string
+  brand?: string
+  equipment_model?: string
+  year?: string
+  pack_size?: string
+  expiry_date?: string
+  service_area?: string
 }
 
 type ProductWithMarketplace = {
@@ -51,6 +64,8 @@ type ProductWithMarketplace = {
     id: string
     status: string
     moderation_note: string | null
+    reviewed_at: string | null
+    reviewer_id: string | null
     category: string | null
     location: string | null
     quantity: string | null
@@ -58,6 +73,19 @@ type ProductWithMarketplace = {
     availability: string | null
     condition: string | null
     contact_preference: string | null
+    variety: string | null
+    production_method: string | null
+    harvest_date: string | null
+    breed: string | null
+    age: string | null
+    sex: string | null
+    health_notes: string | null
+    brand: string | null
+    equipment_model: string | null
+    year: string | null
+    pack_size: string | null
+    expiry_date: string | null
+    service_area: string | null
     created_at: string
     updated_at: string
   } | null
@@ -162,6 +190,8 @@ async function listProductsForCustomer(
         "listing.id",
         "listing.status",
         "listing.moderation_note",
+        "listing.reviewed_at",
+        "listing.reviewer_id",
         "listing.category",
         "listing.location",
         "listing.quantity",
@@ -169,6 +199,19 @@ async function listProductsForCustomer(
         "listing.availability",
         "listing.condition",
         "listing.contact_preference",
+        "listing.variety",
+        "listing.production_method",
+        "listing.harvest_date",
+        "listing.breed",
+        "listing.age",
+        "listing.sex",
+        "listing.health_notes",
+        "listing.brand",
+        "listing.equipment_model",
+        "listing.year",
+        "listing.pack_size",
+        "listing.expiry_date",
+        "listing.service_area",
         "listing.created_at",
         "listing.updated_at",
         "variants.id",
@@ -250,6 +293,8 @@ export async function GET(
       image_urls: product.images?.map((image) => image.url).filter(Boolean) ?? [],
       status: product.listing!.status,
       moderation_note: product.listing!.moderation_note,
+      reviewed_at: product.listing!.reviewed_at,
+      reviewer_id: product.listing!.reviewer_id,
       category: product.listing!.category,
       location: product.listing!.location,
       quantity: product.listing!.quantity,
@@ -257,6 +302,19 @@ export async function GET(
       availability: product.listing!.availability,
       condition: product.listing!.condition,
       contact_preference: product.listing!.contact_preference,
+      variety: product.listing!.variety,
+      production_method: product.listing!.production_method,
+      harvest_date: product.listing!.harvest_date,
+      breed: product.listing!.breed,
+      age: product.listing!.age,
+      sex: product.listing!.sex,
+      health_notes: product.listing!.health_notes,
+      brand: product.listing!.brand,
+      equipment_model: product.listing!.equipment_model,
+      year: product.listing!.year,
+      pack_size: product.listing!.pack_size,
+      expiry_date: product.listing!.expiry_date,
+      service_area: product.listing!.service_area,
       created_at: product.listing!.created_at,
       updated_at: product.listing!.updated_at,
       seller: product.seller ?? null,
@@ -348,6 +406,19 @@ export async function POST(
     availability: cleanOptionalText(body.availability),
     condition: cleanOptionalText(body.condition),
     contact_preference: cleanOptionalText(body.contact_preference),
+    variety: cleanOptionalText(body.variety),
+    production_method: cleanOptionalText(body.production_method),
+    harvest_date: cleanOptionalText(body.harvest_date),
+    breed: cleanOptionalText(body.breed),
+    age: cleanOptionalText(body.age),
+    sex: cleanOptionalText(body.sex),
+    health_notes: cleanOptionalText(body.health_notes),
+    brand: cleanOptionalText(body.brand),
+    equipment_model: cleanOptionalText(body.equipment_model),
+    year: cleanOptionalText(body.year),
+    pack_size: cleanOptionalText(body.pack_size),
+    expiry_date: cleanOptionalText(body.expiry_date),
+    service_area: cleanOptionalText(body.service_area),
   })
 
   await link.create({
@@ -378,6 +449,9 @@ export async function POST(
       thumbnail: product.thumbnail,
       image_urls: images.map((image) => image.url),
       status: listing.status,
+      moderation_note: listing.moderation_note,
+      reviewed_at: listing.reviewed_at,
+      reviewer_id: listing.reviewer_id,
       category: listing.category,
       location: listing.location,
       quantity: listing.quantity,
@@ -385,6 +459,19 @@ export async function POST(
       availability: listing.availability,
       condition: listing.condition,
       contact_preference: listing.contact_preference,
+      variety: listing.variety,
+      production_method: listing.production_method,
+      harvest_date: listing.harvest_date,
+      breed: listing.breed,
+      age: listing.age,
+      sex: listing.sex,
+      health_notes: listing.health_notes,
+      brand: listing.brand,
+      equipment_model: listing.equipment_model,
+      year: listing.year,
+      pack_size: listing.pack_size,
+      expiry_date: listing.expiry_date,
+      service_area: listing.service_area,
     },
   })
 }

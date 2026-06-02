@@ -14,6 +14,8 @@ export type SellerListing = {
   image_urls: string[]
   status: "draft" | "pending_review" | "active" | "sold" | "rejected" | "expired"
   moderation_note: string | null
+  reviewed_at: string | null
+  reviewer_id: string | null
   category: string | null
   location: string | null
   quantity: string | null
@@ -21,6 +23,19 @@ export type SellerListing = {
   availability: string | null
   condition: string | null
   contact_preference: string | null
+  variety: string | null
+  production_method: string | null
+  harvest_date: string | null
+  breed: string | null
+  age: string | null
+  sex: string | null
+  health_notes: string | null
+  brand: string | null
+  equipment_model: string | null
+  year: string | null
+  pack_size: string | null
+  expiry_date: string | null
+  service_area: string | null
   created_at: string
   updated_at: string
   seller: {
@@ -137,6 +152,19 @@ export async function createSellerListing(
         availability: formData.get("availability"),
         condition: formData.get("condition"),
         contact_preference: formData.get("contact_preference"),
+        variety: formData.get("variety"),
+        production_method: formData.get("production_method"),
+        harvest_date: formData.get("harvest_date"),
+        breed: formData.get("breed"),
+        age: formData.get("age"),
+        sex: formData.get("sex"),
+        health_notes: formData.get("health_notes"),
+        brand: formData.get("brand"),
+        equipment_model: formData.get("equipment_model"),
+        year: formData.get("year"),
+        pack_size: formData.get("pack_size"),
+        expiry_date: formData.get("expiry_date"),
+        service_area: formData.get("service_area"),
       },
     })
 
@@ -176,6 +204,19 @@ export async function updateSellerListing(
         availability: formData.get("availability"),
         condition: formData.get("condition"),
         contact_preference: formData.get("contact_preference"),
+        variety: formData.get("variety"),
+        production_method: formData.get("production_method"),
+        harvest_date: formData.get("harvest_date"),
+        breed: formData.get("breed"),
+        age: formData.get("age"),
+        sex: formData.get("sex"),
+        health_notes: formData.get("health_notes"),
+        brand: formData.get("brand"),
+        equipment_model: formData.get("equipment_model"),
+        year: formData.get("year"),
+        pack_size: formData.get("pack_size"),
+        expiry_date: formData.get("expiry_date"),
+        service_area: formData.get("service_area"),
       },
     })
 

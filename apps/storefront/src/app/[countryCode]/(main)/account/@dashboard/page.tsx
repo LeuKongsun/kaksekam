@@ -6,8 +6,8 @@ import { retrieveCustomer } from "@lib/data/customer"
 import { retrieveAccountSellerProfile } from "@lib/data/seller-profile"
 
 export const metadata: Metadata = {
-  title: "Account",
-  description: "Overview of your account activity.",
+  title: "Marketplace workspace",
+  description: "Overview of your marketplace activity.",
 }
 
 export default async function OverviewTemplate() {

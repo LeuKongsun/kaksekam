@@ -24,6 +24,19 @@ type UpdateSellerListingBody = {
   availability?: string
   condition?: string
   contact_preference?: string
+  variety?: string
+  production_method?: string
+  harvest_date?: string
+  breed?: string
+  age?: string
+  sex?: string
+  health_notes?: string
+  brand?: string
+  equipment_model?: string
+  year?: string
+  pack_size?: string
+  expiry_date?: string
+  service_area?: string
 }
 
 type OwnedListingProduct = {
@@ -201,6 +214,8 @@ export async function PATCH(
     id: product.listing.id,
     status: "pending_review",
     moderation_note: null,
+    reviewed_at: null,
+    reviewer_id: null,
     category: cleanOptionalText(body.category),
     location: cleanOptionalText(body.location),
     quantity: cleanOptionalText(body.quantity),
@@ -208,6 +223,19 @@ export async function PATCH(
     availability: cleanOptionalText(body.availability),
     condition: cleanOptionalText(body.condition),
     contact_preference: cleanOptionalText(body.contact_preference),
+    variety: cleanOptionalText(body.variety),
+    production_method: cleanOptionalText(body.production_method),
+    harvest_date: cleanOptionalText(body.harvest_date),
+    breed: cleanOptionalText(body.breed),
+    age: cleanOptionalText(body.age),
+    sex: cleanOptionalText(body.sex),
+    health_notes: cleanOptionalText(body.health_notes),
+    brand: cleanOptionalText(body.brand),
+    equipment_model: cleanOptionalText(body.equipment_model),
+    year: cleanOptionalText(body.year),
+    pack_size: cleanOptionalText(body.pack_size),
+    expiry_date: cleanOptionalText(body.expiry_date),
+    service_area: cleanOptionalText(body.service_area),
   })
 
   res.json({ listing })
@@ -238,6 +266,8 @@ export async function DELETE(
     id: product.listing.id,
     status: "expired",
     moderation_note: null,
+    reviewed_at: null,
+    reviewer_id: null,
   })
 
   res.json({ listing })

@@ -41,6 +41,9 @@ type InquiriesResponse = {
   inquiries: AdminInquiry[]
 }
 
+type InquiryStatusFilter = "all" | AdminInquiry["status"]
+type SellerVerificationFilter = "all" | "verified" | "unverified"
+
 const statusColor: Record<
   AdminInquiry["status"],
   "orange" | "blue" | "green" | "grey"
@@ -62,6 +65,10 @@ const InquiriesPage = () => {
   const [inquiries, setInquiries] = useState<AdminInquiry[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<InquiryStatusFilter>("new")
+  const [sellerVerificationFilter, setSellerVerificationFilter] =
+    useState<SellerVerificationFilter>("all")
   const counts = useMemo(
     () => ({
       new: inquiries.filter((inquiry) => inquiry.status === "new").length,
@@ -71,6 +78,35 @@ const InquiriesPage = () => {
     }),
     [inquiries]
   )
+  const filteredInquiries = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+
+    return inquiries.filter((inquiry) => {
+      const statusMatches =
+        statusFilter === "all" || inquiry.status === statusFilter
+      const verificationMatches =
+        sellerVerificationFilter === "all" ||
+        inquiry.product?.seller?.verification_status ===
+          sellerVerificationFilter
+      const searchable = [
+        inquiry.buyer_name,
+        inquiry.buyer_email,
+        inquiry.buyer_phone,
+        inquiry.message,
+        inquiry.product?.title,
+        inquiry.product?.handle,
+        inquiry.product?.seller?.display_name,
+        inquiry.product?.seller?.handle,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+      const searchMatches =
+        !normalizedSearch || searchable.includes(normalizedSearch)
+
+      return statusMatches && verificationMatches && searchMatches
+    })
+  }, [inquiries, searchTerm, sellerVerificationFilter, statusFilter])
 
   const loadInquiries = async () => {
     setIsLoading(true)
@@ -148,11 +184,66 @@ const InquiriesPage = () => {
           Refresh
         </Button>
       </div>
+      <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[1fr_180px_180px]">
+        <label className="flex flex-col gap-y-1">
+          <Text className="text-ui-fg-subtle" size="small">
+            Search
+          </Text>
+          <input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Buyer, seller, listing, message"
+            className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+          />
+        </label>
+        <label className="flex flex-col gap-y-1">
+          <Text className="text-ui-fg-subtle" size="small">
+            Status
+          </Text>
+          <select
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as InquiryStatusFilter)
+            }
+            className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+          >
+            <option value="all">All statuses</option>
+            <option value="new">New</option>
+            <option value="read">Read</option>
+            <option value="replied">Replied</option>
+            <option value="archived">Archived</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-y-1">
+          <Text className="text-ui-fg-subtle" size="small">
+            Seller verification
+          </Text>
+          <select
+            value={sellerVerificationFilter}
+            onChange={(event) =>
+              setSellerVerificationFilter(
+                event.target.value as SellerVerificationFilter
+              )
+            }
+            className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+          >
+            <option value="all">All sellers</option>
+            <option value="verified">Verified</option>
+            <option value="unverified">Unverified</option>
+          </select>
+        </label>
+      </div>
 
       {inquiries.length === 0 ? (
         <div className="px-6 py-10">
           <Text className="text-ui-fg-subtle">
             {isLoading ? "Loading inquiries..." : "No inquiries yet."}
+          </Text>
+        </div>
+      ) : filteredInquiries.length === 0 ? (
+        <div className="px-6 py-10">
+          <Text className="text-ui-fg-subtle">
+            No inquiries match the current filters.
           </Text>
         </div>
       ) : (
@@ -167,7 +258,7 @@ const InquiriesPage = () => {
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {inquiries.map((inquiry) => (
+            {filteredInquiries.map((inquiry) => (
               <Table.Row key={inquiry.id}>
                 <Table.Cell>
                   <div className="flex max-w-[360px] flex-col gap-y-1">

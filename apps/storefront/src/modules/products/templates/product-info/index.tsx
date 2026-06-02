@@ -23,6 +23,34 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
       "Preferred contact",
       product.listing.contact_preference,
     ],
+    product.listing?.variety && ["Variety/type", product.listing.variety],
+    product.listing?.production_method && [
+      "Production method",
+      product.listing.production_method,
+    ],
+    product.listing?.harvest_date && [
+      "Harvest/season",
+      product.listing.harvest_date,
+    ],
+    product.listing?.breed && ["Breed", product.listing.breed],
+    product.listing?.age && ["Age", product.listing.age],
+    product.listing?.sex && ["Sex", product.listing.sex],
+    product.listing?.health_notes && [
+      "Health notes",
+      product.listing.health_notes,
+    ],
+    product.listing?.brand && ["Brand", product.listing.brand],
+    product.listing?.equipment_model && [
+      "Model",
+      product.listing.equipment_model,
+    ],
+    product.listing?.year && ["Year", product.listing.year],
+    product.listing?.pack_size && ["Pack size", product.listing.pack_size],
+    product.listing?.expiry_date && [
+      "Expiry/production date",
+      product.listing.expiry_date,
+    ],
+    product.listing?.service_area && ["Service area", product.listing.service_area],
   ].filter(Boolean) as string[][]
 
   return (
