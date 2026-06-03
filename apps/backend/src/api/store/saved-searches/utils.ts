@@ -2,6 +2,8 @@ type SavedSearchFilters = {
   query?: string | null
   category?: string | null
   location?: string | null
+  availability?: string | null
+  condition?: string | null
 }
 
 type SearchableListingProduct = {
@@ -43,7 +45,13 @@ export const cleanOptionalText = (value?: string) => {
 }
 
 export const getDefaultSavedSearchName = (filters: SavedSearchFilters) => {
-  const parts = [filters.query, filters.category, filters.location]
+  const parts = [
+    filters.query,
+    filters.category,
+    filters.location,
+    filters.availability,
+    filters.condition,
+  ]
     .map((value) => value?.trim())
     .filter(Boolean)
 
@@ -60,6 +68,8 @@ export const productMatchesSavedSearch = (
 
   const normalizedCategory = filters.category?.trim().toLowerCase()
   const normalizedLocation = filters.location?.trim().toLowerCase()
+  const normalizedAvailability = filters.availability?.trim().toLowerCase()
+  const normalizedCondition = filters.condition?.trim().toLowerCase()
   const normalizedQuery = filters.query?.trim().toLowerCase()
   const categoryMatches =
     !normalizedCategory ||
@@ -67,6 +77,14 @@ export const productMatchesSavedSearch = (
   const locationMatches =
     !normalizedLocation ||
     product.listing?.location?.toLowerCase().includes(normalizedLocation)
+  const availabilityMatches =
+    !normalizedAvailability ||
+    product.listing?.availability?.toLowerCase().includes(
+      normalizedAvailability
+    )
+  const conditionMatches =
+    !normalizedCondition ||
+    product.listing?.condition?.toLowerCase().includes(normalizedCondition)
   const searchText = [
     product.title,
     product.subtitle,
@@ -98,5 +116,11 @@ export const productMatchesSavedSearch = (
     .toLowerCase()
   const queryMatches = !normalizedQuery || searchText.includes(normalizedQuery)
 
-  return categoryMatches && locationMatches && queryMatches
+  return (
+    categoryMatches &&
+    locationMatches &&
+    availabilityMatches &&
+    conditionMatches &&
+    queryMatches
+  )
 }

@@ -8,6 +8,8 @@ type SaveSearchButtonProps = {
   q?: string
   category?: string
   location?: string
+  availability?: string
+  condition?: string
 }
 
 const SaveSearchButton = ({
@@ -15,10 +17,12 @@ const SaveSearchButton = ({
   q,
   category,
   location,
+  availability,
+  condition,
 }: SaveSearchButtonProps) => {
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
-  const canSave = !!(q || category || location)
+  const canSave = !!(q || category || location || availability || condition)
 
   const onSave = () => {
     setMessage(null)
@@ -29,6 +33,8 @@ const SaveSearchButton = ({
         query: q,
         category,
         location,
+        availability,
+        condition,
       })
 
       setMessage(result.success ? "Search saved." : result.error)

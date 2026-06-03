@@ -61,6 +61,22 @@ const statusLabel: Record<AdminInquiry["status"], string> = {
   archived: "Archived",
 }
 
+const getAgeInDays = (createdAt: string) => {
+  const elapsed = Date.now() - new Date(createdAt).getTime()
+
+  return Math.max(0, Math.floor(elapsed / (1000 * 60 * 60 * 24)))
+}
+
+const formatInquiryAge = (createdAt: string) => {
+  const days = getAgeInDays(createdAt)
+
+  if (days === 0) {
+    return "Today"
+  }
+
+  return `${days} day${days === 1 ? "" : "s"} old`
+}
+
 const InquiriesPage = () => {
   const [inquiries, setInquiries] = useState<AdminInquiry[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -72,9 +88,20 @@ const InquiriesPage = () => {
   const counts = useMemo(
     () => ({
       new: inquiries.filter((inquiry) => inquiry.status === "new").length,
+      read: inquiries.filter((inquiry) => inquiry.status === "read").length,
       replied: inquiries.filter((inquiry) => inquiry.status === "replied").length,
       archived: inquiries.filter((inquiry) => inquiry.status === "archived")
         .length,
+      stale: inquiries.filter(
+        (inquiry) =>
+          inquiry.status !== "replied" &&
+          inquiry.status !== "archived" &&
+          getAgeInDays(inquiry.created_at) >= 2
+      ).length,
+      unverifiedSeller: inquiries.filter(
+        (inquiry) =>
+          inquiry.product?.seller?.verification_status === "unverified"
+      ).length,
     }),
     [inquiries]
   )
@@ -172,7 +199,8 @@ const InquiriesPage = () => {
         <div>
           <Heading>Marketplace inquiries</Heading>
           <Text className="text-ui-fg-subtle" size="small">
-            {counts.new} new, {counts.replied} replied, {counts.archived} archived
+            {counts.new} new, {counts.read} read, {counts.replied} replied,{" "}
+            {counts.archived} archived
           </Text>
         </div>
         <Button
@@ -183,6 +211,15 @@ const InquiriesPage = () => {
         >
           Refresh
         </Button>
+      </div>
+      <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-4">
+        <InquirySignal label="New" value={counts.new} />
+        <InquirySignal label="Stale open" value={counts.stale} />
+        <InquirySignal
+          label="Unverified sellers"
+          value={counts.unverifiedSeller}
+        />
+        <InquirySignal label="Replied" value={counts.replied} />
       </div>
       <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[1fr_180px_180px]">
         <label className="flex flex-col gap-y-1">
@@ -263,6 +300,18 @@ const InquiriesPage = () => {
                 <Table.Cell>
                   <div className="flex max-w-[360px] flex-col gap-y-1">
                     <Text weight="plus">{inquiry.buyer_name}</Text>
+                    <Text
+                      className={
+                        inquiry.status !== "replied" &&
+                        inquiry.status !== "archived" &&
+                        getAgeInDays(inquiry.created_at) >= 2
+                          ? "text-ui-fg-error"
+                          : "text-ui-fg-subtle"
+                      }
+                      size="small"
+                    >
+                      {formatInquiryAge(inquiry.created_at)}
+                    </Text>
                     <Text className="text-ui-fg-subtle" size="small">
                       {inquiry.buyer_email}
                       {inquiry.buyer_phone ? ` | ${inquiry.buyer_phone}` : ""}
@@ -303,6 +352,12 @@ const InquiriesPage = () => {
                   <StatusBadge color={statusColor[inquiry.status]}>
                     {statusLabel[inquiry.status]}
                   </StatusBadge>
+                  {inquiry.replied_at && (
+                    <Text className="mt-1 text-ui-fg-subtle" size="small">
+                      Replied{" "}
+                      {new Date(inquiry.replied_at).toLocaleDateString()}
+                    </Text>
+                  )}
                 </Table.Cell>
                 <Table.Cell>
                   <div className="flex min-w-[260px] justify-end gap-x-2">
@@ -347,6 +402,17 @@ const InquiriesPage = () => {
     </Container>
   )
 }
+
+const InquirySignal = ({ label, value }: { label: string; value: number }) => (
+  <div className="rounded-md border border-ui-border-base p-4">
+    <Text className="text-ui-fg-subtle" size="small">
+      {label}
+    </Text>
+    <Text className="mt-2 text-ui-fg-base" size="xlarge" weight="plus">
+      {value}
+    </Text>
+  </div>
+)
 
 export const config = defineRouteConfig({
   label: "Marketplace inquiries",

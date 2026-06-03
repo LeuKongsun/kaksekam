@@ -51,7 +51,7 @@ const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
 
   return (
     <div className="content-container py-10">
-      <div className="mb-10 grid grid-cols-1 gap-4 border-b border-gray-200 pb-8 small:grid-cols-[1fr_auto]">
+      <div className="mb-10 grid grid-cols-1 gap-6 border-b border-gray-200 pb-8 medium:grid-cols-[1fr_280px]">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl-semi">{seller.display_name}</h1>
@@ -94,8 +94,24 @@ const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
             <TrustStat label="Joined" value={joinedDate ?? "Recently"} />
           </div>
         </div>
-        <div className="text-small-regular text-ui-fg-subtle">
-          {listings.length} active listing{listings.length === 1 ? "" : "s"}
+        <div className="rounded-md border border-gray-200 bg-white p-4">
+          <div className="text-[11px] font-medium uppercase text-ui-fg-subtle">
+            Marketplace presence
+          </div>
+          <div className="mt-2 text-xl-semi text-ui-fg-base">
+            {listings.length} active listing{listings.length === 1 ? "" : "s"}
+          </div>
+          <p className="mt-2 text-small-regular text-ui-fg-subtle">
+            Buyers contact this seller directly from individual listings.
+          </p>
+          {seller.email && (
+            <a
+              href={`mailto:${seller.email}`}
+              className="mt-4 inline-flex text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
+            >
+              Email seller
+            </a>
+          )}
         </div>
       </div>
 
@@ -104,12 +120,12 @@ const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
           This farmer has no active listings.
         </div>
       ) : (
-        <ul className="grid grid-cols-1 gap-6 small:grid-cols-2 medium:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-5 small:grid-cols-2 medium:grid-cols-3">
           {listings.map((listing) => (
             <li key={listing.id}>
               <LocalizedClientLink
                 href={`/products/${listing.handle}`}
-                className="group block"
+                className="group block rounded-md border border-gray-200 bg-white p-3 transition-colors hover:border-ui-fg-base"
               >
                 <div className="aspect-square overflow-hidden rounded-md bg-gray-100">
                   {listing.thumbnail && (
@@ -125,7 +141,7 @@ const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
                   <div>
                     <div className="text-base-semi">{listing.title}</div>
                     <div className="mt-1 text-small-regular text-ui-fg-subtle">
-                      {formatPrice(listing.price)}
+                      {formatPrice(listing.price)} asking
                     </div>
                   </div>
                 </div>

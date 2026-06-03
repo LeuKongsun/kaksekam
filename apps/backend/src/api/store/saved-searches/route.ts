@@ -17,6 +17,8 @@ type SaveSearchBody = {
   query?: string
   category?: string
   location?: string
+  availability?: string
+  condition?: string
 }
 
 type SearchProduct = {
@@ -148,8 +150,10 @@ export async function POST(
   const query = cleanOptionalText(body.query)
   const category = cleanOptionalText(body.category)
   const location = cleanOptionalText(body.location)
+  const availability = cleanOptionalText(body.availability)
+  const condition = cleanOptionalText(body.condition)
 
-  if (!query && !category && !location) {
+  if (!query && !category && !location && !availability && !condition) {
     res.status(400).json({ message: "Add at least one search filter to save." })
     return
   }
@@ -161,6 +165,8 @@ export async function POST(
     query,
     category,
     location,
+    availability,
+    condition,
   })
 
   if (existing[0]) {
@@ -174,6 +180,8 @@ export async function POST(
     query,
     category,
     location,
+    availability,
+    condition,
   })
 
   res.status(201).json({ saved_search: savedSearch })

@@ -157,6 +157,11 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
           )}
 
           <div className="grid grid-cols-1 gap-4">
+            <FormSection
+              title="Listing basics"
+              description="Saving changes sends this listing back through review, so keep buyer-facing details complete."
+            />
+
             <Input
               label="Title"
               name="title"
@@ -174,6 +179,11 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
                 className="w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
               />
             </label>
+
+            <FormSection
+              title="Photos"
+              description="Add clear photos or keep existing image URLs so buyers can inspect the listing before contacting you."
+            />
 
             <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
               Upload more photos
@@ -195,6 +205,11 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
                 className="w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
               />
             </label>
+
+            <FormSection
+              title="Marketplace details"
+              description="These fields affect buyer filters, saved searches, and moderation review."
+            />
 
             <div className="grid grid-cols-1 gap-4 small:grid-cols-[1fr_140px]">
               <Input
@@ -282,7 +297,15 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
               </label>
             </div>
 
+            <CategoryGuidance category={category} />
+
             <CategorySpecificFields listing={listing} category={category} />
+
+            <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-small-regular text-ui-fg-subtle">
+              Review price, location, quantity, availability, and contact
+              preference before saving. Active listings are hidden while edited
+              changes wait for review.
+            </div>
 
             <SubmitButton data-testid="update-listing-button">
               Save changes
@@ -293,6 +316,37 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
     </div>
   )
 }
+
+const FormSection = ({
+  title,
+  description,
+}: {
+  title: string
+  description: string
+}) => (
+  <div className="border-t border-gray-200 pt-4 first:border-t-0 first:pt-0">
+    <h3 className="text-base-semi">{title}</h3>
+    <p className="mt-1 text-small-regular text-ui-fg-subtle">{description}</p>
+  </div>
+)
+
+const categoryGuidance: Record<string, string> = {
+  Produce: "Add variety, harvest season, and production method so buyers can judge freshness and fit.",
+  Livestock: "Add breed, age, sex, and health notes. Buyers need enough information before arranging inspection.",
+  Seeds: "Add variety, pack size, and production or expiry date.",
+  Fertilizer: "Add type, pack size, and expiry or production date.",
+  Equipment: "Add brand, model, year, and condition so buyers can compare equipment quickly.",
+  Tools: "Add brand, model, year, and condition for easier inspection planning.",
+  Services: "Add service area and describe what is included in the service.",
+  Other: "Add any category-specific details buyers need before contacting you.",
+}
+
+const CategoryGuidance = ({ category }: { category: string }) => (
+  <div className="rounded-md border border-gray-200 bg-white p-4 text-small-regular text-ui-fg-subtle">
+    <span className="font-semibold text-ui-fg-base">{category} details: </span>
+    {categoryGuidance[category] ?? categoryGuidance.Other}
+  </div>
+)
 
 const CategorySpecificFields = ({
   listing,

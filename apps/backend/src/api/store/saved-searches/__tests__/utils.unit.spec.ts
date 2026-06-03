@@ -41,6 +41,27 @@ describe("saved search utils", () => {
     ).toBe(true)
   })
 
+  it("matches active listings by availability and condition", () => {
+    expect(
+      productMatchesSavedSearch(
+        {
+          title: "Jasmine rice",
+          listing: {
+            status: "active",
+            category: "Produce",
+            location: "Takeo Province",
+            availability: "Ready now",
+            condition: "Organic",
+          },
+        },
+        {
+          availability: "ready",
+          condition: "organic",
+        }
+      )
+    ).toBe(true)
+  })
+
   it("does not match inactive listings", () => {
     expect(
       productMatchesSavedSearch(

@@ -36,6 +36,14 @@ const SellerProfileForm = ({ customer, seller }: SellerProfileFormProps) => {
       action={formAction}
       className="rounded-md border border-gray-200 bg-white p-5"
     >
+      <div className="mb-5">
+        <h2 className="text-large-semi">Public marketplace identity</h2>
+        <p className="mt-1 text-small-regular text-ui-fg-subtle">
+          These details help buyers judge location, supply fit, and how to
+          contact you.
+        </p>
+      </div>
+
       {state.success && (
         <div className="mb-4 rounded-md bg-green-50 px-3 py-2 text-small-regular text-green-700">
           Seller profile saved.

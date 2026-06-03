@@ -63,6 +63,17 @@ const SellersPage = () => {
       verified: sellers.filter(
         (seller) => seller.verification_status === "verified"
       ).length,
+      unverified: sellers.filter(
+        (seller) => seller.verification_status === "unverified"
+      ).length,
+      withPendingListings: sellers.filter(
+        (seller) => seller.listing_stats.pending > 0
+      ).length,
+      lowReplyRate: sellers.filter(
+        (seller) =>
+          seller.inquiry_stats.reply_rate !== null &&
+          seller.inquiry_stats.reply_rate < 50
+      ).length,
     }),
     [sellers]
   )
@@ -169,6 +180,15 @@ const SellersPage = () => {
         >
           Refresh
         </Button>
+      </div>
+      <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-4">
+        <SellerSignal label="Active sellers" value={sellerCounts.active} />
+        <SellerSignal label="Unverified" value={sellerCounts.unverified} />
+        <SellerSignal
+          label="Pending listings"
+          value={sellerCounts.withPendingListings}
+        />
+        <SellerSignal label="Low reply rate" value={sellerCounts.lowReplyRate} />
       </div>
       <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[1fr_180px_180px]">
         <label className="flex flex-col gap-y-1">
@@ -278,6 +298,12 @@ const SellersPage = () => {
                       ? "No reply history"
                       : `${seller.inquiry_stats.reply_rate}% reply rate`}
                   </Text>
+                  {seller.inquiry_stats.reply_rate !== null &&
+                    seller.inquiry_stats.reply_rate < 50 && (
+                      <Text className="text-ui-fg-subtle" size="small">
+                        Needs response follow-up
+                      </Text>
+                    )}
                 </Table.Cell>
                 <Table.Cell>
                   <StatusBadge color={statusColor[seller.status]}>
@@ -335,6 +361,17 @@ const SellersPage = () => {
     </Container>
   )
 }
+
+const SellerSignal = ({ label, value }: { label: string; value: number }) => (
+  <div className="rounded-md border border-ui-border-base p-4">
+    <Text className="text-ui-fg-subtle" size="small">
+      {label}
+    </Text>
+    <Text className="mt-2 text-ui-fg-base" size="xlarge" weight="plus">
+      {value}
+    </Text>
+  </div>
+)
 
 export const config = defineRouteConfig({
   label: "Marketplace sellers",

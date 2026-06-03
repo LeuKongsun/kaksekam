@@ -14,6 +14,9 @@ type Params = {
     page?: string
     category?: string
     location?: string
+    availability?: string
+    condition?: string
+    q?: string
   }>
   params: Promise<{ countryCode: string }>
 }
@@ -21,7 +24,8 @@ type Params = {
 export default async function Home(props: Params) {
   const params = await props.params
   const searchParams = await props.searchParams
-  const { sortBy, page, category, location } = searchParams
+  const { sortBy, page, category, location, availability, condition, q } =
+    searchParams
 
   if (!params.countryCode) {
     return null
@@ -33,6 +37,9 @@ export default async function Home(props: Params) {
       page={page}
       category={category}
       location={location}
+      availability={availability}
+      condition={condition}
+      q={q}
       countryCode={params.countryCode}
     />
   )

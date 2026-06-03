@@ -55,7 +55,7 @@ type SavedListingResponse = {
 export const listSavedListings = async (): Promise<SavedListing[]> => {
   const headers = await getAuthHeaders()
 
-  if (!headers) {
+  if (!headers.authorization) {
     return []
   }
 
@@ -73,7 +73,7 @@ export const retrieveSavedListing = async (
 ): Promise<SavedListing | null> => {
   const headers = await getAuthHeaders()
 
-  if (!headers) {
+  if (!headers.authorization) {
     return null
   }
 
@@ -100,7 +100,7 @@ export async function saveListing(
 }> {
   const headers = await getAuthHeaders()
 
-  if (!headers) {
+  if (!headers.authorization) {
     return {
       success: false,
       error: "Sign in to save listings.",
@@ -132,7 +132,7 @@ export async function removeSavedListing(
 ): Promise<{ success: boolean; error: string | null }> {
   const headers = await getAuthHeaders()
 
-  if (!headers) {
+  if (!headers.authorization) {
     return { success: false, error: "Sign in to manage saved listings." }
   }
 

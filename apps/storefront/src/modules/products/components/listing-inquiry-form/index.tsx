@@ -23,7 +23,8 @@ const ListingInquiryForm = ({ productId }: ListingInquiryFormProps) => {
       <div className="mb-4">
         <h2 className="text-base-semi">Send inquiry</h2>
         <p className="mt-1 text-small-regular text-ui-fg-subtle">
-          Your message will appear in the farmer account inbox.
+          Ask about availability, pickup, inspection, or payment arrangements.
+          The seller will receive this in their marketplace inbox.
         </p>
       </div>
 
@@ -48,6 +49,7 @@ const ListingInquiryForm = ({ productId }: ListingInquiryFormProps) => {
             name="message"
             required
             rows={4}
+            placeholder="Hi, I am interested in this listing. Is it still available?"
             className="w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
           />
         </label>

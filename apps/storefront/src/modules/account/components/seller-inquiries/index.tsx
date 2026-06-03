@@ -19,29 +19,25 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
   const repliedCount = inquiries.filter(
     (inquiry) => inquiry.status === "replied"
   ).length
+  const activeCount = visibleInquiries.length
+  const archivedCount = archivedInquiries.length
 
   return (
     <div className="w-full" data-testid="seller-inquiries-page-wrapper">
-      <div className="mb-8 rounded-md border border-gray-200 bg-white p-5">
-        <div className="flex flex-col gap-3 small:flex-row small:items-start small:justify-between">
-          <div>
-            <h1 className="text-2xl-semi">Inquiries</h1>
-            <p className="mt-2 text-base-regular text-ui-fg-subtle">
-              Review buyer messages for your farming listings.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <div className="rounded-full border border-gray-200 px-4 py-2 text-small-semi text-ui-fg-base">
-              {newCount} new
-            </div>
-            <div className="rounded-full border border-gray-200 px-4 py-2 text-small-semi text-ui-fg-base">
-              {repliedCount} replied
-            </div>
-          </div>
+      <div className="mb-8">
+        <div>
+          <h1 className="text-2xl-semi">Seller inquiries</h1>
+          <p className="mt-2 max-w-2xl text-base-regular text-ui-fg-subtle">
+            Triage buyer messages, reply directly, and keep each listing
+            conversation moving.
+          </p>
         </div>
-        <p className="mt-2 text-base-regular text-ui-fg-subtle">
-          Reply using the buyer email or phone shown on each inquiry.
-        </p>
+        <div className="mt-5 grid grid-cols-2 gap-3 small:grid-cols-4">
+          <InquirySignal label="New" value={newCount} />
+          <InquirySignal label="Open" value={activeCount} />
+          <InquirySignal label="Replied" value={repliedCount} />
+          <InquirySignal label="Archived" value={archivedCount} />
+        </div>
       </div>
 
       {visibleInquiries.length === 0 ? (
@@ -53,7 +49,7 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
           {visibleInquiries.map((inquiry) => (
             <div
               key={inquiry.id}
-              className={`grid grid-cols-1 gap-4 p-4 small:grid-cols-[72px_1fr] ${
+              className={`grid grid-cols-1 gap-4 p-4 small:grid-cols-[88px_1fr] ${
                 inquiry.status === "new" ? "bg-[#fff8f6]" : "bg-white"
               }`}
             >
@@ -64,9 +60,7 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
                     <InquiryListingTitle inquiry={inquiry} />
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <div className="text-base-semi">{inquiry.buyer_name}</div>
-                      <span className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[11px] font-medium uppercase text-ui-fg-subtle">
-                        {inquiry.status}
-                      </span>
+                      <StatusBadge status={inquiry.status} />
                     </div>
                     <div className="text-small-regular text-ui-fg-subtle">
                       {inquiry.buyer_email}
@@ -77,9 +71,14 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
                     {new Date(inquiry.created_at).toLocaleDateString()}
                   </div>
                 </div>
-                <p className="whitespace-pre-line text-small-regular text-ui-fg-base">
+                <div className="rounded-md border border-gray-200 bg-white p-3">
+                  <div className="mb-1 text-[11px] font-medium uppercase text-ui-fg-subtle">
+                    Buyer message
+                  </div>
+                  <p className="whitespace-pre-line text-small-regular text-ui-fg-base">
                   {inquiry.message}
-                </p>
+                  </p>
+                </div>
                 {inquiry.replied_at && (
                   <p className="text-small-regular text-ui-fg-subtle">
                     Marked replied on{" "}
@@ -91,14 +90,14 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
                     href={`mailto:${inquiry.buyer_email}?subject=${encodeURIComponent(
                       `Re: ${inquiry.product?.title ?? "Your listing inquiry"}`
                     )}`}
-                    className="rounded-full border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
+                    className="rounded-md bg-ui-fg-base px-3 py-1.5 text-small-semi text-white transition-colors hover:bg-ui-fg-subtle"
                   >
                     Reply by email
                   </a>
                   {inquiry.buyer_phone && (
                     <a
                       href={`tel:${inquiry.buyer_phone.replace(/[^\d+]/g, "")}`}
-                      className="rounded-full border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
+                      className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
                     >
                       Call
                     </a>
@@ -111,7 +110,7 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
                         "read"
                       )}
                     >
-                      <button className="rounded-full border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
+                      <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
                         Mark read
                       </button>
                     </form>
@@ -125,7 +124,7 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
                         "new"
                       )}
                     >
-                      <button className="rounded-full border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
+                      <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
                         Mark new
                       </button>
                     </form>
@@ -138,7 +137,7 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
                         "replied"
                       )}
                     >
-                      <button className="rounded-full border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
+                      <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
                         Mark replied
                       </button>
                     </form>
@@ -150,7 +149,7 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
                       "archived"
                     )}
                   >
-                    <button className="rounded-full border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
+                    <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
                       Archive
                     </button>
                   </form>
@@ -168,7 +167,7 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
             {archivedInquiries.map((inquiry) => (
               <div
                 key={inquiry.id}
-                className="grid grid-cols-1 gap-4 p-4 small:grid-cols-[72px_1fr]"
+                className="grid grid-cols-1 gap-4 p-4 small:grid-cols-[88px_1fr]"
               >
                 <InquiryListingThumb inquiry={inquiry} />
                 <div className="grid grid-cols-1 gap-3">
@@ -203,7 +202,7 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
                       "read"
                     )}
                   >
-                    <button className="rounded-full border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
+                    <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
                       Restore
                     </button>
                   </form>
@@ -216,6 +215,34 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
     </div>
   )
 }
+
+const InquirySignal = ({ label, value }: { label: string; value: number }) => (
+  <div className="rounded-md border border-gray-200 bg-white p-4">
+    <div className="text-[11px] font-medium uppercase text-ui-fg-subtle">
+      {label}
+    </div>
+    <div className="mt-1 text-xl-semi text-ui-fg-base">{value}</div>
+  </div>
+)
+
+const statusLabels: Record<SellerInquiry["status"], string> = {
+  new: "New",
+  read: "Read",
+  replied: "Replied",
+  archived: "Archived",
+}
+
+const StatusBadge = ({ status }: { status: SellerInquiry["status"] }) => (
+  <span
+    className={`rounded-full border px-2 py-0.5 text-[11px] font-medium uppercase ${
+      status === "new"
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : "border-gray-200 bg-white text-ui-fg-subtle"
+    }`}
+  >
+    {statusLabels[status]}
+  </span>
+)
 
 const InquiryListingThumb = ({ inquiry }: { inquiry: SellerInquiry }) => (
   <div className="aspect-square overflow-hidden rounded-md bg-gray-100">
@@ -232,12 +259,19 @@ const InquiryListingThumb = ({ inquiry }: { inquiry: SellerInquiry }) => (
 
 const InquiryListingTitle = ({ inquiry }: { inquiry: SellerInquiry }) =>
   inquiry.product ? (
-    <LocalizedClientLink
-      href={`/products/${inquiry.product.handle}`}
-      className="text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
-    >
-      {inquiry.product.title}
-    </LocalizedClientLink>
+    <div>
+      <LocalizedClientLink
+        href={`/products/${inquiry.product.handle}`}
+        className="text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
+      >
+        {inquiry.product.title}
+      </LocalizedClientLink>
+      {inquiry.product.listing?.status && (
+        <div className="mt-1 text-small-regular text-ui-fg-subtle">
+          Listing status: {inquiry.product.listing.status.replace("_", " ")}
+        </div>
+      )}
+    </div>
   ) : (
     <div className="text-small-semi text-ui-fg-subtle">Listing unavailable</div>
   )

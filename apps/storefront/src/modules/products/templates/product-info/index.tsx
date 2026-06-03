@@ -1,15 +1,17 @@
 import type { StoreProductWithListing } from "@lib/data/products"
 import { Heading, Text } from "@modules/common/components/ui"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 type ProductInfoProps = {
   product: StoreProductWithListing
 }
 
 const ProductInfo = ({ product }: ProductInfoProps) => {
+  const heroDetails = [
+    product.listing?.category,
+    product.listing?.location,
+    product.listing?.availability,
+  ].filter(Boolean)
   const listingDetails = [
-    product.listing?.category && ["Category", product.listing.category],
-    product.listing?.location && ["Location", product.listing.location],
     product.listing?.quantity &&
       [
         "Quantity",
@@ -56,13 +58,23 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
   return (
     <div id="product-info">
       <div className="mx-auto flex flex-col gap-y-4 lg:max-w-[500px]">
-        {product.collection && (
-          <LocalizedClientLink
-            href={`/collections/${product.collection.handle}`}
-            className="text-medium text-ui-fg-muted hover:text-ui-fg-subtle"
-          >
-            {product.collection.title}
-          </LocalizedClientLink>
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-full bg-green-50 px-3 py-1 text-small-semi uppercase text-green-700">
+            Active listing
+          </span>
+          {heroDetails.map((detail) => (
+            <span
+              key={detail}
+              className="rounded-full bg-gray-100 px-3 py-1 text-small-regular text-ui-fg-subtle"
+            >
+              {detail}
+            </span>
+          ))}
+        </div>
+        {product.listing?.location && (
+          <Text className="text-small-regular text-ui-fg-subtle">
+            Listed in {product.listing.location}
+          </Text>
         )}
         <Heading
           level="h2"
@@ -79,11 +91,11 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
           {product.description}
         </Text>
         {listingDetails.length > 0 && (
-          <dl className="grid grid-cols-1 gap-3 rounded-md border border-gray-200 bg-white p-4 text-small-regular">
+          <dl className="grid grid-cols-1 gap-3 rounded-md border border-gray-200 bg-white p-4 text-small-regular small:grid-cols-2">
             {listingDetails.map(([label, value]) => (
-              <div key={label} className="flex justify-between gap-x-4">
+              <div key={label} className="flex flex-col gap-y-1">
                 <dt className="text-ui-fg-subtle">{label}</dt>
-                <dd className="text-right text-ui-fg-base">{value}</dd>
+                <dd className="text-ui-fg-base">{value}</dd>
               </div>
             ))}
           </dl>

@@ -73,22 +73,32 @@ const emptyMetrics: MarketplaceMetrics = {
 const MarketplacePage = () => {
   const [data, setData] = useState<MarketplaceMetrics>(emptyMetrics)
   const [isLoading, setIsLoading] = useState(true)
+  const totalAttention =
+    data.attention.pending_listings +
+    data.attention.new_inquiries +
+    data.attention.unverified_sellers
   const attentionItems = useMemo(
     () => [
       {
         label: "Pending listings",
+        description: "Review seller submissions and approve or reject them.",
         value: data.attention.pending_listings,
         href: "/app/listing-moderation",
+        cta: "Moderate listings",
       },
       {
         label: "New inquiries",
+        description: "Check buyer messages that sellers have not triaged yet.",
         value: data.attention.new_inquiries,
-        href: "/app/sellers",
+        href: "/app/inquiries",
+        cta: "Review inquiries",
       },
       {
         label: "Unverified sellers",
+        description: "Verify legitimate sellers and inspect profile quality.",
         value: data.attention.unverified_sellers,
         href: "/app/sellers",
+        cta: "Review sellers",
       },
     ],
     [data]
@@ -128,14 +138,19 @@ const MarketplacePage = () => {
               Listings, sellers, inquiries, and saved marketplace activity.
             </Text>
           </div>
-          <Button
-            size="small"
-            variant="secondary"
-            onClick={() => void loadMetrics()}
-            isLoading={isLoading}
-          >
-            Refresh
-          </Button>
+          <div className="flex items-center gap-x-3">
+            <Text className="text-ui-fg-subtle" size="small">
+              {totalAttention} needs attention
+            </Text>
+            <Button
+              size="small"
+              variant="secondary"
+              onClick={() => void loadMetrics()}
+              isLoading={isLoading}
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-3 p-6 md:grid-cols-4">
           <MetricCard label="Active listings" value={data.metrics.listings.active} />
@@ -158,6 +173,40 @@ const MarketplacePage = () => {
       <Container className="divide-y p-0">
         <div className="px-6 py-4">
           <Heading level="h2">Needs attention</Heading>
+          <Text className="text-ui-fg-subtle" size="small">
+            Marketplace operations ordered by moderation, inquiry, and seller
+            trust work.
+          </Text>
+        </div>
+        <div className="grid grid-cols-1 gap-3 p-6 md:grid-cols-3">
+          {attentionItems.map((item) => (
+            <a
+              key={item.label}
+              className="rounded-md border border-ui-border-base p-4 transition-colors hover:border-ui-border-interactive"
+              href={item.href}
+            >
+              <div className="flex items-start justify-between gap-x-3">
+                <div>
+                  <Text weight="plus">{item.label}</Text>
+                  <Text className="mt-1 text-ui-fg-subtle" size="small">
+                    {item.description}
+                  </Text>
+                </div>
+                <Text size="xlarge" weight="plus">
+                  {item.value}
+                </Text>
+              </div>
+              <Text className="mt-4 text-ui-fg-interactive" size="small">
+                {item.cta}
+              </Text>
+            </a>
+          ))}
+        </div>
+      </Container>
+
+      <Container className="divide-y p-0">
+        <div className="px-6 py-4">
+          <Heading level="h2">Operations queues</Heading>
         </div>
         <Table>
           <Table.Body>
@@ -171,7 +220,7 @@ const MarketplacePage = () => {
                 </Table.Cell>
                 <Table.Cell className="text-right">
                   <a className="text-ui-fg-interactive" href={item.href}>
-                    Review
+                    {item.cta}
                   </a>
                 </Table.Cell>
               </Table.Row>

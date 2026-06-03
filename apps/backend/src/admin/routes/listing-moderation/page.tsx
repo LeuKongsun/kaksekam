@@ -66,6 +66,7 @@ type ListingModerationResponse = {
 }
 
 type StatusFilter = "all" | ModerationListing["status"]
+type SellerVerificationFilter = "all" | "verified" | "unverified"
 
 const statusColor: Record<ModerationListing["status"], "orange" | "green" | "red"> = {
   pending_review: "orange",
@@ -99,6 +100,11 @@ const formatReviewedAt = (value: string | null) => {
     timeStyle: "short",
   }).format(new Date(value))
 }
+
+const formatSubmittedAt = (value: string) =>
+  new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+  }).format(new Date(value))
 
 const formatReviewer = (listing: ModerationListing) => {
   if (!listing.reviewer) {
@@ -142,6 +148,8 @@ const ListingModerationPage = () => {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending_review")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [sellerVerificationFilter, setSellerVerificationFilter] =
+    useState<SellerVerificationFilter>("all")
   const [searchTerm, setSearchTerm] = useState("")
   const [moderationNotes, setModerationNotes] = useState<Record<string, string>>(
     {}
@@ -155,6 +163,9 @@ const ListingModerationPage = () => {
       active: listings.filter((listing) => listing.status === "active").length,
       rejected: listings.filter((listing) => listing.status === "rejected")
         .length,
+      unverified_sellers: listings.filter(
+        (listing) => listing.seller?.verification_status !== "verified"
+      ).length,
     }),
     [listings]
   )
@@ -173,6 +184,9 @@ const ListingModerationPage = () => {
         statusFilter === "all" || listing.status === statusFilter
       const categoryMatches =
         categoryFilter === "all" || listing.category === categoryFilter
+      const sellerVerificationMatches =
+        sellerVerificationFilter === "all" ||
+        listing.seller?.verification_status === sellerVerificationFilter
       const searchable = [
         listing.title,
         listing.description,
@@ -188,9 +202,20 @@ const ListingModerationPage = () => {
       const searchMatches =
         !normalizedSearch || searchable.includes(normalizedSearch)
 
-      return statusMatches && categoryMatches && searchMatches
+      return (
+        statusMatches &&
+        categoryMatches &&
+        sellerVerificationMatches &&
+        searchMatches
+      )
     })
-  }, [categoryFilter, listings, searchTerm, statusFilter])
+  }, [
+    categoryFilter,
+    listings,
+    searchTerm,
+    sellerVerificationFilter,
+    statusFilter,
+  ])
 
   const loadListings = async () => {
     setIsLoading(true)
@@ -336,7 +361,16 @@ const ListingModerationPage = () => {
           Refresh
         </Button>
       </div>
-      <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[1fr_180px_180px]">
+      <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-4">
+        <QueueCard label="Pending review" value={listingCounts.pending_review} />
+        <QueueCard label="Active" value={listingCounts.active} />
+        <QueueCard label="Rejected" value={listingCounts.rejected} />
+        <QueueCard
+          label="Unverified sellers"
+          value={listingCounts.unverified_sellers}
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[1fr_180px_180px_180px]">
         <label className="flex flex-col gap-y-1">
           <Text className="text-ui-fg-subtle" size="small">
             Search
@@ -380,6 +414,24 @@ const ListingModerationPage = () => {
             ))}
           </select>
         </label>
+        <label className="flex flex-col gap-y-1">
+          <Text className="text-ui-fg-subtle" size="small">
+            Seller verification
+          </Text>
+          <select
+            value={sellerVerificationFilter}
+            onChange={(event) =>
+              setSellerVerificationFilter(
+                event.target.value as SellerVerificationFilter
+              )
+            }
+            className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+          >
+            <option value="all">All sellers</option>
+            <option value="verified">Verified</option>
+            <option value="unverified">Unverified</option>
+          </select>
+        </label>
       </div>
 
       {listings.length === 0 ? (
@@ -411,6 +463,9 @@ const ListingModerationPage = () => {
                 <Table.Cell>
                   <div className="flex max-w-[360px] flex-col gap-y-1">
                     <Text weight="plus">{listing.title}</Text>
+                    <Text className="text-ui-fg-subtle" size="small">
+                      Submitted {formatSubmittedAt(listing.created_at)}
+                    </Text>
                     {listing.description && (
                       <Text className="line-clamp-2 text-ui-fg-subtle" size="small">
                         {listing.description}
@@ -532,6 +587,17 @@ const ListingModerationPage = () => {
     </Container>
   )
 }
+
+const QueueCard = ({ label, value }: { label: string; value: number }) => (
+  <div className="rounded-md border border-ui-border-base p-4">
+    <Text className="text-ui-fg-subtle" size="small">
+      {label}
+    </Text>
+    <Text className="mt-2 text-ui-fg-base" size="xlarge" weight="plus">
+      {value}
+    </Text>
+  </div>
+)
 
 export const config = defineRouteConfig({
   label: "Listing moderation",

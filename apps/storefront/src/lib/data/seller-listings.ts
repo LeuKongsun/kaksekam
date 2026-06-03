@@ -2,7 +2,7 @@
 
 import { sdk } from "@lib/config"
 import { revalidatePath } from "next/cache"
-import { getAuthHeaders } from "./cookies"
+import { getAuthHeaders, removeAuthToken } from "./cookies"
 
 export type SellerListing = {
   id: string
@@ -64,6 +64,19 @@ type UploadedFile = {
 }
 
 const MAX_UPLOAD_FILES = 6
+const SESSION_EXPIRED_MESSAGE = "Your session expired. Please sign in again."
+const BACKEND_UNAVAILABLE_MESSAGE =
+  "Could not reach the marketplace backend. Make sure Medusa is running on localhost:9000."
+const isUnauthorizedError = (error: unknown) =>
+  String(error).toLowerCase().includes("unauthorized")
+const isFetchError = (error: unknown) =>
+  String(error).toLowerCase().includes("failed to fetch")
+
+const handleUnauthorizedAction = async () => {
+  await removeAuthToken()
+
+  return { success: false, error: SESSION_EXPIRED_MESSAGE }
+}
 
 const getImageFiles = (formData: FormData) =>
   formData
@@ -112,8 +125,10 @@ const getListingImageUrls = async (
 }
 
 export const listSellerListings = async (): Promise<SellerListing[]> => {
-  const headers = {
-    ...(await getAuthHeaders()),
+  const headers = await getAuthHeaders()
+
+  if (!headers.authorization) {
+    return []
   }
 
   return sdk.client
@@ -123,14 +138,23 @@ export const listSellerListings = async (): Promise<SellerListing[]> => {
       cache: "no-store",
     })
     .then(({ listings }) => listings)
+    .catch((error) => {
+      if (isUnauthorizedError(error)) {
+        return []
+      }
+
+      throw error
+    })
 }
 
 export async function createSellerListing(
   _currentState: SellerListingState,
   formData: FormData
 ): Promise<SellerListingState> {
-  const headers = {
-    ...(await getAuthHeaders()),
+  const headers = await getAuthHeaders()
+
+  if (!headers.authorization) {
+    return { success: false, error: "Sign in to create listings." }
   }
 
   try {
@@ -172,6 +196,13 @@ export async function createSellerListing(
 
     return { success: true, error: null }
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return handleUnauthorizedAction()
+    }
+    if (isFetchError(error)) {
+      return { success: false, error: BACKEND_UNAVAILABLE_MESSAGE }
+    }
+
     return { success: false, error: String(error) }
   }
 }
@@ -181,8 +212,10 @@ export async function updateSellerListing(
   _currentState: SellerListingState,
   formData: FormData
 ): Promise<SellerListingState> {
-  const headers = {
-    ...(await getAuthHeaders()),
+  const headers = await getAuthHeaders()
+
+  if (!headers.authorization) {
+    return { success: false, error: "Sign in to edit listings." }
   }
 
   try {
@@ -224,6 +257,13 @@ export async function updateSellerListing(
 
     return { success: true, error: null }
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return handleUnauthorizedAction()
+    }
+    if (isFetchError(error)) {
+      return { success: false, error: BACKEND_UNAVAILABLE_MESSAGE }
+    }
+
     return { success: false, error: String(error) }
   }
 }
@@ -231,8 +271,10 @@ export async function updateSellerListing(
 export async function withdrawSellerListing(
   listingId: string
 ): Promise<SellerListingState> {
-  const headers = {
-    ...(await getAuthHeaders()),
+  const headers = await getAuthHeaders()
+
+  if (!headers.authorization) {
+    return { success: false, error: "Sign in to manage listings." }
   }
 
   try {
@@ -245,6 +287,13 @@ export async function withdrawSellerListing(
 
     return { success: true, error: null }
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return handleUnauthorizedAction()
+    }
+    if (isFetchError(error)) {
+      return { success: false, error: BACKEND_UNAVAILABLE_MESSAGE }
+    }
+
     return { success: false, error: String(error) }
   }
 }
@@ -252,8 +301,10 @@ export async function withdrawSellerListing(
 export async function markSellerListingSold(
   listingId: string
 ): Promise<SellerListingState> {
-  const headers = {
-    ...(await getAuthHeaders()),
+  const headers = await getAuthHeaders()
+
+  if (!headers.authorization) {
+    return { success: false, error: "Sign in to manage listings." }
   }
 
   try {
@@ -270,6 +321,13 @@ export async function markSellerListingSold(
 
     return { success: true, error: null }
   } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return handleUnauthorizedAction()
+    }
+    if (isFetchError(error)) {
+      return { success: false, error: BACKEND_UNAVAILABLE_MESSAGE }
+    }
+
     return { success: false, error: String(error) }
   }
 }

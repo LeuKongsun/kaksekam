@@ -65,7 +65,7 @@ const CartDropdown = ({
 
   const pathname = usePathname()
 
-  // open cart dropdown when modifying the cart items, but only if we're not on the cart page
+  // Legacy carts should no longer be part of the marketplace flow.
   useEffect(() => {
     if (itemRef.current !== totalItems && !pathname.includes("/cart")) {
       timedOpen()
@@ -83,9 +83,11 @@ const CartDropdown = ({
         <PopoverButton className="h-full">
           <LocalizedClientLink
             className="hover:text-ui-fg-base"
-            href="/cart"
+            href="/store"
             data-testid="nav-cart-link"
-          >{`Cart (${totalItems})`}</LocalizedClientLink>
+          >
+            Browse listings
+          </LocalizedClientLink>
         </PopoverButton>
         <Transition
           show={cartDropdownOpen}
@@ -103,7 +105,7 @@ const CartDropdown = ({
             data-testid="nav-cart-dropdown"
           >
             <div className="p-4 flex items-center justify-center">
-              <h3 className="text-large-semi">Cart</h3>
+              <h3 className="text-large-semi">Marketplace listings</h3>
             </div>
             {cartState && cartState.items?.length ? (
               <>
@@ -197,7 +199,7 @@ const CartDropdown = ({
                       size="large"
                       data-testid="go-to-cart-button"
                     >
-                      Go to cart
+                      View saved checkout draft
                     </Button>
                   </LocalizedClientLink>
                 </div>
@@ -208,12 +210,12 @@ const CartDropdown = ({
                   <div className="bg-gray-900 text-small-regular flex items-center justify-center w-6 h-6 rounded-full text-white">
                     <span>0</span>
                   </div>
-                  <span>Your shopping bag is empty.</span>
+                  <span>Marketplace listings do not use cart checkout.</span>
                   <div>
                     <LocalizedClientLink href="/store">
                       <>
-                        <span className="sr-only">Go to all products page</span>
-                        <Button onClick={close}>Explore products</Button>
+                        <span className="sr-only">Go to listings page</span>
+                        <Button onClick={close}>Browse listings</Button>
                       </>
                     </LocalizedClientLink>
                   </div>

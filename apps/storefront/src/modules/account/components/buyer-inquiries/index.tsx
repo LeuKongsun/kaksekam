@@ -13,13 +13,26 @@ const statusLabels: Record<BuyerInquiry["status"], string> = {
 }
 
 const BuyerInquiries = ({ inquiries }: BuyerInquiriesProps) => {
+  const repliedCount = inquiries.filter(
+    (inquiry) => inquiry.status === "replied"
+  ).length
+  const openCount = inquiries.filter(
+    (inquiry) => inquiry.status !== "archived"
+  ).length
+
   return (
     <div className="w-full" data-testid="buyer-inquiries-page-wrapper">
-      <div className="mb-8 rounded-md border border-gray-200 bg-white p-5">
+      <div className="mb-8">
         <h1 className="text-2xl-semi">Buyer inquiries</h1>
         <p className="mt-2 max-w-2xl text-base-regular text-ui-fg-subtle">
-          Track messages you have sent to farmers while signed in.
+          Track messages you have sent to sellers and revisit the listings you
+          asked about.
         </p>
+        <div className="mt-5 grid grid-cols-2 gap-3 small:grid-cols-3">
+          <BuyerSignal label="Sent" value={inquiries.length} />
+          <BuyerSignal label="Open" value={openCount} />
+          <BuyerSignal label="Replied" value={repliedCount} />
+        </div>
       </div>
 
       {inquiries.length === 0 ? (
@@ -65,9 +78,14 @@ const BuyerInquiries = ({ inquiries }: BuyerInquiriesProps) => {
                     </LocalizedClientLink>
                   </div>
                 )}
-                <p className="mt-3 whitespace-pre-line text-small-regular text-ui-fg-base">
-                  {inquiry.message}
-                </p>
+                <div className="mt-3 rounded-md border border-gray-200 bg-white p-3">
+                  <div className="mb-1 text-[11px] font-medium uppercase text-ui-fg-subtle">
+                    Your message
+                  </div>
+                  <p className="whitespace-pre-line text-small-regular text-ui-fg-base">
+                    {inquiry.message}
+                  </p>
+                </div>
                 {inquiry.replied_at && (
                   <p className="mt-2 text-small-regular text-ui-fg-subtle">
                     Marked replied on{" "}
@@ -82,6 +100,14 @@ const BuyerInquiries = ({ inquiries }: BuyerInquiriesProps) => {
                 <div className="mt-2 text-small-regular text-ui-fg-subtle">
                   {new Date(inquiry.created_at).toLocaleDateString()}
                 </div>
+                {inquiry.product?.seller && (
+                  <LocalizedClientLink
+                    href={`/sellers/${inquiry.product.seller.handle}`}
+                    className="mt-3 inline-flex text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
+                  >
+                    Seller profile
+                  </LocalizedClientLink>
+                )}
               </div>
             </div>
           ))}
@@ -90,5 +116,14 @@ const BuyerInquiries = ({ inquiries }: BuyerInquiriesProps) => {
     </div>
   )
 }
+
+const BuyerSignal = ({ label, value }: { label: string; value: number }) => (
+  <div className="rounded-md border border-gray-200 bg-white p-4">
+    <div className="text-[11px] font-medium uppercase text-ui-fg-subtle">
+      {label}
+    </div>
+    <div className="mt-1 text-xl-semi text-ui-fg-base">{value}</div>
+  </div>
+)
 
 export default BuyerInquiries

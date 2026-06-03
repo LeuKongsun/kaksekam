@@ -52,24 +52,48 @@ const formatReviewedAt = (value: string | null) => {
 }
 
 const SellerListings = ({ listings }: SellerListingsProps) => {
+  const statusCounts = listings.reduce(
+    (counts, listing) => ({
+      ...counts,
+      [listing.status]: counts[listing.status] + 1,
+    }),
+    {
+      draft: 0,
+      pending_review: 0,
+      active: 0,
+      sold: 0,
+      rejected: 0,
+      expired: 0,
+    } satisfies Record<SellerListing["status"], number>
+  )
+
   return (
     <div className="w-full" data-testid="seller-listings-page-wrapper">
-      <div className="mb-8 rounded-md border border-gray-200 bg-white p-5">
-        <h1 className="text-2xl-semi">Farmer listings</h1>
-        <p className="mt-2 text-base-regular text-ui-fg-subtle">
-          Create listings, add photos, submit for review, and track publication
-          status.
-        </p>
-        <LocalizedClientLink
-          href="/account/seller-profile"
-          className="mt-3 inline-flex text-base-semi text-ui-fg-base hover:text-ui-fg-interactive"
-        >
-          Manage the seller profile reused by your listings
-        </LocalizedClientLink>
-        <div className="mt-4 grid grid-cols-1 gap-3 text-small-regular text-ui-fg-subtle small:grid-cols-3">
-          <div className="rounded-md bg-gray-50 p-3">1. Create listing</div>
-          <div className="rounded-md bg-gray-50 p-3">2. Admin reviews</div>
-          <div className="rounded-md bg-gray-50 p-3">3. Buyers inquire</div>
+      <div className="mb-8">
+        <div className="grid grid-cols-1 gap-4 small:grid-cols-[1fr_auto]">
+          <div>
+            <h1 className="text-2xl-semi">My listings</h1>
+            <p className="mt-2 max-w-2xl text-base-regular text-ui-fg-subtle">
+              Create marketplace listings, track review status, and keep buyers
+              moving toward an inquiry.
+            </p>
+          </div>
+          <LocalizedClientLink
+            href="/account/seller-profile"
+            className="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 px-4 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
+          >
+            Seller profile
+          </LocalizedClientLink>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3 small:grid-cols-4">
+          <ListingSignal label="Active" value={statusCounts.active} />
+          <ListingSignal label="In review" value={statusCounts.pending_review} />
+          <ListingSignal label="Drafts" value={statusCounts.draft} />
+          <ListingSignal
+            label="Needs attention"
+            value={statusCounts.rejected + statusCounts.expired}
+          />
         </div>
       </div>
 
@@ -100,7 +124,12 @@ const SellerListings = ({ listings }: SellerListingsProps) => {
                     )}
                   </div>
                   <div>
-                    <div className="text-base-semi">{listing.title}</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="text-base-semi">{listing.title}</div>
+                      <span className="inline-flex rounded-md border border-gray-200 px-2 py-1 text-small-regular">
+                        {statusLabels[listing.status]}
+                      </span>
+                    </div>
                     {listing.description && (
                       <p className="mt-1 line-clamp-2 text-small-regular text-ui-fg-subtle">
                         {listing.description}
@@ -151,9 +180,14 @@ const SellerListings = ({ listings }: SellerListingsProps) => {
                     )}
                   </div>
                   <div className="small:text-right">
-                    <span className="inline-flex rounded-md border border-gray-200 px-2 py-1 text-small-regular">
-                      {statusLabels[listing.status]}
-                    </span>
+                    {listing.status === "active" && (
+                      <LocalizedClientLink
+                        href={`/products/${listing.handle}`}
+                        className="mb-3 inline-flex text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
+                      >
+                        View public listing
+                      </LocalizedClientLink>
+                    )}
                     <div className="mt-3">
                       <SellerListingEditor listing={listing} />
                     </div>
@@ -167,5 +201,14 @@ const SellerListings = ({ listings }: SellerListingsProps) => {
     </div>
   )
 }
+
+const ListingSignal = ({ label, value }: { label: string; value: number }) => (
+  <div className="rounded-md border border-gray-200 bg-white p-4">
+    <div className="text-[11px] font-medium uppercase text-ui-fg-subtle">
+      {label}
+    </div>
+    <div className="mt-1 text-xl-semi text-ui-fg-base">{value}</div>
+  </div>
+)
 
 export default SellerListings

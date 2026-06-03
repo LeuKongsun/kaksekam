@@ -16,7 +16,7 @@ export default async function ListingsPage() {
     notFound()
   }
 
-  const listings = await listSellerListings()
+  const listings = await listSellerListings().catch(() => [])
 
   return <SellerListings listings={listings} />
 }

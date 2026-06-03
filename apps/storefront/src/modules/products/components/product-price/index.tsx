@@ -36,21 +36,21 @@ export default function ProductPrice({
           {selectedPrice.calculated_price}
         </span>
       </span>
+      <span className="mt-1 text-small-regular text-ui-fg-subtle">
+        Asking price
+      </span>
       {selectedPrice.price_type === "sale" && (
         <>
           <p>
-            <span className="text-ui-fg-subtle">Original: </span>
+            <span className="text-ui-fg-subtle">Previous asking price: </span>
             <span
               className="line-through"
               data-testid="original-product-price"
               data-value={selectedPrice.original_price_number}
             >
-              {selectedPrice.original_price}
+            {selectedPrice.original_price}
             </span>
           </p>
-          <span className="text-ui-fg-interactive">
-            -{selectedPrice.percentage_diff}%
-          </span>
         </>
       )}
     </div>

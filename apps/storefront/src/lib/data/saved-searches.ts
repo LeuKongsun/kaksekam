@@ -11,6 +11,8 @@ export type SavedSearch = {
   query: string | null
   category: string | null
   location: string | null
+  availability: string | null
+  condition: string | null
   match_count?: number
   created_at: string
 }
@@ -41,6 +43,8 @@ export async function saveSearch(
     query?: string
     category?: string
     location?: string
+    availability?: string
+    condition?: string
   }
 ): Promise<{ success: boolean; error: string | null }> {
   const headers = await getAuthHeaders()
@@ -57,6 +61,8 @@ export async function saveSearch(
         query: input.query,
         category: input.category,
         location: input.location,
+        availability: input.availability,
+        condition: input.condition,
       },
     })
 

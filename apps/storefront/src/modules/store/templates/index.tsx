@@ -12,6 +12,8 @@ const StoreTemplate = ({
   page,
   category,
   location,
+  availability,
+  condition,
   q,
   countryCode,
 }: {
@@ -19,6 +21,8 @@ const StoreTemplate = ({
   page?: string
   category?: string
   location?: string
+  availability?: string
+  condition?: string
   q?: string
   countryCode: string
 }) => {
@@ -42,6 +46,8 @@ const StoreTemplate = ({
             sortBy={sort}
             category={category}
             location={location}
+            availability={availability}
+            condition={condition}
             q={q}
           />
         </div>
@@ -93,6 +99,8 @@ const StoreTemplate = ({
                 q={q}
                 category={category}
                 location={location}
+                availability={availability}
+                condition={condition}
               />
             </div>
           </div>
@@ -102,6 +110,8 @@ const StoreTemplate = ({
               q={q}
               category={category}
               location={location}
+              availability={availability}
+              condition={condition}
             />
           </div>
           <div
@@ -114,6 +124,8 @@ const StoreTemplate = ({
                 page={pageNumber}
                 category={category}
                 location={location}
+                availability={availability}
+                condition={condition}
                 q={q}
                 countryCode={countryCode}
               />

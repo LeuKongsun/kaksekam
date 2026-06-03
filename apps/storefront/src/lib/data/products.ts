@@ -159,6 +159,8 @@ export const listProductsWithSort = async ({
   sortBy = "created_at",
   listingCategory,
   listingLocation,
+  listingAvailability,
+  listingCondition,
   listingQuery,
   countryCode,
 }: {
@@ -167,6 +169,8 @@ export const listProductsWithSort = async ({
   sortBy?: SortOptions
   listingCategory?: string
   listingLocation?: string
+  listingAvailability?: string
+  listingCondition?: string
   listingQuery?: string
   countryCode: string
 }): Promise<{
@@ -189,6 +193,8 @@ export const listProductsWithSort = async ({
 
   const normalizedCategory = listingCategory?.trim().toLowerCase()
   const normalizedLocation = listingLocation?.trim().toLowerCase()
+  const normalizedAvailability = listingAvailability?.trim().toLowerCase()
+  const normalizedCondition = listingCondition?.trim().toLowerCase()
   const normalizedQuery = listingQuery?.trim().toLowerCase()
   const filteredProducts = products.filter((product) => {
     const categoryMatches =
@@ -197,6 +203,14 @@ export const listProductsWithSort = async ({
     const locationMatches =
       !normalizedLocation ||
       product.listing?.location?.toLowerCase().includes(normalizedLocation)
+    const availabilityMatches =
+      !normalizedAvailability ||
+      product.listing?.availability?.toLowerCase().includes(
+        normalizedAvailability
+      )
+    const conditionMatches =
+      !normalizedCondition ||
+      product.listing?.condition?.toLowerCase().includes(normalizedCondition)
     const searchText = [
       product.title,
       product.subtitle,
@@ -228,7 +242,13 @@ export const listProductsWithSort = async ({
       .toLowerCase()
     const queryMatches = !normalizedQuery || searchText.includes(normalizedQuery)
 
-    return categoryMatches && locationMatches && queryMatches
+    return (
+      categoryMatches &&
+      locationMatches &&
+      availabilityMatches &&
+      conditionMatches &&
+      queryMatches
+    )
   })
   const sortedProducts = sortProducts(filteredProducts, sortBy)
 

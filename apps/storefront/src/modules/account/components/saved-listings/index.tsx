@@ -13,7 +13,7 @@ const formatPrice = (price: SavedListing["product"]["price"]) => {
 
   return `${price.calculated_amount} ${(
     price.currency_code ?? ""
-  ).toUpperCase()}`
+  ).toUpperCase()} asking`
 }
 
 const formatListingDetails = (listing: SavedListing["product"]["listing"]) =>
@@ -51,8 +51,20 @@ const SavedListings = ({ savedListings }: SavedListingsProps) => {
       </div>
 
       {savedListings.length === 0 ? (
-        <div className="rounded-md border border-gray-200 p-4 text-base-regular text-ui-fg-subtle">
-          No saved listings yet.
+        <div className="rounded-md border border-gray-200 bg-white p-5">
+          <h2 className="text-base-semi text-ui-fg-base">
+            No saved listings yet
+          </h2>
+          <p className="mt-2 text-base-regular text-ui-fg-subtle">
+            Save listings while browsing so you can compare price, location,
+            seller, and availability before sending inquiries.
+          </p>
+          <LocalizedClientLink
+            href="/store"
+            className="mt-4 inline-flex rounded-md border border-gray-300 px-4 py-2 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
+          >
+            Browse listings
+          </LocalizedClientLink>
         </div>
       ) : (
         <div className="divide-y divide-gray-200 rounded-md border border-gray-200">
@@ -108,6 +120,12 @@ const SavedListings = ({ savedListings }: SavedListingsProps) => {
                     )}
                   </div>
                 )}
+                <LocalizedClientLink
+                  href={`/products/${savedListing.product.handle}`}
+                  className="mt-3 inline-flex text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
+                >
+                  View listing and inquire
+                </LocalizedClientLink>
               </div>
               <RemoveSavedListingButton savedListingId={savedListing.id} />
             </div>
