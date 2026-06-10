@@ -3,39 +3,83 @@
 import { ArrowRightOnRectangle } from "@medusajs/icons"
 import { clx } from "@modules/common/components/ui"
 import { useParams, usePathname } from "next/navigation"
+import type { ComponentType, ReactNode } from "react"
 
 import { signout } from "@lib/data/customer"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ChevronDown from "@modules/common/icons/chevron-down"
+import Eye from "@modules/common/icons/eye"
 import MapPin from "@modules/common/icons/map-pin"
+import Package from "@modules/common/icons/package"
 import User from "@modules/common/icons/user"
 
 const marketplaceLinks = [
   {
-    href: "/account/seller-profile",
-    label: "Seller profile",
-    testId: "seller-profile-link",
-  },
-  {
     href: "/account/listings",
-    label: "My listings",
+    label: "Listings",
     testId: "listings-link",
+    icon: Package,
   },
   {
     href: "/account/inquiries",
-    label: "Seller inquiries",
+    label: "Messages",
     testId: "inquiries-link",
+    icon: MessageIcon,
   },
   {
+    href: "/account/seller-profile",
+    label: "Seller",
+    testId: "seller-profile-link",
+    icon: User,
+  },
+]
+
+const buyerLinks = [
+  {
     href: "/account/saved",
-    label: "Saved listings",
+    label: "Saved",
     testId: "saved-listings-link",
+    icon: Eye,
   },
   {
     href: "/account/buyer-inquiries",
-    label: "Sent inquiries",
+    label: "Sent",
     testId: "buyer-inquiries-link",
+    icon: MessageIcon,
+  },
+]
+
+const mobileShortcutLinks = [
+  {
+    href: "/account/listings",
+    label: "Listings",
+    testId: "mobile-listings-link",
+    icon: Package,
+  },
+  {
+    href: "/account/inquiries",
+    label: "Messages",
+    testId: "mobile-inquiries-link",
+    icon: MessageIcon,
+  },
+  {
+    href: "/account/saved",
+    label: "Saved",
+    testId: "mobile-saved-link",
+    icon: Eye,
+  },
+  {
+    href: "/account/seller-profile",
+    label: "Seller",
+    testId: "mobile-seller-profile-link",
+    icon: User,
+  },
+  {
+    href: "/account/profile",
+    label: "Profile",
+    testId: "mobile-profile-link",
+    icon: User,
   },
 ]
 
@@ -48,7 +92,7 @@ const settingsLinks = [
   },
   {
     href: "/account/addresses",
-    label: "Contact addresses",
+    label: "Addresses",
     testId: "addresses-link",
     icon: MapPin,
   },
@@ -81,90 +125,52 @@ const AccountNav = ({
             </>
           </LocalizedClientLink>
         ) : (
-          <>
-            <div className="text-xl-semi mb-4 px-8">
-              Hello {customer?.first_name}
+          <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+            <div>
+              <div className="text-large-semi">
+                Hello {customer?.first_name}
+              </div>
+              <p className="mt-1 text-small-regular text-ui-fg-subtle">
+                Choose a shortcut.
+              </p>
             </div>
-            <div className="text-base-regular">
-              <ul>
-                <li>
-                  <LocalizedClientLink
-                    href="/account"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="overview-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <User size={20} />
-                        <span>Overview</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                {marketplaceLinks.map((link) => (
-                  <li key={link.href}>
-                    <LocalizedClientLink
-                      href={link.href}
-                      className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                      data-testid={link.testId}
-                    >
-                      <>
-                        <div className="flex items-center gap-x-2">
-                          <User size={20} />
-                          <span>{link.label}</span>
-                        </div>
-                        <ChevronDown className="transform -rotate-90" />
-                      </>
-                    </LocalizedClientLink>
-                  </li>
-                ))}
-                {settingsLinks.map((link) => {
-                  const Icon = link.icon
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {mobileShortcutLinks.map((link) => {
+                const Icon = link.icon
 
-                  return (
-                    <li key={link.href}>
-                      <LocalizedClientLink
-                        href={link.href}
-                        className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                        data-testid={link.testId}
-                      >
-                        <>
-                          <div className="flex items-center gap-x-2">
-                            <Icon size={20} />
-                            <span>{link.label}</span>
-                          </div>
-                          <ChevronDown className="transform -rotate-90" />
-                        </>
-                      </LocalizedClientLink>
-                    </li>
-                  )
-                })}
-                <li>
-                  <button
-                    type="button"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8 w-full"
-                    onClick={handleLogout}
-                    data-testid="logout-button"
+                return (
+                  <LocalizedClientLink
+                    key={link.href}
+                    href={link.href}
+                    className="flex items-center gap-x-2 rounded-md border border-gray-200 px-3 py-3 text-small-semi text-ui-fg-base"
+                    data-testid={link.testId}
                   >
-                    <div className="flex items-center gap-x-2">
-                      <ArrowRightOnRectangle />
-                      <span>Log out</span>
-                    </div>
-                    <ChevronDown className="transform -rotate-90" />
-                  </button>
-                </li>
-              </ul>
+                    <Icon size={16} className="text-ui-fg-muted" />
+                    {link.label}
+                  </LocalizedClientLink>
+                )
+              })}
             </div>
-          </>
+            <button
+              type="button"
+              className="mt-3 flex w-full items-center gap-x-2 text-small-regular text-ui-fg-subtle"
+              onClick={handleLogout}
+              data-testid="logout-button"
+            >
+              <ArrowRightOnRectangle />
+              <span>Log out</span>
+            </button>
+          </div>
         )}
       </div>
       <div className="hidden small:block" data-testid="account-nav">
-        <div className="rounded-md border border-gray-200 bg-white p-4">
+        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
           <div className="pb-4">
-            <h3 className="text-base-semi">Marketplace</h3>
+            <h3 className="text-base-semi">
+              {customer?.first_name ? `Hi, ${customer.first_name}` : "Account"}
+            </h3>
             <p className="mt-1 text-small-regular text-ui-fg-subtle">
-              Buyer and seller tools
+              Manage your market activity
             </p>
           </div>
           <div className="text-base-regular">
@@ -173,6 +179,7 @@ const AccountNav = ({
                 <AccountNavLink
                   href="/account"
                   route={route!}
+                  icon={DashboardIcon}
                   data-testid="overview-link"
                 >
                   Overview
@@ -183,6 +190,7 @@ const AccountNav = ({
                   <AccountNavLink
                     href={link.href}
                     route={route!}
+                    icon={link.icon}
                     data-testid={link.testId}
                   >
                     {link.label}
@@ -192,7 +200,27 @@ const AccountNav = ({
             </ul>
           </div>
 
-          <div className="mt-6 border-t border-gray-200 pt-4 text-base-regular">
+          <div className="mt-5 border-t border-gray-200 pt-4 text-base-regular">
+            <p className="mb-3 text-small-semi uppercase text-ui-fg-muted">
+              Buying
+            </p>
+            <ul className="flex mb-0 justify-start items-start flex-col gap-y-3">
+              {buyerLinks.map((link) => (
+                <li key={link.href}>
+                  <AccountNavLink
+                    href={link.href}
+                    route={route!}
+                    icon={link.icon}
+                    data-testid={link.testId}
+                  >
+                    {link.label}
+                  </AccountNavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-5 border-t border-gray-200 pt-4 text-base-regular">
             <p className="mb-3 text-small-semi uppercase text-ui-fg-muted">
               Settings
             </p>
@@ -202,6 +230,7 @@ const AccountNav = ({
                   <AccountNavLink
                     href={link.href}
                     route={route!}
+                    icon={link.icon}
                     data-testid={link.testId}
                   >
                     {link.label}
@@ -212,9 +241,11 @@ const AccountNav = ({
                 <button
                   type="button"
                   onClick={handleLogout}
+                  className="inline-flex items-center gap-x-2 text-ui-fg-subtle hover:text-ui-fg-base"
                   data-testid="logout-button"
                 >
-                  Log out
+                  <ArrowRightOnRectangle />
+                  <span>Log out</span>
                 </button>
               </li>
             </ul>
@@ -228,7 +259,8 @@ const AccountNav = ({
 type AccountNavLinkProps = {
   href: string
   route: string
-  children: React.ReactNode
+  children: ReactNode
+  icon?: ComponentType<{ size?: string | number; className?: string }>
   "data-testid"?: string
 }
 
@@ -236,6 +268,7 @@ const AccountNavLink = ({
   href,
   route,
   children,
+  icon: Icon,
   "data-testid": dataTestId,
 }: AccountNavLinkProps) => {
   const { countryCode }: { countryCode: string } = useParams()
@@ -244,13 +277,85 @@ const AccountNavLink = ({
   return (
     <LocalizedClientLink
       href={href}
-      className={clx("text-ui-fg-subtle hover:text-ui-fg-base", {
-        "text-ui-fg-base font-semibold": active,
-      })}
+      className={clx(
+        "inline-flex items-center gap-x-2 text-ui-fg-subtle hover:text-ui-fg-base",
+        {
+          "text-ui-fg-base font-semibold": active,
+        }
+      )}
       data-testid={dataTestId}
     >
+      {Icon && <Icon size={16} className="text-ui-fg-muted" />}
       {children}
     </LocalizedClientLink>
+  )
+}
+
+function DashboardIcon({
+  size = 16,
+  className,
+}: {
+  size?: string | number
+  className?: string
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M3.5 4.75C3.5 4.05964 4.05964 3.5 4.75 3.5H8.25C8.94036 3.5 9.5 4.05964 9.5 4.75V8.25C9.5 8.94036 8.94036 9.5 8.25 9.5H4.75C4.05964 9.5 3.5 8.94036 3.5 8.25V4.75Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M10.5 4.75C10.5 4.05964 11.0596 3.5 11.75 3.5H15.25C15.9404 3.5 16.5 4.05964 16.5 4.75V8.25C16.5 8.94036 15.9404 9.5 15.25 9.5H11.75C11.0596 9.5 10.5 8.94036 10.5 8.25V4.75Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M3.5 11.75C3.5 11.0596 4.05964 10.5 4.75 10.5H8.25C8.94036 10.5 9.5 11.0596 9.5 11.75V15.25C9.5 15.9404 8.94036 16.5 8.25 16.5H4.75C4.05964 16.5 3.5 15.9404 3.5 15.25V11.75Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M10.5 11.75C10.5 11.0596 11.0596 10.5 11.75 10.5H15.25C15.9404 10.5 16.5 11.0596 16.5 11.75V15.25C16.5 15.9404 15.9404 16.5 15.25 16.5H11.75C11.0596 16.5 10.5 15.9404 10.5 15.25V11.75Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+    </svg>
+  )
+}
+
+function MessageIcon({
+  size = 16,
+  className,
+}: {
+  size?: string | number
+  className?: string
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M4.25 5.25C4.25 4.55964 4.80964 4 5.5 4H14.5C15.1904 4 15.75 4.55964 15.75 5.25V11.25C15.75 11.9404 15.1904 12.5 14.5 12.5H9L5.75 15.25V12.5H5.5C4.80964 12.5 4.25 11.9404 4.25 11.25V5.25Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
 

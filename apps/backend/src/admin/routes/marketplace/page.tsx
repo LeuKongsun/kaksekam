@@ -1,5 +1,11 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { Button, Container, Heading, Table, Text, toast } from "@medusajs/ui"
+import {
+  EmptyState,
+  OpsPage,
+  OpsSection,
+  SignalCard,
+} from "../../components/marketplace-ops"
+import { Button, Heading, StatusBadge, Table, Text, toast } from "@medusajs/ui"
 import { useEffect, useMemo, useState } from "react"
 
 type MarketplaceMetrics = {
@@ -34,6 +40,29 @@ type MarketplaceMetrics = {
     new_inquiries: number
     unverified_sellers: number
   }
+  recent_listings: MarketplaceListingSummary[]
+}
+
+type MarketplaceListingSummary = {
+  id: string
+  product_id: string
+  title: string
+  handle: string
+  status:
+    | "draft"
+    | "pending_review"
+    | "active"
+    | "sold"
+    | "rejected"
+    | "expired"
+  category: string | null
+  location: string | null
+  created_at: string
+  seller: {
+    id: string
+    display_name: string
+    verification_status: "unverified" | "verified"
+  } | null
 }
 
 const emptyMetrics: MarketplaceMetrics = {
@@ -68,11 +97,40 @@ const emptyMetrics: MarketplaceMetrics = {
     new_inquiries: 0,
     unverified_sellers: 0,
   },
+  recent_listings: [],
+}
+
+const statusColor: Record<
+  MarketplaceListingSummary["status"],
+  "grey" | "orange" | "green" | "red"
+> = {
+  draft: "grey",
+  pending_review: "orange",
+  active: "green",
+  sold: "grey",
+  rejected: "red",
+  expired: "grey",
+}
+
+const statusLabel: Record<MarketplaceListingSummary["status"], string> = {
+  draft: "Draft",
+  pending_review: "Pending review",
+  active: "Live",
+  sold: "Sold",
+  rejected: "Rejected",
+  expired: "Expired",
 }
 
 const MarketplacePage = () => {
   const [data, setData] = useState<MarketplaceMetrics>(emptyMetrics)
   const [isLoading, setIsLoading] = useState(true)
+  const storefrontBase = useMemo(() => {
+    if (typeof window === "undefined") {
+      return "http://localhost:8000"
+    }
+
+    return window.location.origin.replace(":9000", ":8000")
+  }, [])
   const totalAttention =
     data.attention.pending_listings +
     data.attention.new_inquiries +
@@ -101,7 +159,50 @@ const MarketplacePage = () => {
         cta: "Review sellers",
       },
     ],
-    [data]
+    [data],
+  )
+  const flowItems = useMemo(
+    () => [
+      {
+        eyebrow: "Seller",
+        label: "Submit listing",
+        description: "Seller adds product, price, farm details, and photos.",
+        value: data.metrics.listings.total,
+        valueLabel: "total",
+        href: `${storefrontBase}/us/account/listings/new`,
+        cta: "Create test listing",
+      },
+      {
+        eyebrow: "Admin",
+        label: "Approve review",
+        description:
+          "Pending submissions stay hidden until moderation approves.",
+        value: data.metrics.listings.pending_review,
+        valueLabel: "pending",
+        href: "/app/listing-moderation",
+        cta: "Open moderation",
+      },
+      {
+        eyebrow: "Storefront",
+        label: "Buyer can see it",
+        description:
+          "Approval publishes the Medusa product and exposes it in store.",
+        value: data.metrics.listings.active,
+        valueLabel: "live",
+        href: `${storefrontBase}/us/store`,
+        cta: "View marketplace",
+      },
+      {
+        eyebrow: "Follow-up",
+        label: "Inquiry or save",
+        description: "Buyer actions create the next operational queues.",
+        value: data.metrics.inquiries.total,
+        valueLabel: "inquiries",
+        href: "/app/inquiries",
+        cta: "Review inquiries",
+      },
+    ],
+    [data, storefrontBase],
   )
 
   const loadMetrics = async () => {
@@ -129,60 +230,93 @@ const MarketplacePage = () => {
   }, [])
 
   return (
-    <div className="flex flex-col gap-y-6">
-      <Container className="divide-y p-0">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div>
-            <Heading>Marketplace overview</Heading>
-            <Text className="text-ui-fg-subtle" size="small">
-              Listings, sellers, inquiries, and saved marketplace activity.
-            </Text>
-          </div>
-          <div className="flex items-center gap-x-3">
+    <OpsPage
+      title="Marketplace command center"
+      subtitle="End-to-end view from seller submission to approved storefront listing."
+      actions={
+        <>
+          <div className="flex items-center rounded-md border border-ui-border-base bg-ui-bg-subtle px-3">
             <Text className="text-ui-fg-subtle" size="small">
               {totalAttention} needs attention
             </Text>
-            <Button
-              size="small"
-              variant="secondary"
-              onClick={() => void loadMetrics()}
-              isLoading={isLoading}
-            >
-              Refresh
-            </Button>
           </div>
-        </div>
+          <Button
+            size="small"
+            variant="secondary"
+            onClick={() => void loadMetrics()}
+            isLoading={isLoading}
+          >
+            Refresh
+          </Button>
+        </>
+      }
+    >
+      <OpsSection>
         <div className="grid grid-cols-1 gap-3 p-6 md:grid-cols-4">
-          <MetricCard label="Active listings" value={data.metrics.listings.active} />
-          <MetricCard
+          <SignalCard
+            label="Active listings"
+            value={data.metrics.listings.active}
+            tone="success"
+          />
+          <SignalCard
             label="Pending review"
             value={data.metrics.listings.pending_review}
+            tone={
+              data.metrics.listings.pending_review > 0 ? "attention" : "neutral"
+            }
           />
-          <MetricCard label="Verified sellers" value={data.metrics.sellers.verified} />
-          <MetricCard
+          <SignalCard
+            label="Verified sellers"
+            value={data.metrics.sellers.verified}
+            detail={`${data.metrics.sellers.total} total sellers`}
+          />
+          <SignalCard
             label="Reply rate"
             value={
               data.metrics.inquiries.reply_rate === null
                 ? "No history"
                 : `${data.metrics.inquiries.reply_rate}%`
             }
+            tone={
+              data.metrics.inquiries.reply_rate !== null &&
+              data.metrics.inquiries.reply_rate < 50
+                ? "danger"
+                : "neutral"
+            }
           />
         </div>
-      </Container>
+      </OpsSection>
 
-      <Container className="divide-y p-0">
-        <div className="px-6 py-4">
-          <Heading level="h2">Needs attention</Heading>
-          <Text className="text-ui-fg-subtle" size="small">
-            Marketplace operations ordered by moderation, inquiry, and seller
-            trust work.
-          </Text>
+      <OpsSection
+        title="Marketplace test flow"
+        subtitle="Use this path to prove a seller listing becomes a buyer-facing product."
+      >
+        <div className="grid grid-cols-1 gap-3 p-6 xl:grid-cols-4">
+          {flowItems.map((item, index) => (
+            <FlowStage
+              key={item.label}
+              index={index + 1}
+              eyebrow={item.eyebrow}
+              label={item.label}
+              description={item.description}
+              value={item.value}
+              valueLabel={item.valueLabel}
+              href={item.href}
+              cta={item.cta}
+            />
+          ))}
         </div>
+      </OpsSection>
+
+      <OpsSection
+        title="Needs attention"
+        subtitle="Queues that can block the marketplace flow."
+      >
         <div className="grid grid-cols-1 gap-3 p-6 md:grid-cols-3">
           {attentionItems.map((item) => (
             <a
               key={item.label}
-              className="rounded-md border border-ui-border-base p-4 transition-colors hover:border-ui-border-interactive"
+              className="rounded-md border border-ui-border-base p-4 transition-colors hover:border-ui-border-interactive hover:bg-ui-bg-subtle"
               href={item.href}
             >
               <div className="flex items-start justify-between gap-x-3">
@@ -202,69 +336,192 @@ const MarketplacePage = () => {
             </a>
           ))}
         </div>
-      </Container>
+      </OpsSection>
 
-      <Container className="divide-y p-0">
-        <div className="px-6 py-4">
-          <Heading level="h2">Operations queues</Heading>
-        </div>
-        <Table>
-          <Table.Body>
-            {attentionItems.map((item) => (
-              <Table.Row key={item.label}>
-                <Table.Cell>
-                  <Text weight="plus">{item.label}</Text>
-                </Table.Cell>
-                <Table.Cell>
-                  <Text>{item.value}</Text>
-                </Table.Cell>
-                <Table.Cell className="text-right">
-                  <a className="text-ui-fg-interactive" href={item.href}>
-                    {item.cta}
-                  </a>
-                </Table.Cell>
+      <OpsSection
+        title="Recent listing path"
+        subtitle="Latest seller submissions with moderation and storefront links."
+        actions={
+          <>
+            <Button size="small" variant="secondary" asChild>
+              <a href="/app/listing-moderation">Moderation queue</a>
+            </Button>
+            <Button size="small" variant="secondary" asChild>
+              <a href={`${storefrontBase}/us/store`}>Storefront</a>
+            </Button>
+          </>
+        }
+      >
+        {data.recent_listings.length === 0 ? (
+          <EmptyState
+            title={
+              isLoading ? "Loading marketplace listings..." : "No listings yet"
+            }
+            description="Recent seller submissions will appear here with links into moderation and the storefront."
+          />
+        ) : (
+          <Table>
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Listing</Table.HeaderCell>
+                <Table.HeaderCell>Seller</Table.HeaderCell>
+                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell>Where to test</Table.HeaderCell>
               </Table.Row>
-            ))}
-          </Table.Body>
-        </Table>
-      </Container>
+            </Table.Header>
+            <Table.Body>
+              {data.recent_listings.map((listing) => (
+                <Table.Row key={listing.id}>
+                  <Table.Cell>
+                    <div className="flex max-w-[340px] flex-col gap-y-1">
+                      <Text weight="plus">{listing.title}</Text>
+                      <Text className="text-ui-fg-subtle" size="small">
+                        {[listing.category, listing.location]
+                          .filter(Boolean)
+                          .join(" | ") || "No category or location"}
+                      </Text>
+                      <Text className="text-ui-fg-subtle" size="small">
+                        Submitted {formatDate(listing.created_at)}
+                      </Text>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex flex-col gap-y-1">
+                      <Text>
+                        {listing.seller?.display_name ?? "Unknown seller"}
+                      </Text>
+                      {listing.seller && (
+                        <Text className="text-ui-fg-subtle" size="small">
+                          {listing.seller.verification_status === "verified"
+                            ? "Verified seller"
+                            : "Unverified seller"}
+                        </Text>
+                      )}
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <StatusBadge color={statusColor[listing.status]}>
+                      {statusLabel[listing.status]}
+                    </StatusBadge>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex flex-wrap gap-2">
+                      {listing.status === "active" ? (
+                        <Button size="small" variant="secondary" asChild>
+                          <a
+                            href={`${storefrontBase}/us/products/${listing.handle}`}
+                          >
+                            Product page
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button size="small" variant="secondary" asChild>
+                          <a href="/app/listing-moderation">Review listing</a>
+                        </Button>
+                      )}
+                      <Button size="small" variant="transparent" asChild>
+                        <a href={`/app/products/${listing.product_id}`}>
+                          Admin product
+                        </a>
+                      </Button>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table>
+        )}
+      </OpsSection>
 
-      <Container className="divide-y p-0">
-        <div className="px-6 py-4">
-          <Heading level="h2">Marketplace totals</Heading>
-        </div>
+      <OpsSection title="Marketplace totals">
         <div className="grid grid-cols-1 gap-3 p-6 md:grid-cols-3">
-          <MetricCard label="Total listings" value={data.metrics.listings.total} />
-          <MetricCard label="Total sellers" value={data.metrics.sellers.total} />
-          <MetricCard label="Total inquiries" value={data.metrics.inquiries.total} />
-          <MetricCard label="Saved listings" value={data.metrics.saved.listings} />
-          <MetricCard label="Saved searches" value={data.metrics.saved.searches} />
-          <MetricCard
+          <SignalCard
+            label="Total listings"
+            value={data.metrics.listings.total}
+          />
+          <SignalCard
+            label="Total sellers"
+            value={data.metrics.sellers.total}
+          />
+          <SignalCard
+            label="Total inquiries"
+            value={data.metrics.inquiries.total}
+          />
+          <SignalCard
+            label="Saved listings"
+            value={data.metrics.saved.listings}
+          />
+          <SignalCard
+            label="Saved searches"
+            value={data.metrics.saved.searches}
+          />
+          <SignalCard
             label="Suspended sellers"
             value={data.metrics.sellers.suspended}
+            tone={data.metrics.sellers.suspended > 0 ? "danger" : "neutral"}
           />
         </div>
-      </Container>
-    </div>
+      </OpsSection>
+    </OpsPage>
   )
 }
 
-const MetricCard = ({
+const FlowStage = ({
+  index,
+  eyebrow,
   label,
+  description,
   value,
+  valueLabel,
+  href,
+  cta,
 }: {
+  index: number
+  eyebrow: string
   label: string
-  value: number | string
+  description: string
+  value: number
+  valueLabel: string
+  href: string
+  cta: string
 }) => (
-  <div className="rounded-md border border-ui-border-base p-4">
-    <Text className="text-ui-fg-subtle" size="small">
-      {label}
-    </Text>
-    <Text className="mt-2 text-ui-fg-base" size="xlarge" weight="plus">
-      {value}
-    </Text>
-  </div>
+  <a
+    className="flex min-h-[184px] flex-col justify-between rounded-md border border-ui-border-base p-4 transition-colors hover:border-ui-border-interactive hover:bg-ui-bg-subtle"
+    href={href}
+  >
+    <div>
+      <div className="flex items-center justify-between gap-x-3">
+        <Text className="text-ui-fg-subtle" size="small">
+          {index}. {eyebrow}
+        </Text>
+        <div className="flex h-8 min-w-8 items-center justify-center rounded-full border border-ui-border-base px-2">
+          <Text size="small" weight="plus">
+            {value}
+          </Text>
+        </div>
+      </div>
+      <Text className="mt-3" weight="plus">
+        {label}
+      </Text>
+      <Text className="mt-1 text-ui-fg-subtle" size="small">
+        {description}
+      </Text>
+    </div>
+    <div className="mt-5 flex items-center justify-between gap-x-3">
+      <Text className="text-ui-fg-subtle" size="small">
+        {valueLabel}
+      </Text>
+      <Text className="text-ui-fg-interactive" size="small">
+        {cta}
+      </Text>
+    </div>
+  </a>
 )
+
+const formatDate = (value: string) =>
+  new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+  }).format(new Date(value))
 
 export const config = defineRouteConfig({
   label: "Marketplace",

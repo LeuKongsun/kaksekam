@@ -9,7 +9,14 @@ export const metadata: Metadata = {
   description: "Create and manage your classifieds listings.",
 }
 
-export default async function ListingsPage() {
+const PAGE_SIZE = 10
+
+export default async function ListingsPage(props: {
+  searchParams: Promise<{
+    page?: string
+  }>
+}) {
+  const searchParams = await props.searchParams
   const customer = await retrieveCustomer()
 
   if (!customer) {
@@ -17,6 +24,37 @@ export default async function ListingsPage() {
   }
 
   const listings = await listSellerListings().catch(() => [])
+  const statusCounts = listings.reduce(
+    (counts, listing) => ({
+      ...counts,
+      [listing.status]: counts[listing.status] + 1,
+    }),
+    {
+      draft: 0,
+      pending_review: 0,
+      active: 0,
+      sold: 0,
+      rejected: 0,
+      expired: 0,
+    },
+  )
+  const totalPages = Math.max(1, Math.ceil(listings.length / PAGE_SIZE))
+  const requestedPage = Number(searchParams.page)
+  const page =
+    Number.isFinite(requestedPage) && requestedPage > 0
+      ? Math.min(requestedPage, totalPages)
+      : 1
+  const pageStart = (page - 1) * PAGE_SIZE
+  const paginatedListings = listings.slice(pageStart, pageStart + PAGE_SIZE)
 
-  return <SellerListings listings={listings} />
+  return (
+    <SellerListings
+      listings={paginatedListings}
+      totalListings={listings.length}
+      statusCounts={statusCounts}
+      page={page}
+      pageSize={PAGE_SIZE}
+      totalPages={totalPages}
+    />
+  )
 }

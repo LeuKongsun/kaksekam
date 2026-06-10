@@ -1,13 +1,12 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import {
-  Button,
-  Container,
-  Heading,
-  StatusBadge,
-  Table,
-  Text,
-  toast,
-} from "@medusajs/ui"
+  EmptyState,
+  FilterPanel,
+  OpsPage,
+  OpsSection,
+  SignalCard,
+} from "../../components/marketplace-ops"
+import { Button, StatusBadge, Table, Text, toast } from "@medusajs/ui"
 import { useEffect, useMemo, useState } from "react"
 
 type AdminInquiry = {
@@ -89,21 +88,22 @@ const InquiriesPage = () => {
     () => ({
       new: inquiries.filter((inquiry) => inquiry.status === "new").length,
       read: inquiries.filter((inquiry) => inquiry.status === "read").length,
-      replied: inquiries.filter((inquiry) => inquiry.status === "replied").length,
+      replied: inquiries.filter((inquiry) => inquiry.status === "replied")
+        .length,
       archived: inquiries.filter((inquiry) => inquiry.status === "archived")
         .length,
       stale: inquiries.filter(
         (inquiry) =>
           inquiry.status !== "replied" &&
           inquiry.status !== "archived" &&
-          getAgeInDays(inquiry.created_at) >= 2
+          getAgeInDays(inquiry.created_at) >= 2,
       ).length,
       unverifiedSeller: inquiries.filter(
         (inquiry) =>
-          inquiry.product?.seller?.verification_status === "unverified"
+          inquiry.product?.seller?.verification_status === "unverified",
       ).length,
     }),
-    [inquiries]
+    [inquiries],
   )
   const filteredInquiries = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase()
@@ -158,7 +158,7 @@ const InquiriesPage = () => {
 
   const updateInquiryStatus = async (
     inquiry: AdminInquiry,
-    status: AdminInquiry["status"]
+    status: AdminInquiry["status"],
   ) => {
     setUpdatingId(inquiry.id)
 
@@ -194,15 +194,10 @@ const InquiriesPage = () => {
   }, [])
 
   return (
-    <Container className="divide-y p-0">
-      <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <Heading>Marketplace inquiries</Heading>
-          <Text className="text-ui-fg-subtle" size="small">
-            {counts.new} new, {counts.read} read, {counts.replied} replied,{" "}
-            {counts.archived} archived
-          </Text>
-        </div>
+    <OpsPage
+      title="Marketplace inquiries"
+      subtitle={`${counts.new} new, ${counts.read} read, ${counts.replied} replied, ${counts.archived} archived.`}
+      actions={
         <Button
           size="small"
           variant="secondary"
@@ -211,208 +206,225 @@ const InquiriesPage = () => {
         >
           Refresh
         </Button>
-      </div>
-      <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-4">
-        <InquirySignal label="New" value={counts.new} />
-        <InquirySignal label="Stale open" value={counts.stale} />
-        <InquirySignal
-          label="Unverified sellers"
-          value={counts.unverifiedSeller}
-        />
-        <InquirySignal label="Replied" value={counts.replied} />
-      </div>
-      <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[1fr_180px_180px]">
-        <label className="flex flex-col gap-y-1">
-          <Text className="text-ui-fg-subtle" size="small">
-            Search
-          </Text>
-          <input
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Buyer, seller, listing, message"
-            className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+      }
+    >
+      <OpsSection>
+        <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-4">
+          <SignalCard
+            label="New"
+            value={counts.new}
+            tone={counts.new > 0 ? "attention" : "neutral"}
           />
-        </label>
-        <label className="flex flex-col gap-y-1">
-          <Text className="text-ui-fg-subtle" size="small">
-            Status
-          </Text>
-          <select
-            value={statusFilter}
-            onChange={(event) =>
-              setStatusFilter(event.target.value as InquiryStatusFilter)
-            }
-            className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
-          >
-            <option value="all">All statuses</option>
-            <option value="new">New</option>
-            <option value="read">Read</option>
-            <option value="replied">Replied</option>
-            <option value="archived">Archived</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-y-1">
-          <Text className="text-ui-fg-subtle" size="small">
-            Seller verification
-          </Text>
-          <select
-            value={sellerVerificationFilter}
-            onChange={(event) =>
-              setSellerVerificationFilter(
-                event.target.value as SellerVerificationFilter
-              )
-            }
-            className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
-          >
-            <option value="all">All sellers</option>
-            <option value="verified">Verified</option>
-            <option value="unverified">Unverified</option>
-          </select>
-        </label>
-      </div>
+          <SignalCard
+            label="Stale open"
+            value={counts.stale}
+            detail="2+ days old"
+            tone={counts.stale > 0 ? "danger" : "neutral"}
+          />
+          <SignalCard
+            label="Unverified sellers"
+            value={counts.unverifiedSeller}
+            tone={counts.unverifiedSeller > 0 ? "attention" : "neutral"}
+          />
+          <SignalCard label="Replied" value={counts.replied} tone="success" />
+        </div>
+      </OpsSection>
 
-      {inquiries.length === 0 ? (
-        <div className="px-6 py-10">
-          <Text className="text-ui-fg-subtle">
-            {isLoading ? "Loading inquiries..." : "No inquiries yet."}
-          </Text>
-        </div>
-      ) : filteredInquiries.length === 0 ? (
-        <div className="px-6 py-10">
-          <Text className="text-ui-fg-subtle">
-            No inquiries match the current filters.
-          </Text>
-        </div>
-      ) : (
-        <Table>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell>Inquiry</Table.HeaderCell>
-              <Table.HeaderCell>Listing</Table.HeaderCell>
-              <Table.HeaderCell>Seller</Table.HeaderCell>
-              <Table.HeaderCell>Status</Table.HeaderCell>
-              <Table.HeaderCell className="text-right">Actions</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {filteredInquiries.map((inquiry) => (
-              <Table.Row key={inquiry.id}>
-                <Table.Cell>
-                  <div className="flex max-w-[360px] flex-col gap-y-1">
-                    <Text weight="plus">{inquiry.buyer_name}</Text>
-                    <Text
-                      className={
-                        inquiry.status !== "replied" &&
-                        inquiry.status !== "archived" &&
-                        getAgeInDays(inquiry.created_at) >= 2
-                          ? "text-ui-fg-error"
-                          : "text-ui-fg-subtle"
-                      }
-                      size="small"
-                    >
-                      {formatInquiryAge(inquiry.created_at)}
-                    </Text>
-                    <Text className="text-ui-fg-subtle" size="small">
-                      {inquiry.buyer_email}
-                      {inquiry.buyer_phone ? ` | ${inquiry.buyer_phone}` : ""}
-                    </Text>
-                    <Text className="line-clamp-2 text-ui-fg-subtle" size="small">
-                      {inquiry.message}
-                    </Text>
-                  </div>
-                </Table.Cell>
-                <Table.Cell>
-                  <div className="flex max-w-[260px] flex-col gap-y-1">
-                    <Text>{inquiry.product?.title ?? "Listing unavailable"}</Text>
-                    <Text className="text-ui-fg-subtle" size="small">
-                      {inquiry.product?.listing?.status ?? "Unknown status"}
-                    </Text>
-                  </div>
-                </Table.Cell>
-                <Table.Cell>
-                  <div className="flex flex-col gap-y-1">
-                    <div className="flex items-center gap-x-2">
-                      <Text>
-                        {inquiry.product?.seller?.display_name ??
-                          "Unknown seller"}
+      <OpsSection
+        title="Buyer message queue"
+        subtitle="Track open buyer interest, seller responsiveness, and stale messages."
+      >
+        <FilterPanel>
+          <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[1fr_180px_180px]">
+            <label className="flex flex-col gap-y-1">
+              <Text className="text-ui-fg-subtle" size="small">
+                Search
+              </Text>
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Buyer, seller, listing, message"
+                className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+              />
+            </label>
+            <label className="flex flex-col gap-y-1">
+              <Text className="text-ui-fg-subtle" size="small">
+                Status
+              </Text>
+              <select
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(event.target.value as InquiryStatusFilter)
+                }
+                className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+              >
+                <option value="all">All statuses</option>
+                <option value="new">New</option>
+                <option value="read">Read</option>
+                <option value="replied">Replied</option>
+                <option value="archived">Archived</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-y-1">
+              <Text className="text-ui-fg-subtle" size="small">
+                Seller verification
+              </Text>
+              <select
+                value={sellerVerificationFilter}
+                onChange={(event) =>
+                  setSellerVerificationFilter(
+                    event.target.value as SellerVerificationFilter,
+                  )
+                }
+                className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+              >
+                <option value="all">All sellers</option>
+                <option value="verified">Verified</option>
+                <option value="unverified">Unverified</option>
+              </select>
+            </label>
+          </div>
+        </FilterPanel>
+
+        {inquiries.length === 0 ? (
+          <EmptyState
+            title={isLoading ? "Loading inquiries..." : "No inquiries yet"}
+            description="Buyer messages from storefront listing pages will appear here."
+          />
+        ) : filteredInquiries.length === 0 ? (
+          <EmptyState
+            title="No inquiries match"
+            description="Adjust search, inquiry status, or seller verification filters."
+          />
+        ) : (
+          <Table>
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Inquiry</Table.HeaderCell>
+                <Table.HeaderCell>Listing</Table.HeaderCell>
+                <Table.HeaderCell>Seller</Table.HeaderCell>
+                <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell className="text-right">
+                  Actions
+                </Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {filteredInquiries.map((inquiry) => (
+                <Table.Row key={inquiry.id}>
+                  <Table.Cell>
+                    <div className="flex max-w-[360px] flex-col gap-y-1">
+                      <Text weight="plus">{inquiry.buyer_name}</Text>
+                      <Text
+                        className={
+                          inquiry.status !== "replied" &&
+                          inquiry.status !== "archived" &&
+                          getAgeInDays(inquiry.created_at) >= 2
+                            ? "text-ui-fg-error"
+                            : "text-ui-fg-subtle"
+                        }
+                        size="small"
+                      >
+                        {formatInquiryAge(inquiry.created_at)}
                       </Text>
-                      {inquiry.product?.seller?.verification_status ===
-                        "verified" && (
-                        <StatusBadge color="green">Verified</StatusBadge>
+                      <Text className="text-ui-fg-subtle" size="small">
+                        {inquiry.buyer_email}
+                        {inquiry.buyer_phone ? ` | ${inquiry.buyer_phone}` : ""}
+                      </Text>
+                      <Text
+                        className="line-clamp-2 text-ui-fg-subtle"
+                        size="small"
+                      >
+                        {inquiry.message}
+                      </Text>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex max-w-[260px] flex-col gap-y-1">
+                      <Text>
+                        {inquiry.product?.title ?? "Listing unavailable"}
+                      </Text>
+                      <Text className="text-ui-fg-subtle" size="small">
+                        {inquiry.product?.listing?.status ?? "Unknown status"}
+                      </Text>
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex flex-col gap-y-1">
+                      <div className="flex items-center gap-x-2">
+                        <Text>
+                          {inquiry.product?.seller?.display_name ??
+                            "Unknown seller"}
+                        </Text>
+                        {inquiry.product?.seller?.verification_status ===
+                          "verified" && (
+                          <StatusBadge color="green">Verified</StatusBadge>
+                        )}
+                      </div>
+                      {inquiry.product?.seller?.handle && (
+                        <Text className="text-ui-fg-subtle" size="small">
+                          @{inquiry.product.seller.handle}
+                        </Text>
                       )}
                     </div>
-                    {inquiry.product?.seller?.handle && (
-                      <Text className="text-ui-fg-subtle" size="small">
-                        @{inquiry.product.seller.handle}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <StatusBadge color={statusColor[inquiry.status]}>
+                      {statusLabel[inquiry.status]}
+                    </StatusBadge>
+                    {inquiry.replied_at && (
+                      <Text className="mt-1 text-ui-fg-subtle" size="small">
+                        Replied{" "}
+                        {new Date(inquiry.replied_at).toLocaleDateString()}
                       </Text>
                     )}
-                  </div>
-                </Table.Cell>
-                <Table.Cell>
-                  <StatusBadge color={statusColor[inquiry.status]}>
-                    {statusLabel[inquiry.status]}
-                  </StatusBadge>
-                  {inquiry.replied_at && (
-                    <Text className="mt-1 text-ui-fg-subtle" size="small">
-                      Replied{" "}
-                      {new Date(inquiry.replied_at).toLocaleDateString()}
-                    </Text>
-                  )}
-                </Table.Cell>
-                <Table.Cell>
-                  <div className="flex min-w-[260px] justify-end gap-x-2">
-                    <Button
-                      size="small"
-                      variant="secondary"
-                      disabled={inquiry.status === "read"}
-                      isLoading={updatingId === inquiry.id}
-                      onClick={() => void updateInquiryStatus(inquiry, "read")}
-                    >
-                      Read
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="secondary"
-                      disabled={inquiry.status === "replied"}
-                      isLoading={updatingId === inquiry.id}
-                      onClick={() =>
-                        void updateInquiryStatus(inquiry, "replied")
-                      }
-                    >
-                      Replied
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="secondary"
-                      disabled={inquiry.status === "archived"}
-                      isLoading={updatingId === inquiry.id}
-                      onClick={() =>
-                        void updateInquiryStatus(inquiry, "archived")
-                      }
-                    >
-                      Archive
-                    </Button>
-                  </div>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table>
-      )}
-    </Container>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex min-w-[260px] justify-end gap-x-2">
+                      <Button
+                        size="small"
+                        variant="secondary"
+                        disabled={inquiry.status === "read"}
+                        isLoading={updatingId === inquiry.id}
+                        onClick={() =>
+                          void updateInquiryStatus(inquiry, "read")
+                        }
+                      >
+                        Read
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="secondary"
+                        disabled={inquiry.status === "replied"}
+                        isLoading={updatingId === inquiry.id}
+                        onClick={() =>
+                          void updateInquiryStatus(inquiry, "replied")
+                        }
+                      >
+                        Replied
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="secondary"
+                        disabled={inquiry.status === "archived"}
+                        isLoading={updatingId === inquiry.id}
+                        onClick={() =>
+                          void updateInquiryStatus(inquiry, "archived")
+                        }
+                      >
+                        Archive
+                      </Button>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table>
+        )}
+      </OpsSection>
+    </OpsPage>
   )
 }
-
-const InquirySignal = ({ label, value }: { label: string; value: number }) => (
-  <div className="rounded-md border border-ui-border-base p-4">
-    <Text className="text-ui-fg-subtle" size="small">
-      {label}
-    </Text>
-    <Text className="mt-2 text-ui-fg-base" size="xlarge" weight="plus">
-      {value}
-    </Text>
-  </div>
-)
 
 export const config = defineRouteConfig({
   label: "Marketplace inquiries",

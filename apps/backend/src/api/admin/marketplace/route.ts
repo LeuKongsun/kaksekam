@@ -6,13 +6,19 @@ import MarketplaceModuleService from "../../../modules/marketplace/service"
 
 type MarketplaceProduct = {
   id: string
+  title: string
+  handle: string
   listing?: {
     id: string
     status: string
     created_at: string
+    category: string | null
+    location: string | null
   } | null
   seller?: {
     id: string
+    display_name: string
+    verification_status: string
   } | null
 }
 
@@ -27,7 +33,19 @@ async function listMarketplaceProducts(query: any) {
   while (hasMoreProducts) {
     const { data, metadata } = await query.graph({
       entity: "product",
-      fields: ["id", "listing.id", "listing.status", "listing.created_at", "seller.id"],
+      fields: [
+        "id",
+        "title",
+        "handle",
+        "listing.id",
+        "listing.status",
+        "listing.created_at",
+        "listing.category",
+        "listing.location",
+        "seller.id",
+        "seller.display_name",
+        "seller.verification_status",
+      ],
       pagination: {
         skip,
         take: PAGE_SIZE,
@@ -35,7 +53,7 @@ async function listMarketplaceProducts(query: any) {
     })
 
     products.push(
-      ...(data as MarketplaceProduct[]).filter((product) => product.listing)
+      ...(data as MarketplaceProduct[]).filter((product) => product.listing),
     )
 
     totalCount = metadata?.count
@@ -59,6 +77,20 @@ const getListingStatusCounts = (products: MarketplaceProduct[]) =>
     return acc
   }, {})
 
+const getRecentListings = (products: MarketplaceProduct[]) =>
+  [...products]
+    .sort((left, right) => {
+      const leftTime = left.listing?.created_at
+        ? new Date(left.listing.created_at).getTime()
+        : 0
+      const rightTime = right.listing?.created_at
+        ? new Date(right.listing.created_at).getTime()
+        : 0
+
+      return rightTime - leftTime
+    })
+    .slice(0, 6)
+
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const marketplaceService: MarketplaceModuleService =
@@ -73,10 +105,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     ])
   const listingStatusCounts = getListingStatusCounts(products)
   const newInquiryCount = inquiries.filter(
-    (inquiry) => inquiry.status === "new"
+    (inquiry) => inquiry.status === "new",
   ).length
   const repliedInquiryCount = inquiries.filter(
-    (inquiry) => inquiry.status === "replied"
+    (inquiry) => inquiry.status === "replied",
   ).length
 
   res.json({
@@ -95,7 +127,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         suspended: sellers.filter((seller) => seller.status === "suspended")
           .length,
         verified: sellers.filter(
-          (seller) => seller.verification_status === "verified"
+          (seller) => seller.verification_status === "verified",
         ).length,
       },
       inquiries: {
@@ -116,8 +148,25 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       pending_listings: listingStatusCounts.pending_review ?? 0,
       new_inquiries: newInquiryCount,
       unverified_sellers: sellers.filter(
-        (seller) => seller.verification_status !== "verified"
+        (seller) => seller.verification_status !== "verified",
       ).length,
     },
+    recent_listings: getRecentListings(products).map((product) => ({
+      id: product.listing!.id,
+      product_id: product.id,
+      title: product.title,
+      handle: product.handle,
+      status: product.listing!.status,
+      category: product.listing!.category,
+      location: product.listing!.location,
+      created_at: product.listing!.created_at,
+      seller: product.seller
+        ? {
+            id: product.seller.id,
+            display_name: product.seller.display_name,
+            verification_status: product.seller.verification_status,
+          }
+        : null,
+    })),
   })
 }

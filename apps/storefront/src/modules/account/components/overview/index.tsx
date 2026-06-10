@@ -1,6 +1,9 @@
 import { HttpTypes } from "@medusajs/types"
 import type { ProductSeller } from "@lib/data/products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Eye from "@modules/common/icons/eye"
+import Package from "@modules/common/icons/package"
+import User from "@modules/common/icons/user"
 
 type OverviewProps = {
   customer: HttpTypes.StoreCustomer | null
@@ -21,154 +24,153 @@ const Overview = ({ customer, seller, metrics }: OverviewProps) => {
   const sellerCompletion = getSellerProfileCompletion(seller)
   const primaryActions = [
     {
-      title: "Post a listing",
-      description:
-        "Create or edit farming product, livestock, supply, or service listings.",
+      title: "Listings",
       href: "/account/listings",
-      cta: "Manage listings",
+      icon: Package,
     },
     {
-      title: "Reply to inquiries",
-      description: "Review buyer messages and keep listing conversations moving.",
+      title: "Messages",
       href: "/account/inquiries",
-      cta: "Open inbox",
+      icon: MessageIcon,
     },
     {
-      title: "Browse as a buyer",
-      description: "Search active marketplace listings and save useful filters.",
+      title: "Browse",
       href: "/store",
-      cta: "Browse listings",
+      icon: Eye,
     },
   ]
   const stats = [
     {
-      label: "My listings",
+      label: "Listings",
       value: metrics.listings,
       detail: `${metrics.activeListings} active, ${metrics.pendingListings} pending`,
+      icon: Package,
     },
     {
-      label: "Seller inquiries",
+      label: "Inbox",
       value: metrics.sellerInquiries,
       detail:
         metrics.newSellerInquiries > 0
           ? `${metrics.newSellerInquiries} new`
-          : "No new messages",
+          : "All caught up",
+      icon: MessageIcon,
     },
     {
-      label: "Sent inquiries",
+      label: "Sent",
       value: metrics.buyerInquiries,
-      detail: "Messages sent to sellers",
+      detail: "To sellers",
+      icon: MessageIcon,
     },
     {
-      label: "Saved activity",
+      label: "Saved",
       value: metrics.savedListings + metrics.savedSearches,
       detail: `${metrics.savedListings} listings, ${metrics.savedSearches} searches`,
+      icon: Eye,
     },
   ]
 
   return (
-    <div className="flex flex-col gap-y-6" data-testid="overview-page-wrapper">
-      <div className="rounded-md border border-gray-200 bg-white p-5">
-        <div className="flex flex-col gap-y-2 small:flex-row small:items-start small:justify-between">
+    <div className="w-full" data-testid="overview-page-wrapper">
+      <div className="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-3 small:flex-row small:items-center small:justify-between">
           <div>
-            <h2 className="text-xl-semi">Marketplace overview</h2>
-            <p className="mt-1 text-base-regular text-ui-fg-subtle">
-              Track your seller profile, listings, saved searches, and
-              inquiries from one workspace.
+            <h2
+              className="text-xl-semi"
+              data-testid="welcome-message"
+              data-value={customer?.first_name}
+            >
+              Overview
+            </h2>
+            <p className="mt-1 text-small-regular text-ui-fg-subtle">
+              Hi {customer?.first_name}
             </p>
           </div>
-          <span data-testid="welcome-message" data-value={customer?.first_name}>
-            Hello {customer?.first_name}
-          </span>
-        </div>
-        <div className="mt-4 text-small-regular text-ui-fg-subtle">
-          Signed in as:{" "}
-          <span
-            className="font-semibold"
-            data-testid="customer-email"
-            data-value={customer?.email}
-          >
-            {customer?.email}
-          </span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 small:grid-cols-2 large:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-md border border-gray-200 bg-white p-4"
-          >
-            <div className="text-small-regular text-ui-fg-subtle">
-              {stat.label}
-            </div>
-            <div className="mt-2 text-3xl-semi text-ui-fg-base">
-              {stat.value}
-            </div>
-            <div className="mt-1 text-small-regular text-ui-fg-subtle">
-              {stat.detail}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-3">
-        {primaryActions.map((action) => (
-          <div
-            key={action.href}
-            className="flex min-h-[180px] flex-col justify-between rounded-md border border-gray-200 bg-white p-5"
-          >
-            <div>
-              <h3 className="text-large-semi">{action.title}</h3>
-              <p className="mt-2 text-small-regular text-ui-fg-subtle">
-                {action.description}
-              </p>
-            </div>
-            <LocalizedClientLink
-              href={action.href}
-              className="mt-5 text-base-semi text-ui-fg-base hover:text-ui-fg-interactive"
+          <div className="text-small-regular text-ui-fg-subtle small:text-right">
+            <span
+              className="block text-base-semi text-ui-fg-base"
+              data-testid="customer-email"
+              data-value={customer?.email}
             >
-              {action.cta}
+              {customer?.email}
+            </span>
+            Signed in
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-gray-200 pt-5">
+          <div className="flex flex-wrap gap-2">
+            {primaryActions.map((action) => {
+              const Icon = action.icon
+
+              return (
+                <LocalizedClientLink
+                  key={action.href}
+                  href={action.href}
+                  className="inline-flex h-9 items-center gap-x-2 rounded-md border border-gray-200 px-3 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base hover:bg-gray-50"
+                >
+                  <Icon size={15} />
+                  {action.title}
+                </LocalizedClientLink>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-gray-200 pt-5">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 small:grid-cols-4">
+            {stats.map((stat) => (
+              <div
+                key={stat.label}
+                className="min-w-0"
+              >
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[11px] font-medium uppercase text-ui-fg-subtle">
+                    {stat.label}
+                  </span>
+                  <span className="text-xl-semi text-ui-fg-base">
+                    {stat.value}
+                  </span>
+                </div>
+                <div className="mt-0.5 truncate text-small-regular text-ui-fg-subtle">
+                  {stat.detail}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-gray-200 pt-5">
+          <div className="flex flex-col gap-4 small:flex-row small:items-center small:justify-between">
+            <div>
+              <h3 className="text-large-semi">Seller profile</h3>
+            </div>
+            <p className="text-small-regular text-ui-fg-subtle">
+              <span
+                className="text-xl-semi text-ui-fg-base"
+                data-testid="seller-profile-completion"
+                data-value={sellerCompletion}
+              >
+                {sellerCompletion}%
+              </span>{" "}
+              complete
+            </p>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <LocalizedClientLink
+              href="/account/seller-profile"
+              className="inline-flex items-center gap-x-2 text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
+            >
+              <User size={14} />
+              Profile
+            </LocalizedClientLink>
+            <LocalizedClientLink
+              href="/account/saved"
+              className="inline-flex items-center gap-x-2 text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
+            >
+              <Eye size={14} />
+              Saved
             </LocalizedClientLink>
           </div>
-        ))}
-      </div>
-
-      <div className="rounded-md border border-gray-200 bg-white p-5">
-        <div className="flex flex-col gap-y-3 small:flex-row small:items-center small:justify-between">
-          <div>
-            <h3 className="text-large-semi">Seller profile readiness</h3>
-            <p className="mt-1 text-small-regular text-ui-fg-subtle">
-              A complete seller profile helps buyers understand who they are
-              contacting before they send an inquiry.
-            </p>
-          </div>
-          <div className="text-left small:text-right">
-            <div
-              className="text-3xl-semi leading-none"
-              data-testid="seller-profile-completion"
-              data-value={sellerCompletion}
-            >
-              {sellerCompletion}%
-            </div>
-            <div className="mt-1 text-small-regular uppercase text-ui-fg-subtle">
-              complete
-            </div>
-          </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <LocalizedClientLink
-            href="/account/seller-profile"
-            className="rounded-full border border-gray-300 px-4 py-2 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
-          >
-            Manage seller profile
-          </LocalizedClientLink>
-          <LocalizedClientLink
-            href="/account/saved"
-            className="rounded-full border border-gray-300 px-4 py-2 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
-          >
-            View saved activity
-          </LocalizedClientLink>
         </div>
       </div>
     </div>
@@ -191,6 +193,33 @@ const getSellerProfileCompletion = (seller: ProductSeller | null) => {
   const completed = fields.filter(Boolean).length
 
   return Math.round((completed / fields.length) * 100)
+}
+
+function MessageIcon({
+  size = 16,
+  className,
+}: {
+  size?: string | number
+  className?: string
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M4.25 5.25C4.25 4.55964 4.80964 4 5.5 4H14.5C15.1904 4 15.75 4.55964 15.75 5.25V11.25C15.75 11.9404 15.1904 12.5 14.5 12.5H9L5.75 15.25V12.5H5.5C4.80964 12.5 4.25 11.9404 4.25 11.25V5.25Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
 }
 
 export default Overview

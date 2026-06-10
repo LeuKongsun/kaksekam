@@ -32,7 +32,7 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
             conversation moving.
           </p>
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-3 small:grid-cols-4">
+        <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 border-y border-gray-200 py-3">
           <InquirySignal label="New" value={newCount} />
           <InquirySignal label="Open" value={activeCount} />
           <InquirySignal label="Replied" value={repliedCount} />
@@ -45,171 +45,13 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
           No inquiries yet.
         </div>
       ) : (
-        <div className="divide-y divide-gray-200 rounded-md border border-gray-200 bg-white">
-          {visibleInquiries.map((inquiry) => (
-            <div
-              key={inquiry.id}
-              className={`grid grid-cols-1 gap-4 p-4 small:grid-cols-[88px_1fr] ${
-                inquiry.status === "new" ? "bg-[#fff8f6]" : "bg-white"
-              }`}
-            >
-              <InquiryListingThumb inquiry={inquiry} />
-              <div className="grid grid-cols-1 gap-3">
-                <div className="flex flex-col gap-y-1 small:flex-row small:items-start small:justify-between">
-                  <div>
-                    <InquiryListingTitle inquiry={inquiry} />
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <div className="text-base-semi">{inquiry.buyer_name}</div>
-                      <StatusBadge status={inquiry.status} />
-                    </div>
-                    <div className="text-small-regular text-ui-fg-subtle">
-                      {inquiry.buyer_email}
-                      {inquiry.buyer_phone ? ` | ${inquiry.buyer_phone}` : ""}
-                    </div>
-                  </div>
-                  <div className="text-small-regular text-ui-fg-subtle">
-                    {new Date(inquiry.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-                <div className="rounded-md border border-gray-200 bg-white p-3">
-                  <div className="mb-1 text-[11px] font-medium uppercase text-ui-fg-subtle">
-                    Buyer message
-                  </div>
-                  <p className="whitespace-pre-line text-small-regular text-ui-fg-base">
-                  {inquiry.message}
-                  </p>
-                </div>
-                {inquiry.replied_at && (
-                  <p className="text-small-regular text-ui-fg-subtle">
-                    Marked replied on{" "}
-                    {new Date(inquiry.replied_at).toLocaleDateString()}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  <a
-                    href={`mailto:${inquiry.buyer_email}?subject=${encodeURIComponent(
-                      `Re: ${inquiry.product?.title ?? "Your listing inquiry"}`
-                    )}`}
-                    className="rounded-md bg-ui-fg-base px-3 py-1.5 text-small-semi text-white transition-colors hover:bg-ui-fg-subtle"
-                  >
-                    Reply by email
-                  </a>
-                  {inquiry.buyer_phone && (
-                    <a
-                      href={`tel:${inquiry.buyer_phone.replace(/[^\d+]/g, "")}`}
-                      className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
-                    >
-                      Call
-                    </a>
-                  )}
-                  {inquiry.status === "new" && (
-                    <form
-                      action={updateSellerInquiryStatus.bind(
-                        null,
-                        inquiry.id,
-                        "read"
-                      )}
-                    >
-                      <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
-                        Mark read
-                      </button>
-                    </form>
-                  )}
-                  {(inquiry.status === "read" ||
-                    inquiry.status === "replied") && (
-                    <form
-                      action={updateSellerInquiryStatus.bind(
-                        null,
-                        inquiry.id,
-                        "new"
-                      )}
-                    >
-                      <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
-                        Mark new
-                      </button>
-                    </form>
-                  )}
-                  {inquiry.status !== "replied" && (
-                    <form
-                      action={updateSellerInquiryStatus.bind(
-                        null,
-                        inquiry.id,
-                        "replied"
-                      )}
-                    >
-                      <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
-                        Mark replied
-                      </button>
-                    </form>
-                  )}
-                  <form
-                    action={updateSellerInquiryStatus.bind(
-                      null,
-                      inquiry.id,
-                      "archived"
-                    )}
-                  >
-                    <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
-                      Archive
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <SellerInquiryTable inquiries={visibleInquiries} />
       )}
 
       {archivedInquiries.length > 0 && (
         <div className="mt-8">
           <h2 className="mb-3 text-base-semi">Archived</h2>
-          <div className="divide-y divide-gray-200 rounded-md border border-gray-200 bg-white">
-            {archivedInquiries.map((inquiry) => (
-              <div
-                key={inquiry.id}
-                className="grid grid-cols-1 gap-4 p-4 small:grid-cols-[88px_1fr]"
-              >
-                <InquiryListingThumb inquiry={inquiry} />
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="flex flex-col gap-y-1 small:flex-row small:items-start small:justify-between">
-                    <div>
-                      <InquiryListingTitle inquiry={inquiry} />
-                      <div className="mt-2 text-base-semi">
-                        {inquiry.buyer_name}
-                      </div>
-                      <div className="text-small-regular text-ui-fg-subtle">
-                        {inquiry.buyer_email}
-                        {inquiry.buyer_phone ? ` | ${inquiry.buyer_phone}` : ""}
-                      </div>
-                    </div>
-                    <div className="text-small-regular text-ui-fg-subtle">
-                      {new Date(inquiry.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <p className="line-clamp-2 whitespace-pre-line text-small-regular text-ui-fg-subtle">
-                    {inquiry.message}
-                  </p>
-                  {inquiry.replied_at && (
-                    <p className="text-small-regular text-ui-fg-subtle">
-                      Marked replied on{" "}
-                      {new Date(inquiry.replied_at).toLocaleDateString()}
-                    </p>
-                  )}
-                  <form
-                    action={updateSellerInquiryStatus.bind(
-                      null,
-                      inquiry.id,
-                      "read"
-                    )}
-                  >
-                    <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
-                      Restore
-                    </button>
-                  </form>
-                </div>
-              </div>
-            ))}
-          </div>
+          <SellerInquiryTable inquiries={archivedInquiries} archived />
         </div>
       )}
     </div>
@@ -217,11 +59,154 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
 }
 
 const InquirySignal = ({ label, value }: { label: string; value: number }) => (
-  <div className="rounded-md border border-gray-200 bg-white p-4">
-    <div className="text-[11px] font-medium uppercase text-ui-fg-subtle">
+  <div className="flex items-baseline gap-x-2">
+    <span className="text-[11px] font-medium uppercase text-ui-fg-subtle">
       {label}
+    </span>
+    <span className="text-base-semi text-ui-fg-base">{value}</span>
+  </div>
+)
+
+const SellerInquiryTable = ({
+  inquiries,
+  archived = false,
+}: {
+  inquiries: SellerInquiry[]
+  archived?: boolean
+}) => (
+  <div className="w-full max-w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
+    <div className="overflow-x-auto">
+      <table className="w-full table-fixed border-collapse text-left">
+        <thead className="bg-ui-fg-base">
+          <tr className="text-[11px] font-medium uppercase text-white">
+            <th className="w-[28%] px-3 py-4">Listing</th>
+            <th className="w-[20%] px-3 py-4">Buyer</th>
+            <th className="w-[27%] px-3 py-4">Message</th>
+            <th className="w-[11%] px-3 py-4">Status</th>
+            <th className="w-[14%] px-3 py-4 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {inquiries.map((inquiry) => (
+            <SellerInquiryRow
+              key={inquiry.id}
+              inquiry={inquiry}
+              archived={archived}
+            />
+          ))}
+        </tbody>
+      </table>
     </div>
-    <div className="mt-1 text-xl-semi text-ui-fg-base">{value}</div>
+  </div>
+)
+
+const SellerInquiryRow = ({
+  inquiry,
+  archived,
+}: {
+  inquiry: SellerInquiry
+  archived: boolean
+}) => (
+  <tr className={inquiry.status === "new" ? "bg-[#fff8f6]" : "bg-white"}>
+    <td className="px-3 py-4 align-middle">
+      <div className="flex min-w-0 gap-3">
+        <div className="h-12 w-12 shrink-0">
+          <InquiryListingThumb inquiry={inquiry} />
+        </div>
+        <InquiryListingTitle inquiry={inquiry} />
+      </div>
+    </td>
+    <td className="px-3 py-4 align-middle">
+      <div className="text-base-semi text-ui-fg-base">{inquiry.buyer_name}</div>
+      <div className="break-words text-small-regular text-ui-fg-subtle">
+        {inquiry.buyer_email}
+      </div>
+      {inquiry.buyer_phone && (
+        <div className="text-small-regular text-ui-fg-subtle">
+          {inquiry.buyer_phone}
+        </div>
+      )}
+    </td>
+    <td className="px-3 py-4 align-middle">
+      <p className="line-clamp-2 whitespace-pre-line text-small-regular text-ui-fg-base">
+        {inquiry.message}
+      </p>
+      <div className="mt-1 text-small-regular text-ui-fg-subtle">
+        {new Date(inquiry.created_at).toLocaleDateString()}
+      </div>
+    </td>
+    <td className="px-3 py-4 align-middle">
+      <StatusBadge status={inquiry.status} />
+    </td>
+    <td className="px-3 py-4 align-middle">
+      <SellerInquiryActions inquiry={inquiry} archived={archived} />
+    </td>
+  </tr>
+)
+
+const SellerInquiryActions = ({
+  inquiry,
+  archived,
+}: {
+  inquiry: SellerInquiry
+  archived: boolean
+}) => (
+  <div className="flex flex-wrap justify-end gap-2">
+    <a
+      href={`mailto:${inquiry.buyer_email}?subject=${encodeURIComponent(
+        `Re: ${inquiry.product?.title ?? "Your listing inquiry"}`
+      )}`}
+      className="rounded-md bg-ui-fg-base px-3 py-1.5 text-small-semi text-white transition-colors hover:bg-ui-fg-subtle"
+    >
+      Reply
+    </a>
+    {inquiry.buyer_phone && (
+      <a
+        href={`tel:${inquiry.buyer_phone.replace(/[^\d+]/g, "")}`}
+        className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
+      >
+        Call
+      </a>
+    )}
+    {archived ? (
+      <form action={updateSellerInquiryStatus.bind(null, inquiry.id, "read")}>
+        <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
+          Restore
+        </button>
+      </form>
+    ) : (
+      <>
+        {inquiry.status === "new" ? (
+          <form action={updateSellerInquiryStatus.bind(null, inquiry.id, "read")}>
+            <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
+              Read
+            </button>
+          </form>
+        ) : (
+          <form action={updateSellerInquiryStatus.bind(null, inquiry.id, "new")}>
+            <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
+              New
+            </button>
+          </form>
+        )}
+        {inquiry.status !== "replied" && (
+          <form
+            action={updateSellerInquiryStatus.bind(null, inquiry.id, "replied")}
+          >
+            <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
+              Replied
+            </button>
+          </form>
+        )}
+        <form
+          action={updateSellerInquiryStatus.bind(null, inquiry.id, "archived")}
+        >
+          <button className="rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base">
+            Archive
+          </button>
+        </form>
+      </>
+    )}
   </div>
 )
 

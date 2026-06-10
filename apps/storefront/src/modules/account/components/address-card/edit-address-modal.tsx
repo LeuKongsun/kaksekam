@@ -19,12 +19,14 @@ type EditAddressProps = {
   region: HttpTypes.StoreRegion
   address: HttpTypes.StoreCustomerAddress
   isActive?: boolean
+  variant?: "card" | "table"
 }
 
 const EditAddress: React.FC<EditAddressProps> = ({
   region,
   address,
   isActive = false,
+  variant = "card",
 }) => {
   const [removing, setRemoving] = useState(false)
   const [successState, setSuccessState] = useState(false)
@@ -59,65 +61,73 @@ const EditAddress: React.FC<EditAddressProps> = ({
     setRemoving(false)
   }
 
+  const actions = (
+    <div className="flex items-center justify-end gap-x-4">
+      <button
+        className="inline-flex items-center gap-x-2 text-small-regular text-ui-fg-base hover:text-ui-fg-interactive"
+        onClick={open}
+        data-testid="address-edit-button"
+      >
+        <Edit />
+        Edit
+      </button>
+      <button
+        className="inline-flex items-center gap-x-2 text-small-regular text-ui-fg-base hover:text-rose-600"
+        onClick={removeAddress}
+        data-testid="address-delete-button"
+      >
+        {removing ? <Spinner /> : <Trash />}
+        Remove
+      </button>
+    </div>
+  )
+
   return (
     <>
-      <div
-        className={clx(
-          "border rounded-rounded p-5 min-h-[220px] h-full w-full flex flex-col justify-between transition-colors",
-          {
-            "border-gray-900": isActive,
-          }
-        )}
-        data-testid="address-container"
-      >
-        <div className="flex flex-col">
-          <Heading
-            className="text-left text-base-semi"
-            data-testid="address-name"
-          >
-            {address.first_name} {address.last_name}
-          </Heading>
-          {address.company && (
-            <Text
-              className="txt-compact-small text-ui-fg-base"
-              data-testid="address-company"
-            >
-              {address.company}
-            </Text>
+      {variant === "card" ? (
+        <div
+          className={clx(
+            "border rounded-rounded p-5 min-h-[220px] h-full w-full flex flex-col justify-between transition-colors",
+            {
+              "border-gray-900": isActive,
+            }
           )}
-          <Text className="flex flex-col text-left text-base-regular mt-2">
-            <span data-testid="address-address">
-              {address.address_1}
-              {address.address_2 && <span>, {address.address_2}</span>}
-            </span>
-            <span data-testid="address-postal-city">
-              {address.postal_code}, {address.city}
-            </span>
-            <span data-testid="address-province-country">
-              {address.province && `${address.province}, `}
-              {address.country_code?.toUpperCase()}
-            </span>
-          </Text>
+          data-testid="address-container"
+        >
+          <div className="flex flex-col">
+            <Heading
+              className="text-left text-base-semi"
+              data-testid="address-name"
+            >
+              {address.first_name} {address.last_name}
+            </Heading>
+            {address.company && (
+              <Text
+                className="txt-compact-small text-ui-fg-base"
+                data-testid="address-company"
+              >
+                {address.company}
+              </Text>
+            )}
+            <Text className="flex flex-col text-left text-base-regular mt-2">
+              <span data-testid="address-address">
+                {address.address_1}
+                {address.address_2 && <span>, {address.address_2}</span>}
+              </span>
+              <span data-testid="address-postal-city">
+                {address.postal_code}, {address.city}
+              </span>
+              <span data-testid="address-province-country">
+                {address.province && `${address.province}, `}
+                {address.country_code?.toUpperCase()}
+              </span>
+            </Text>
+          </div>
+          {actions}
         </div>
-        <div className="flex items-center gap-x-4">
-          <button
-            className="text-small-regular text-ui-fg-base flex items-center gap-x-2"
-            onClick={open}
-            data-testid="address-edit-button"
-          >
-            <Edit />
-            Edit
-          </button>
-          <button
-            className="text-small-regular text-ui-fg-base flex items-center gap-x-2"
-            onClick={removeAddress}
-            data-testid="address-delete-button"
-          >
-            {removing ? <Spinner /> : <Trash />}
-            Remove
-          </button>
-        </div>
-      </div>
+      ) : (
+        actions
+      )}
 
       <Modal isOpen={state} close={close} data-testid="edit-address-modal">
         <Modal.Title>

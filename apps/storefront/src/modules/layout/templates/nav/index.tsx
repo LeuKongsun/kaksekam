@@ -1,15 +1,17 @@
 import { listLocales } from "@lib/data/locales"
 import { getLocale } from "@lib/data/locale-actions"
+import { retrieveCustomer } from "@lib/data/customer"
 import { listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import SideMenu from "@modules/layout/components/side-menu"
 
 export default async function Nav() {
-  const [regions, locales, currentLocale] = await Promise.all([
+  const [regions, locales, currentLocale, customer] = await Promise.all([
     listRegions().then((regions: StoreRegion[]) => regions),
     listLocales(),
     getLocale(),
+    retrieveCustomer().catch(() => null),
   ])
 
   return (
@@ -17,8 +19,12 @@ export default async function Nav() {
       <header className="relative h-16 mx-auto border-b duration-200 bg-white border-ui-border-base">
         <nav className="content-container txt-xsmall-plus text-ui-fg-subtle flex items-center justify-between w-full h-full text-small-regular">
           <div className="flex flex-1 basis-0 items-center gap-5 h-full">
-            <div className="h-full">
-              <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} />
+            <div className="h-full small:hidden">
+              <SideMenu
+                regions={regions}
+                locales={locales}
+                currentLocale={currentLocale}
+              />
             </div>
             <LocalizedClientLink
               href="/"
@@ -42,13 +48,13 @@ export default async function Nav() {
               href="/account/listings"
               data-testid="nav-post-link"
             >
-              Post
+              Sell
             </LocalizedClientLink>
             <LocalizedClientLink
               className="hover:text-ui-fg-base"
               href="/account/inquiries"
             >
-              Inquiries
+              Messages
             </LocalizedClientLink>
           </div>
 
@@ -58,7 +64,7 @@ export default async function Nav() {
               href="/account"
               data-testid="nav-account-link"
             >
-              Sign in
+              {customer ? "Account" : "Sign in"}
             </LocalizedClientLink>
           </div>
         </nav>

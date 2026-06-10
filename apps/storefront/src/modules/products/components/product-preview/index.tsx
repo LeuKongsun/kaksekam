@@ -32,16 +32,13 @@ export default async function ProductPreview({
     product.listing?.quantity && product.listing?.unit
       ? `${product.listing.quantity} ${product.listing.unit}`
       : product.listing?.quantity,
-    product.listing?.condition,
-    product.listing?.availability,
   ].filter(Boolean)
   const secondaryDetails = [
-    product.listing?.variety,
-    product.listing?.production_method,
-    product.listing?.breed,
-    product.listing?.brand,
-    product.listing?.service_area,
+    product.listing?.availability,
+    product.listing?.condition,
   ].filter(Boolean)
+  const cardDescription =
+    product.description || secondaryDetails.slice(0, 2).join(" · ")
 
   return (
     <LocalizedClientLink href={`/products/${product.handle}`} className="group">
@@ -50,7 +47,7 @@ export default async function ProductPreview({
         data-testid="product-wrapper"
       >
         {product.listing?.category && (
-          <div className="absolute left-3 top-3 z-10 rounded-full bg-white/95 px-3 py-1 text-small-semi text-ui-fg-base shadow-sm backdrop-blur">
+          <div className="absolute left-3 top-3 z-10 rounded-full bg-white/95 px-3 py-1 text-small-semi text-ui-fg-base shadow-sm">
             {product.listing.category}
           </div>
         )}
@@ -61,44 +58,34 @@ export default async function ProductPreview({
           isFeatured={isFeatured}
           className="rounded-none p-0 shadow-none"
         />
-        <div className="flex min-h-[168px] flex-col gap-2 p-4">
-          <div className="flex items-start justify-between gap-x-3">
-            <Text
-              className="line-clamp-2 text-base-semi text-ui-fg-base small:text-[15px]"
-              data-testid="product-title"
-            >
-              {product.title}
-            </Text>
-            <span className="min-w-fit rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium uppercase text-green-700">
-              Active
-            </span>
-          </div>
+        <div className="flex min-h-[136px] flex-col gap-2 p-3 small:p-4">
+          <Text
+            className="line-clamp-2 text-base-semi text-ui-fg-base small:text-[15px]"
+            data-testid="product-title"
+          >
+            {product.title}
+          </Text>
           {listingDetails.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {listingDetails.slice(0, 4).map((detail) => (
+            <div className="flex flex-wrap gap-1.5">
+              {listingDetails.slice(0, 2).map((detail) => (
                 <span
                   key={detail}
-                  className="rounded-full bg-gray-100 px-2 py-1 text-small-regular text-ui-fg-subtle"
+                  className="rounded-full bg-gray-100 px-2 py-0.5 text-small-regular text-ui-fg-subtle"
                 >
                   {detail}
                 </span>
               ))}
             </div>
           )}
-          {product.description && (
-            <p className="line-clamp-2 text-small-regular text-ui-fg-subtle">
-              {product.description}
-            </p>
-          )}
-          {secondaryDetails.length > 0 && (
+          {cardDescription && (
             <p className="line-clamp-1 text-small-regular text-ui-fg-subtle">
-              {secondaryDetails.join(" · ")}
+              {cardDescription}
             </p>
           )}
-          <div className="mt-auto flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+          <div className="mt-auto flex items-center justify-between gap-3 pt-2">
             {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
             <span className="min-w-fit text-small-semi text-ui-fg-base">
-              View listing
+              View
             </span>
           </div>
         </div>

@@ -2,11 +2,20 @@
 
 import { sdk } from "@lib/config"
 import { revalidatePath } from "next/cache"
-import { getAuthHeaders } from "./cookies"
+import { getAuthHeaders, removeAuthToken } from "./cookies"
 
 type InquiryState = {
   success: boolean
   error: string | null
+}
+
+const isUnauthorizedError = (error: unknown) =>
+  String(error).toLowerCase().includes("unauthorized")
+
+const handleUnauthorizedInquiry = async () => {
+  try {
+    await removeAuthToken()
+  } catch {}
 }
 
 export type SellerInquiry = {
@@ -87,6 +96,14 @@ export async function listBuyerInquiries(): Promise<BuyerInquiry[]> {
       cache: "no-store",
     })
     .then(({ inquiries }) => inquiries)
+    .catch(async (error) => {
+      if (isUnauthorizedError(error)) {
+        await handleUnauthorizedInquiry()
+        return []
+      }
+
+      throw error
+    })
 }
 
 export async function listSellerInquiries(): Promise<SellerInquiry[]> {
@@ -103,6 +120,14 @@ export async function listSellerInquiries(): Promise<SellerInquiry[]> {
       cache: "no-store",
     })
     .then(({ inquiries }) => inquiries)
+    .catch(async (error) => {
+      if (isUnauthorizedError(error)) {
+        await handleUnauthorizedInquiry()
+        return []
+      }
+
+      throw error
+    })
 }
 
 export async function updateSellerInquiryStatus(
@@ -115,13 +140,23 @@ export async function updateSellerInquiryStatus(
     throw new Error("You must be signed in to update inquiries.")
   }
 
-  await sdk.client.fetch(`/store/seller-inquiries/${inquiryId}`, {
-    method: "PATCH",
-    headers,
-    body: {
-      status,
-    },
-  })
+  try {
+    await sdk.client.fetch(`/store/seller-inquiries/${inquiryId}`, {
+      method: "PATCH",
+      headers,
+      body: {
+        status,
+      },
+    })
+  } catch (error) {
+    if (isUnauthorizedError(error)) {
+      await handleUnauthorizedInquiry()
+      revalidatePath("/[countryCode]/account/inquiries", "page")
+      return
+    }
+
+    throw error
+  }
 
   revalidatePath("/[countryCode]/account/inquiries", "page")
 }

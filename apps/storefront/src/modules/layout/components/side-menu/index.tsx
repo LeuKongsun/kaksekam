@@ -11,13 +11,10 @@ import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
 import { Locale } from "@lib/data/locales"
 
-
 const SideMenuItems = {
-  Marketplace: "/",
-  "Browse listings": "/store",
-  "Post listing": "/account/listings",
-  Inquiries: "/account/inquiries",
-  "Sign in": "/account",
+  Browse: "/store",
+  Sell: "/account/listings",
+  Account: "/account",
 }
 
 type SideMenuProps = {
@@ -79,7 +76,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                           <li key={name}>
                             <LocalizedClientLink
                               href={href}
-                              className="text-3xl leading-10 hover:text-ui-fg-disabled"
+                              className="text-2xl leading-10 hover:text-ui-fg-disabled"
                               onClick={close}
                               data-testid={`${name.toLowerCase()}-link`}
                             >
@@ -104,7 +101,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                           <ArrowRightMini
                             className={clx(
                               "transition-transform duration-150",
-                              languageToggleState.state ? "-rotate-90" : ""
+                              languageToggleState.state ? "-rotate-90" : "",
                             )}
                           />
                         </div>
@@ -123,7 +120,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                         <ArrowRightMini
                           className={clx(
                             "transition-transform duration-150",
-                            countryToggleState.state ? "-rotate-90" : ""
+                            countryToggleState.state ? "-rotate-90" : "",
                           )}
                         />
                       </div>

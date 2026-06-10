@@ -1,29 +1,18 @@
 "use client"
 
 import {
-  markSellerListingSold,
   SellerListing,
   updateSellerListing,
-  withdrawSellerListing,
 } from "@lib/data/seller-listings"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
-import { Button } from "@modules/common/components/ui"
-import { useRouter } from "next/navigation"
-import { useActionState, useState, useTransition } from "react"
+import { useActionState, useState } from "react"
 
 type SellerListingEditorProps = {
   listing: SellerListing
 }
 
 const editableStatuses = new Set<SellerListing["status"]>([
-  "draft",
-  "pending_review",
-  "active",
-  "rejected",
-])
-
-const withdrawableStatuses = new Set<SellerListing["status"]>([
   "draft",
   "pending_review",
   "active",
@@ -42,13 +31,7 @@ const categoryOptions = [
 ]
 
 const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
-  const router = useRouter()
-  const [isOpen, setIsOpen] = useState(false)
   const [category, setCategory] = useState(listing.category ?? "Produce")
-  const [withdrawError, setWithdrawError] = useState<string | null>(null)
-  const [soldError, setSoldError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
-  const [isMarkingSold, startSoldTransition] = useTransition()
   const [state, formAction] = useActionState(
     updateSellerListing.bind(null, listing.id),
     {
@@ -57,86 +40,15 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
     }
   )
   const canEdit = editableStatuses.has(listing.status)
-  const canWithdraw = withdrawableStatuses.has(listing.status)
-  const canMarkSold = listing.status === "active"
   const amount = listing.price?.calculated_amount
   const currencyCode = listing.price?.currency_code ?? "eur"
 
-  const withdraw = () => {
-    setWithdrawError(null)
-
-    startTransition(async () => {
-      const result = await withdrawSellerListing(listing.id)
-
-      if (!result.success) {
-        setWithdrawError(result.error)
-        return
-      }
-
-      router.refresh()
-    })
-  }
-
-  const markSold = () => {
-    setSoldError(null)
-
-    startSoldTransition(async () => {
-      const result = await markSellerListingSold(listing.id)
-
-      if (!result.success) {
-        setSoldError(result.error)
-        return
-      }
-
-      router.refresh()
-    })
-  }
-
   return (
-    <div className="flex flex-col gap-y-3">
-      <div className="flex flex-wrap gap-2 small:justify-end">
-        <Button
-          type="button"
-          variant="secondary"
-          size="small"
-          disabled={!canEdit}
-          onClick={() => setIsOpen((current) => !current)}
-        >
-          {isOpen ? "Close edit" : "Edit"}
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          size="small"
-          disabled={!canWithdraw}
-          isLoading={isPending}
-          onClick={withdraw}
-        >
-          Withdraw
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          size="small"
-          disabled={!canMarkSold}
-          isLoading={isMarkingSold}
-          onClick={markSold}
-        >
-          Mark sold
-        </Button>
-      </div>
-
-      {withdrawError && (
-        <p className="text-small-regular text-rose-600">{withdrawError}</p>
-      )}
-      {soldError && (
-        <p className="text-small-regular text-rose-600">{soldError}</p>
-      )}
-
-      {isOpen && canEdit && (
+    <div>
+      {canEdit ? (
         <form
           action={formAction}
-          className="rounded-md border border-gray-200 p-4 text-left"
+          className="rounded-md border border-gray-200 bg-white p-5 text-left shadow-sm"
         >
           <div className="mb-4">
             <h3 className="text-base-semi">Edit listing</h3>
@@ -312,6 +224,10 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
             </SubmitButton>
           </div>
         </form>
+      ) : (
+        <div className="rounded-md border border-gray-200 bg-white p-5 text-small-regular text-ui-fg-subtle shadow-sm">
+          This listing can no longer be edited.
+        </div>
       )}
     </div>
   )

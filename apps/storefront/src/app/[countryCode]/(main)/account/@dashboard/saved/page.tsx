@@ -11,7 +11,14 @@ export const metadata: Metadata = {
   description: "View your saved classifieds listings.",
 }
 
-export default async function SavedListingsPage() {
+const PAGE_SIZE = 10
+
+export default async function SavedListingsPage(props: {
+  searchParams: Promise<{
+    page?: string
+  }>
+}) {
+  const searchParams = await props.searchParams
   const customer = await retrieveCustomer()
 
   if (!customer) {
@@ -26,6 +33,17 @@ export default async function SavedListingsPage() {
     (total, search) => total + (search.match_count ?? 0),
     0
   )
+  const totalPages = Math.max(1, Math.ceil(savedListings.length / PAGE_SIZE))
+  const requestedPage = Number(searchParams.page)
+  const page =
+    Number.isFinite(requestedPage) && requestedPage > 0
+      ? Math.min(requestedPage, totalPages)
+      : 1
+  const pageStart = (page - 1) * PAGE_SIZE
+  const paginatedSavedListings = savedListings.slice(
+    pageStart,
+    pageStart + PAGE_SIZE
+  )
 
   return (
     <div className="flex flex-col gap-y-10">
@@ -35,7 +53,7 @@ export default async function SavedListingsPage() {
           Revisit listings, rerun useful searches, and keep track of sellers you
           may want to contact.
         </p>
-        <div className="mt-5 grid grid-cols-1 gap-3 small:grid-cols-3">
+        <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 border-y border-gray-200 py-3">
           <SavedSignal label="Saved listings" value={savedListings.length} />
           <SavedSignal label="Saved searches" value={savedSearches.length} />
           <SavedSignal label="Current matches" value={savedSearchMatches} />
@@ -50,16 +68,22 @@ export default async function SavedListingsPage() {
         </div>
         <SavedSearches savedSearches={savedSearches} />
       </div>
-      <SavedListings savedListings={savedListings} />
+      <SavedListings
+        savedListings={paginatedSavedListings}
+        totalSavedListings={savedListings.length}
+        page={page}
+        pageSize={PAGE_SIZE}
+        totalPages={totalPages}
+      />
     </div>
   )
 }
 
 const SavedSignal = ({ label, value }: { label: string; value: number }) => (
-  <div className="rounded-md border border-gray-200 bg-white p-4">
-    <div className="text-[11px] font-medium uppercase text-ui-fg-subtle">
+  <div className="flex items-baseline gap-x-2">
+    <span className="text-[11px] font-medium uppercase text-ui-fg-subtle">
       {label}
-    </div>
-    <div className="mt-1 text-xl-semi text-ui-fg-base">{value}</div>
+    </span>
+    <span className="text-base-semi text-ui-fg-base">{value}</span>
   </div>
 )
