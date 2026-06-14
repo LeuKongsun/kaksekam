@@ -2,7 +2,7 @@
 
 import { sdk } from "@lib/config"
 import { revalidatePath } from "next/cache"
-import { getAuthHeaders } from "./cookies"
+import { getAuthHeaders, removeAuthToken } from "./cookies"
 
 export type SavedListing = {
   id: string
@@ -52,6 +52,9 @@ type SavedListingResponse = {
   saved_listings: SavedListing[]
 }
 
+const isUnauthorizedError = (error: unknown) =>
+  String(error).toLowerCase().includes("unauthorized")
+
 export const listSavedListings = async (): Promise<SavedListing[]> => {
   const headers = await getAuthHeaders()
 
@@ -66,6 +69,14 @@ export const listSavedListings = async (): Promise<SavedListing[]> => {
       cache: "no-store",
     })
     .then(({ saved_listings }) => saved_listings)
+    .catch(async (error) => {
+      if (isUnauthorizedError(error)) {
+        await removeAuthToken()
+        return []
+      }
+
+      throw error
+    })
 }
 
 export const retrieveSavedListing = async (

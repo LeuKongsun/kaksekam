@@ -1,10 +1,11 @@
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
+import { StoreTranslations } from "@lib/i18n/translations"
 import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
-const PRODUCT_LIMIT = 12
+const PRODUCT_LIMIT = 20
 
 type PaginatedProductsParams = {
   limit: number
@@ -26,6 +27,7 @@ export default async function PaginatedProducts({
   condition,
   q,
   countryCode,
+  labels,
 }: {
   sortBy?: SortOptions
   page: number
@@ -38,9 +40,10 @@ export default async function PaginatedProducts({
   condition?: string
   q?: string
   countryCode: string
+  labels: StoreTranslations
 }) {
   const queryParams: PaginatedProductsParams = {
-    limit: 12,
+    limit: PRODUCT_LIMIT,
   }
 
   if (collectionId) {
@@ -84,9 +87,11 @@ export default async function PaginatedProducts({
   if (products.length === 0) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-8 text-center">
-        <h2 className="text-base-semi text-ui-fg-base">No listings found</h2>
+        <h2 className="text-base-semi text-ui-fg-base">
+          {labels.noListingsTitle}
+        </h2>
         <p className="mt-2 text-small-regular text-ui-fg-subtle">
-          Try a different keyword, category, or location.
+          {labels.noListingsDescription}
         </p>
       </div>
     )
@@ -95,7 +100,7 @@ export default async function PaginatedProducts({
   return (
     <>
       <ul
-        className="grid w-full grid-cols-1 gap-x-5 gap-y-8 xsmall:grid-cols-2 small:grid-cols-3 medium:grid-cols-4"
+        className="mx-auto grid w-full max-w-[1120px] grid-cols-2 gap-x-3 gap-y-5 small:grid-cols-3 small:gap-x-5 small:gap-y-7 medium:grid-cols-4"
         data-testid="products-list"
       >
         {products.map((p) => {

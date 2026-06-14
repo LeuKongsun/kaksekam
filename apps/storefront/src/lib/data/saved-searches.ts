@@ -2,7 +2,7 @@
 
 import { sdk } from "@lib/config"
 import { revalidatePath } from "next/cache"
-import { getAuthHeaders } from "./cookies"
+import { getAuthHeaders, removeAuthToken } from "./cookies"
 
 export type SavedSearch = {
   id: string
@@ -21,6 +21,9 @@ type SavedSearchResponse = {
   saved_searches: SavedSearch[]
 }
 
+const isUnauthorizedError = (error: unknown) =>
+  String(error).toLowerCase().includes("unauthorized")
+
 export async function listSavedSearches(): Promise<SavedSearch[]> {
   const headers = await getAuthHeaders()
 
@@ -35,6 +38,14 @@ export async function listSavedSearches(): Promise<SavedSearch[]> {
       cache: "no-store",
     })
     .then(({ saved_searches }) => saved_searches)
+    .catch(async (error) => {
+      if (isUnauthorizedError(error)) {
+        await removeAuthToken()
+        return []
+      }
+
+      throw error
+    })
 }
 
 export async function saveSearch(

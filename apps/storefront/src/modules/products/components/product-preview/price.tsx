@@ -22,7 +22,7 @@ export default async function PreviewPrice({ price }: { price: VariantPrice }) {
         })}
         data-testid="price"
       >
-        {price.calculated_price} asking
+        {price.calculated_price}
       </Text>
     </>
   )

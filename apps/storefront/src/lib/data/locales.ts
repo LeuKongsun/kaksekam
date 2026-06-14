@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { supportedLocales } from "@lib/i18n/translations"
 import { getCacheOptions } from "./cookies"
 
 export type Locale = {
@@ -24,5 +25,5 @@ export const listLocales = async (): Promise<Locale[] | null> => {
       cache: "force-cache",
     })
     .then(({ locales }) => locales)
-    .catch(() => null)
+    .catch(() => [...supportedLocales])
 }

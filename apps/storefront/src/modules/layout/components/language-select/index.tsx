@@ -40,6 +40,10 @@ type LanguageSelectProps = {
   toggleState: StateType
   locales: Locale[]
   currentLocale: string | null
+  labels: {
+    language: string
+    defaultLanguage: string
+  }
 }
 
 /**
@@ -61,23 +65,26 @@ const getLocalizedLanguageName = (
   }
 }
 
-const DEFAULT_OPTION: LanguageOption = {
-  code: "",
-  name: "Default",
-  localizedName: "Default",
-  countryCode: "",
-}
-
 const LanguageSelect = ({
   toggleState,
   locales,
   currentLocale,
+  labels,
 }: LanguageSelectProps) => {
   const [current, setCurrent] = useState<LanguageOption | undefined>(undefined)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
 
   const { state, close } = toggleState
+  const defaultOption: LanguageOption = useMemo(
+    () => ({
+      code: "",
+      name: labels.defaultLanguage,
+      localizedName: labels.defaultLanguage,
+      countryCode: "",
+    }),
+    [labels.defaultLanguage]
+  )
 
   const options = useMemo(() => {
     const localeOptions = locales.map((locale) => ({
@@ -90,19 +97,19 @@ const LanguageSelect = ({
       ),
       countryCode: getCountryCodeFromLocale(locale.code),
     }))
-    return [DEFAULT_OPTION, ...localeOptions]
-  }, [locales, currentLocale])
+    return [defaultOption, ...localeOptions]
+  }, [defaultOption, locales, currentLocale])
 
   useEffect(() => {
     if (currentLocale) {
       const option = options.find(
         (o) => o.code.toLowerCase() === currentLocale.toLowerCase()
       )
-      setCurrent(option ?? DEFAULT_OPTION)
+      setCurrent(option ?? defaultOption)
     } else {
-      setCurrent(DEFAULT_OPTION)
+      setCurrent(defaultOption)
     }
-  }, [options, currentLocale])
+  }, [defaultOption, options, currentLocale])
 
   const handleChange = (option: LanguageOption) => {
     startTransition(async () => {
@@ -121,14 +128,14 @@ const LanguageSelect = ({
           currentLocale
             ? options.find(
                 (o) => o.code.toLowerCase() === currentLocale.toLowerCase()
-              ) ?? DEFAULT_OPTION
-            : DEFAULT_OPTION
+              ) ?? defaultOption
+            : defaultOption
         }
         disabled={isPending}
       >
         <ListboxButton className="py-1 w-full">
           <div className="txt-compact-small flex items-start gap-x-2">
-            <span>Language:</span>
+            <span>{labels.language}:</span>
             {current && (
               <span className="txt-compact-small flex items-center gap-x-2">
                 {current.countryCode && (

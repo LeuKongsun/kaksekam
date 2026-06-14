@@ -3,7 +3,15 @@
 import { createSellerListing } from "@lib/data/seller-listings"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
-import { useActionState, useState } from "react"
+import { Photo, PlusMini, XMarkMini } from "@medusajs/icons"
+import {
+  ChangeEvent,
+  SelectHTMLAttributes,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 
 const categoryOptions = [
   "Produce",
@@ -16,21 +24,76 @@ const categoryOptions = [
   "Other",
 ]
 
+const MAX_PHOTO_UPLOADS = 6
+const selectFieldClassName =
+  "h-11 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-3 pb-1 pt-4 text-ui-fg-base hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active focus:outline-none"
+
 const SellerListingForm = () => {
   const [category, setCategory] = useState("Produce")
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const imageInputRef = useRef<HTMLInputElement>(null)
   const [state, formAction] = useActionState(createSellerListing, {
     success: false,
     error: null as string | null,
   })
 
+  useEffect(() => {
+    const previews = imageFiles.map((file) => URL.createObjectURL(file))
+
+    setImagePreviews(previews)
+
+    return () => previews.forEach((preview) => URL.revokeObjectURL(preview))
+  }, [imageFiles])
+
+  const syncImageInput = (files: File[]) => {
+    if (!imageInputRef.current || typeof DataTransfer === "undefined") {
+      return
+    }
+
+    const transfer = new DataTransfer()
+    files.forEach((file) => transfer.items.add(file))
+    imageInputRef.current.files = transfer.files
+  }
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files ?? [])
+
+    if (!selectedFiles.length) {
+      return
+    }
+
+    setImageFiles((currentFiles) => {
+      const mergedFiles = [...currentFiles, ...selectedFiles].slice(
+        0,
+        MAX_PHOTO_UPLOADS,
+      )
+
+      syncImageInput(mergedFiles)
+
+      return mergedFiles
+    })
+  }
+
+  const removeImage = (indexToRemove: number) => {
+    setImageFiles((currentFiles) => {
+      const nextFiles = currentFiles.filter(
+        (_file, index) => index !== indexToRemove,
+      )
+
+      syncImageInput(nextFiles)
+
+      return nextFiles
+    })
+  }
+
   return (
-    <form action={formAction} className="rounded-md border border-gray-200 bg-white p-4">
+    <form
+      action={formAction}
+      className="rounded-md border border-gray-200 bg-white p-4"
+    >
       <div className="mb-4">
-        <h2 className="text-large-semi">Create farming listing</h2>
-        <p className="mt-1 text-small-regular text-ui-fg-subtle">
-          Add enough detail for buyers to understand product, quantity,
-          location, and availability.
-        </p>
+        <h2 className="text-large-semi">New product</h2>
       </div>
 
       {state.success && (
@@ -45,15 +108,12 @@ const SellerListingForm = () => {
       )}
 
       <div className="grid grid-cols-1 gap-4">
-        <FormSection
-          title="Listing basics"
-          description="Use a buyer-friendly title and describe quality, packaging, inspection details, and any limits."
-        />
-
         <Input label="Title" name="title" required />
 
         <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-          Description<span className="text-rose-500">*</span>
+          <span>
+            Description<span className="text-rose-500">*</span>
+          </span>
           <textarea
             name="description"
             required
@@ -64,28 +124,58 @@ const SellerListingForm = () => {
 
         <FormSection
           title="Photos"
-          description="Upload clear photos or paste image URLs. Listings with real photos are easier to approve and trust."
+          description="Upload clear photos. Listings with real photos are easier to approve and trust."
         />
 
-        <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-          Upload photos
+        <div className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
+          <div className="flex items-center justify-between gap-3">
+            <span>Upload photos</span>
+            <span className="text-xsmall-regular text-ui-fg-muted">
+              {imageFiles.length}/{MAX_PHOTO_UPLOADS}
+            </span>
+          </div>
           <input
+            ref={imageInputRef}
             name="images"
             type="file"
             accept="image/*"
             multiple
-            className="block w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base file:mr-4 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-small-regular file:text-ui-fg-base hover:bg-ui-bg-field-hover"
+            onChange={handleImageChange}
+            className="sr-only"
           />
-        </label>
-
-        <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-          Photo URLs
-          <textarea
-            name="image_urls"
-            rows={3}
-            className="w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
-          />
-        </label>
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {imagePreviews.map((preview, index) => (
+              <div
+                key={`${imageFiles[index]?.name ?? "photo"}-${index}`}
+                className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md border border-ui-border-base bg-ui-bg-subtle"
+              >
+                <div
+                  aria-label={`Selected photo ${index + 1}`}
+                  className="h-full w-full bg-cover bg-center"
+                  style={{ backgroundImage: `url(${preview})` }}
+                />
+                <button
+                  type="button"
+                  aria-label={`Remove photo ${index + 1}`}
+                  onClick={() => removeImage(index)}
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-ui-fg-subtle shadow-elevation-card-rest transition-colors hover:text-ui-fg-base"
+                >
+                  <XMarkMini />
+                </button>
+              </div>
+            ))}
+            {imageFiles.length < MAX_PHOTO_UPLOADS && (
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-ui-border-base bg-ui-bg-field text-ui-fg-subtle transition-colors hover:bg-ui-bg-field-hover hover:text-ui-fg-base focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
+              >
+                {imageFiles.length ? <PlusMini /> : <Photo />}
+                <span className="text-xsmall-regular">Add photo</span>
+              </button>
+            )}
+          </div>
+        </div>
 
         <FormSection
           title="Marketplace details"
@@ -94,65 +184,45 @@ const SellerListingForm = () => {
 
         <div className="grid grid-cols-1 gap-4 small:grid-cols-[1fr_140px]">
           <Input label="Price" name="price" type="number" min="1" required />
-          <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-            Currency
-            <select
-              name="currency_code"
-              defaultValue="eur"
-              className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
-            >
-              <option value="eur">EUR</option>
-              <option value="usd">USD</option>
-            </select>
-          </label>
+          <SelectField label="Currency" name="currency_code" defaultValue="eur">
+            <option value="eur">EUR</option>
+            <option value="usd">USD</option>
+          </SelectField>
         </div>
 
         <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-          <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-            Farming category
-            <select
-              name="category"
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
-              className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
-            >
-              {categoryOptions.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SelectField
+            label="Farming category"
+            name="category"
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+          >
+            {categoryOptions.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </SelectField>
           <Input label="Farm or pickup location" name="location" />
           <Input label="Quantity" name="quantity" />
           <Input label="Unit" name="unit" />
           <Input label="Availability" name="availability" />
-          <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-            Condition
-            <select
-              name="condition"
-              defaultValue=""
-              className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
-            >
-              <option value="">Not specified</option>
-              <option value="Fresh">Fresh</option>
-              <option value="Organic">Organic</option>
-              <option value="Used">Used</option>
-              <option value="New">New</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-            Preferred contact
-            <select
-              name="contact_preference"
-              defaultValue=""
-              className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
-            >
-              <option value="">Any contact method</option>
-              <option value="Phone">Phone</option>
-              <option value="Email">Email</option>
-            </select>
-          </label>
+          <SelectField label="Condition" name="condition" defaultValue="">
+            <option value="">Not specified</option>
+            <option value="Fresh">Fresh</option>
+            <option value="Organic">Organic</option>
+            <option value="Used">Used</option>
+            <option value="New">New</option>
+          </SelectField>
+          <SelectField
+            label="Preferred contact"
+            name="contact_preference"
+            defaultValue=""
+          >
+            <option value="">Any contact method</option>
+            <option value="Phone">Phone</option>
+            <option value="Email">Email</option>
+          </SelectField>
         </div>
 
         <CategoryGuidance category={category} />
@@ -161,8 +231,8 @@ const SellerListingForm = () => {
 
         <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-small-regular text-ui-fg-subtle">
           Before submitting, check that price, location, quantity, availability,
-          photos, and contact preference are clear. Admins review listings before
-          they appear to buyers.
+          photos, and contact preference are clear. Admins review listings
+          before they appear to buyers.
         </div>
 
         <SubmitButton data-testid="create-listing-button">
@@ -186,13 +256,32 @@ const FormSection = ({
   </div>
 )
 
+type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
+  label: string
+}
+
+const SelectField = ({ label, children, ...props }: SelectFieldProps) => (
+  <label className="relative flex w-full text-small-regular text-ui-fg-subtle">
+    <select {...props} className={selectFieldClassName}>
+      {children}
+    </select>
+    <span className="pointer-events-none absolute left-3 top-1 text-xsmall-regular text-ui-fg-subtle">
+      {label}
+    </span>
+  </label>
+)
+
 const categoryGuidance: Record<string, string> = {
-  Produce: "Add variety, harvest season, and production method so buyers can judge freshness and fit.",
-  Livestock: "Add breed, age, sex, and health notes. Buyers need enough information before arranging inspection.",
+  Produce:
+    "Add variety, harvest season, and production method so buyers can judge freshness and fit.",
+  Livestock:
+    "Add breed, age, sex, and health notes. Buyers need enough information before arranging inspection.",
   Seeds: "Add variety, pack size, and production or expiry date.",
   Fertilizer: "Add type, pack size, and expiry or production date.",
-  Equipment: "Add brand, model, year, and condition so buyers can compare equipment quickly.",
-  Tools: "Add brand, model, year, and condition for easier inspection planning.",
+  Equipment:
+    "Add brand, model, year, and condition so buyers can compare equipment quickly.",
+  Tools:
+    "Add brand, model, year, and condition for easier inspection planning.",
   Services: "Add service area and describe what is included in the service.",
   Other: "Add any category-specific details buyers need before contacting you.",
 }
@@ -210,19 +299,16 @@ const CategorySpecificFields = ({ category }: { category: string }) => {
       <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
         <Input label="Variety" name="variety" />
         <Input label="Harvest date or season" name="harvest_date" />
-        <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-          Production method
-          <select
-            name="production_method"
-            defaultValue=""
-            className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
-          >
-            <option value="">Not specified</option>
-            <option value="Organic">Organic</option>
-            <option value="Conventional">Conventional</option>
-            <option value="Regenerative">Regenerative</option>
-          </select>
-        </label>
+        <SelectField
+          label="Production method"
+          name="production_method"
+          defaultValue=""
+        >
+          <option value="">Not specified</option>
+          <option value="Organic">Organic</option>
+          <option value="Conventional">Conventional</option>
+          <option value="Regenerative">Regenerative</option>
+        </SelectField>
       </div>
     )
   }

@@ -3,10 +3,11 @@ import { Suspense } from "react"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { getTranslations } from "@lib/i18n/server"
 
 import PaginatedProducts from "./paginated-products"
 
-const StoreTemplate = ({
+const StoreTemplate = async ({
   sortBy,
   page,
   category,
@@ -25,6 +26,7 @@ const StoreTemplate = ({
   q?: string
   countryCode: string
 }) => {
+  const { t } = await getTranslations()
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
   const quickFilters: {
@@ -43,25 +45,19 @@ const StoreTemplate = ({
   return (
     <main className="bg-white">
       <div className="content-container py-5 small:py-8">
-        <section className="border-b border-gray-200 pb-5 small:pb-6">
-          <div className="flex flex-col gap-4 small:flex-row small:items-end small:justify-between">
+        <section className="mx-auto max-w-[1120px] border-b border-gray-200 pb-5 small:pb-6">
+          <div>
             <div>
               <h1
                 className="text-2xl-semi text-ui-fg-base"
                 data-testid="store-page-title"
               >
-                Browse listings
+                {t.store.title}
               </h1>
               <p className="mt-1 text-small-regular text-ui-fg-subtle">
-                Find products from local farmers and suppliers.
+                {t.store.description}
               </p>
             </div>
-            <a
-              href={`/${countryCode}/account/listings`}
-              className="w-fit rounded-full border border-gray-300 px-4 py-2 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
-            >
-              Sell an item
-            </a>
           </div>
 
           <div className="mt-5">
@@ -72,6 +68,7 @@ const StoreTemplate = ({
               availability={availability}
               condition={condition}
               q={q}
+              labels={t.store}
             />
           </div>
 
@@ -82,7 +79,9 @@ const StoreTemplate = ({
               return (
                 <a
                   key={filter.label}
-                  href={`/${countryCode}/store?category=${encodeURIComponent(filter.label)}`}
+                  href={`/${countryCode}/store?category=${encodeURIComponent(
+                    filter.label
+                  )}`}
                   className={`flex min-w-fit items-center gap-2 rounded-full border px-3 py-2 text-small-semi transition-colors ${
                     isActive
                       ? "border-ui-fg-base bg-ui-fg-base text-white"
@@ -90,7 +89,7 @@ const StoreTemplate = ({
                   }`}
                 >
                   <CategoryIcon icon={filter.icon} />
-                  {filter.label}
+                  {t.store.categories[filter.label]}
                 </a>
               )
             })}
@@ -109,6 +108,7 @@ const StoreTemplate = ({
                 condition={condition}
                 q={q}
                 countryCode={countryCode}
+                labels={t.store}
               />
             </Suspense>
           </div>

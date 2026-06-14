@@ -11,21 +11,36 @@ import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
 import { Locale } from "@lib/data/locales"
 
-const SideMenuItems = {
-  Browse: "/store",
-  Sell: "/account/listings",
-  Account: "/account",
+type SideMenuLabels = {
+  browse: string
+  sell: string
+  account: string
+  menu: string
+  language: string
+  defaultLanguage: string
+  brand: string
 }
 
 type SideMenuProps = {
   regions: HttpTypes.StoreRegion[] | null
   locales: Locale[] | null
   currentLocale: string | null
+  labels: SideMenuLabels
 }
 
-const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
+const SideMenu = ({
+  regions,
+  locales,
+  currentLocale,
+  labels,
+}: SideMenuProps) => {
   const countryToggleState = useToggleState()
   const languageToggleState = useToggleState()
+  const menuItems = [
+    { label: labels.browse, href: "/store", testId: "browse-link" },
+    { label: labels.sell, href: "/account/listings", testId: "sell-link" },
+    { label: labels.account, href: "/account", testId: "account-link" },
+  ]
 
   return (
     <div className="h-full">
@@ -38,7 +53,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                   data-testid="nav-menu-button"
                   className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base"
                 >
-                  Menu
+                  {labels.menu}
                 </Popover.Button>
               </div>
 
@@ -71,16 +86,16 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                       </button>
                     </div>
                     <ul className="flex flex-col gap-6 items-start justify-start">
-                      {Object.entries(SideMenuItems).map(([name, href]) => {
+                      {menuItems.map(({ label, href, testId }) => {
                         return (
-                          <li key={name}>
+                          <li key={href}>
                             <LocalizedClientLink
                               href={href}
                               className="text-2xl leading-10 hover:text-ui-fg-disabled"
                               onClick={close}
-                              data-testid={`${name.toLowerCase()}-link`}
+                              data-testid={testId}
                             >
-                              {name}
+                              {label}
                             </LocalizedClientLink>
                           </li>
                         )
@@ -97,11 +112,15 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                             toggleState={languageToggleState}
                             locales={locales}
                             currentLocale={currentLocale}
+                            labels={{
+                              language: labels.language,
+                              defaultLanguage: labels.defaultLanguage,
+                            }}
                           />
                           <ArrowRightMini
                             className={clx(
                               "transition-transform duration-150",
-                              languageToggleState.state ? "-rotate-90" : "",
+                              languageToggleState.state ? "-rotate-90" : ""
                             )}
                           />
                         </div>
@@ -120,12 +139,12 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                         <ArrowRightMini
                           className={clx(
                             "transition-transform duration-150",
-                            countryToggleState.state ? "-rotate-90" : "",
+                            countryToggleState.state ? "-rotate-90" : ""
                           )}
                         />
                       </div>
                       <Text className="flex justify-between txt-compact-small">
-                        © {new Date().getFullYear()} Farm Marketplace.
+                        © {new Date().getFullYear()} {labels.brand}.
                       </Text>
                     </div>
                   </div>

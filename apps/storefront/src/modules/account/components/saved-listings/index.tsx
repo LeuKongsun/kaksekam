@@ -1,6 +1,7 @@
 import { SavedListing } from "@lib/data/saved-listings"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Eye from "@modules/common/icons/eye"
+import Package from "@modules/common/icons/package"
 import { Pagination } from "@modules/store/components/pagination"
 import { ReactNode } from "react"
 import RemoveSavedListingButton from "../remove-saved-listing-button"
@@ -60,28 +61,17 @@ const SavedListings = ({
   return (
     <div className="w-full" data-testid="saved-listings-page-wrapper">
       <div className="mb-8 flex flex-col gap-y-4">
-        <h2 className="text-2xl-semi">Saved listings</h2>
-        <p className="text-base-regular text-ui-fg-subtle">
-          Showing {pageStart}-{pageEnd} of {totalSavedListings} saved listings.
-        </p>
+        <h2 className="text-2xl-semi">Saved products</h2>
+        {totalSavedListings > 0 && (
+          <p className="text-base-regular text-ui-fg-subtle">
+            Showing {pageStart}-{pageEnd} of {totalSavedListings} saved
+            products.
+          </p>
+        )}
       </div>
 
       {totalSavedListings === 0 ? (
-        <div className="rounded-md border border-gray-200 bg-white p-5">
-          <h2 className="text-base-semi text-ui-fg-base">
-            No saved listings yet
-          </h2>
-          <p className="mt-2 text-base-regular text-ui-fg-subtle">
-            Save listings while browsing so you can compare price, location,
-            seller, and availability before sending inquiries.
-          </p>
-          <LocalizedClientLink
-            href="/store"
-            className="mt-4 inline-flex rounded-md border border-gray-300 px-4 py-2 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
-          >
-            Browse listings
-          </LocalizedClientLink>
-        </div>
+        <SavedListingsTable savedListings={[]} startIndex={0} />
       ) : (
         <div>
           <SavedListingsTable
@@ -111,8 +101,8 @@ const SavedListingsTable = ({
   <div className="w-full max-w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
     <div className="overflow-x-auto">
       <table className="w-full table-fixed border-collapse text-left">
-        <thead className="bg-ui-fg-base">
-          <tr className="text-[11px] font-medium uppercase text-white">
+        <thead className="border-b border-gray-200 bg-gray-50">
+          <tr className="text-[11px] font-medium uppercase text-ui-fg-subtle">
             <th className="w-12 px-3 py-4">No.</th>
             <th className="w-[30%] px-3 py-4">Listing</th>
             <th className="w-[18%] px-3 py-4">Seller</th>
@@ -122,13 +112,25 @@ const SavedListingsTable = ({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {savedListings.map((savedListing, index) => (
-            <SavedListingRow
-              key={savedListing.id}
-              savedListing={savedListing}
-              rowNumber={startIndex + index}
-            />
-          ))}
+          {savedListings.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="px-3 py-16">
+                <div className="flex justify-center text-ui-fg-muted">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-gray-300 bg-ui-bg-subtle">
+                    <Package size={28} />
+                  </div>
+                </div>
+              </td>
+            </tr>
+          ) : (
+            savedListings.map((savedListing, index) => (
+              <SavedListingRow
+                key={savedListing.id}
+                savedListing={savedListing}
+                rowNumber={startIndex + index}
+              />
+            ))
+          )}
         </tbody>
       </table>
     </div>

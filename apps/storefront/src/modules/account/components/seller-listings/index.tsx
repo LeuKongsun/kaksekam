@@ -112,36 +112,24 @@ const SellerListings = ({
         </div>
 
         <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 border-y border-gray-200 py-3">
-          <ListingSignal
-            label="Total"
-            value={totalListings}
-          />
-          <ListingSignal
-            label="Visible"
-            value={totalVisible}
-          />
-          <ListingSignal
-            label="In review"
-            value={waitingOnReview}
-          />
-          <ListingSignal
-            label="Attention"
-            value={needsAttention}
-          />
+          <ListingSignal label="Total" value={totalListings} />
+          <ListingSignal label="Visible" value={totalVisible} />
+          <ListingSignal label="In review" value={waitingOnReview} />
+          <ListingSignal label="Attention" value={needsAttention} />
         </div>
       </div>
 
       <div className="flex flex-col gap-y-3">
-        <div>
-          <h2 className="text-large-semi">Your listings</h2>
-          <p className="mt-1 text-small-regular text-ui-fg-subtle">
-            Showing {pageStart}-{pageEnd} of {totalListings} listings.
-          </p>
-        </div>
         {totalListings === 0 ? (
-          <EmptyListings />
+          <ListingsTable listings={[]} startIndex={0} />
         ) : (
           <div>
+            <div className="mb-3">
+              <h2 className="text-large-semi">Your listings</h2>
+              <p className="mt-1 text-small-regular text-ui-fg-subtle">
+                Showing {pageStart}-{pageEnd} of {totalListings} listings.
+              </p>
+            </div>
             <ListingsTable listings={listings} startIndex={pageStart} />
             {totalPages > 1 && (
               <Pagination
@@ -157,43 +145,7 @@ const SellerListings = ({
   )
 }
 
-const EmptyListings = () => (
-  <div className="rounded-md border border-dashed border-gray-300 bg-white p-6 shadow-sm">
-    <div className="max-w-xl">
-      <h3 className="text-large-semi text-ui-fg-base">
-        Start with one good listing
-      </h3>
-      <p className="mt-2 text-base-regular text-ui-fg-subtle">
-        Add photos, price, location, and availability. After approval, buyers
-        can find it and send inquiries.
-      </p>
-      <div className="mt-5 flex flex-wrap gap-3">
-        <LocalizedClientLink
-          href="/account/listings/new"
-          className="inline-flex h-10 items-center justify-center gap-x-2 rounded-md bg-ui-fg-base px-4 text-small-semi text-white transition-colors hover:bg-ui-fg-subtle"
-        >
-          <Package size={16} />
-          Add listing
-        </LocalizedClientLink>
-        <LocalizedClientLink
-          href="/account/seller-profile"
-          className="inline-flex h-10 items-center justify-center gap-x-2 rounded-md border border-gray-300 px-4 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
-        >
-          <ProfileIcon size={16} />
-          Seller profile
-        </LocalizedClientLink>
-      </div>
-    </div>
-  </div>
-)
-
-const ListingSignal = ({
-  label,
-  value,
-}: {
-  label: string
-  value: number
-}) => (
+const ListingSignal = ({ label, value }: { label: string; value: number }) => (
   <div className="flex items-baseline gap-x-2">
     <span className="text-[11px] font-medium uppercase text-ui-fg-subtle">
       {label}
@@ -212,8 +164,8 @@ const ListingsTable = ({
   <div className="w-full max-w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
     <div className="overflow-x-auto">
       <table className="w-full table-fixed border-collapse text-left">
-        <thead className="bg-ui-fg-base">
-          <tr className="text-[11px] font-medium uppercase text-white">
+        <thead className="border-b border-gray-200 bg-gray-50">
+          <tr className="text-[11px] font-medium uppercase text-ui-fg-subtle">
             <th className="w-12 px-3 py-4">No.</th>
             <th className="w-[28%] px-3 py-4">Listing</th>
             <th className="w-[15%] px-3 py-4">Status</th>
@@ -223,13 +175,31 @@ const ListingsTable = ({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {listings.map((listing, index) => (
-            <ListingRow
-              key={listing.id}
-              listing={listing}
-              rowNumber={startIndex + index}
-            />
-          ))}
+          {listings.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="px-3 py-16">
+                <div className="flex flex-col items-center justify-center text-center text-ui-fg-muted">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-gray-300 bg-ui-bg-subtle">
+                    <Package size={28} />
+                  </div>
+                  <p className="mt-3 text-small-semi text-ui-fg-base">
+                    No data
+                  </p>
+                  <p className="mt-1 text-small-regular text-ui-fg-subtle">
+                    Listings you create will appear here.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          ) : (
+            listings.map((listing, index) => (
+              <ListingRow
+                key={listing.id}
+                listing={listing}
+                rowNumber={startIndex + index}
+              />
+            ))
+          )}
         </tbody>
       </table>
     </div>
@@ -325,38 +295,6 @@ const ListingRow = ({
         </div>
       </td>
     </tr>
-  )
-}
-
-function ProfileIcon({
-  size = 16,
-  className,
-}: {
-  size?: string | number
-  className?: string
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M10 9.5C11.6569 9.5 13 8.15685 13 6.5C13 4.84315 11.6569 3.5 10 3.5C8.34315 3.5 7 4.84315 7 6.5C7 8.15685 8.34315 9.5 10 9.5Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M4.5 16.5C4.5 13.7386 6.96243 11.5 10 11.5C13.0376 11.5 15.5 13.7386 15.5 16.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
   )
 }
 

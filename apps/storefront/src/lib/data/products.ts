@@ -4,6 +4,7 @@ import { sdk } from "@lib/config"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { mockProducts } from "@modules/store/mock-products"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
@@ -51,6 +52,20 @@ export type StoreProductWithListing = HttpTypes.StoreProduct & {
     expiry_date: string | null
     service_area: string | null
   } | null
+}
+
+const findMockProducts = (
+  queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
+) => {
+  if (queryParams?.handle) {
+    return mockProducts.filter((product) => product.handle === queryParams.handle)
+  }
+
+  if (queryParams?.id?.length) {
+    return mockProducts.filter((product) => queryParams.id?.includes(product.id))
+  }
+
+  return []
 }
 
 export const listProducts = async ({
@@ -121,12 +136,14 @@ export const listProducts = async ({
       const activeProducts = products.filter(
         (product) => product.listing?.status === "active"
       )
-      const activeCount = activeProducts.length
+      const matchedMockProducts = findMockProducts(queryParams)
+      const visibleProducts = [...activeProducts, ...matchedMockProducts]
+      const activeCount = visibleProducts.length
       const nextPage = count > offset + limit ? pageParam + 1 : null
 
       return {
         response: {
-          products: activeProducts,
+          products: visibleProducts,
           count: activeCount,
         },
         nextPage: nextPage,
@@ -196,7 +213,8 @@ export const listProductsWithSort = async ({
   const normalizedAvailability = listingAvailability?.trim().toLowerCase()
   const normalizedCondition = listingCondition?.trim().toLowerCase()
   const normalizedQuery = listingQuery?.trim().toLowerCase()
-  const filteredProducts = products.filter((product) => {
+  const productsWithMockListings = [...products, ...mockProducts]
+  const filteredProducts = productsWithMockListings.filter((product) => {
     const categoryMatches =
       !normalizedCategory ||
       product.listing?.category?.toLowerCase() === normalizedCategory

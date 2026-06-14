@@ -24,7 +24,7 @@ const optionsAsKeymap = (
   return variantOptions?.reduce((acc: Record<string, string>, varopt) => {
     if (varopt.option_id) acc[varopt.option_id] = varopt.value
     return acc
-  }, {})
+  }, {}) ?? {}
 }
 
 export default function ProductActions({

@@ -59,8 +59,8 @@ const BuyerInquiryTable = ({ inquiries }: { inquiries: BuyerInquiry[] }) => (
   <div className="w-full max-w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm">
     <div className="overflow-x-auto">
       <table className="w-full table-fixed border-collapse text-left">
-        <thead className="bg-ui-fg-base">
-          <tr className="text-[11px] font-medium uppercase text-white">
+        <thead className="border-b border-gray-200 bg-gray-50">
+          <tr className="text-[11px] font-medium uppercase text-ui-fg-subtle">
             <th className="w-[31%] px-3 py-4">Listing</th>
             <th className="w-[22%] px-3 py-4">Seller</th>
             <th className="w-[28%] px-3 py-4">Message</th>

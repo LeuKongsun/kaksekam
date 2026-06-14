@@ -4,6 +4,7 @@ import type { StoreProductWithListing } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "../thumbnail"
+import ProductQuickActions from "../product-quick-actions"
 import PreviewPrice from "./price"
 
 export default async function ProductPreview({
@@ -39,15 +40,27 @@ export default async function ProductPreview({
   ].filter(Boolean)
   const cardDescription =
     product.description || secondaryDetails.slice(0, 2).join(" · ")
+  const isMockProduct = product.id.startsWith("mock-product-")
 
   return (
-    <LocalizedClientLink href={`/products/${product.handle}`} className="group">
-      <div
-        className="group relative h-full overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-400"
-        data-testid="product-wrapper"
+    <div
+      className="group relative h-full overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-400"
+      data-testid="product-wrapper"
+    >
+      <div className="absolute right-3 top-3 z-20">
+        <ProductQuickActions
+          productId={product.id}
+          productHandle={product.handle}
+          productTitle={product.title}
+          canSave={!isMockProduct}
+        />
+      </div>
+      <LocalizedClientLink
+        href={`/products/${product.handle}`}
+        className="block h-full"
       >
         {product.listing?.category && (
-          <div className="absolute left-3 top-3 z-10 rounded-full bg-white/95 px-3 py-1 text-small-semi text-ui-fg-base shadow-sm">
+          <div className="absolute left-3 top-3 z-10 max-w-[calc(100%-112px)] truncate rounded-full bg-white/95 px-3 py-1 text-small-semi text-ui-fg-base shadow-sm">
             {product.listing.category}
           </div>
         )}
@@ -58,9 +71,9 @@ export default async function ProductPreview({
           isFeatured={isFeatured}
           className="rounded-none p-0 shadow-none"
         />
-        <div className="flex min-h-[136px] flex-col gap-2 p-3 small:p-4">
+        <div className="flex min-h-[128px] flex-col gap-1.5 p-2.5 small:min-h-[136px] small:gap-2 small:p-4">
           <Text
-            className="line-clamp-2 text-base-semi text-ui-fg-base small:text-[15px]"
+            className="line-clamp-2 text-small-semi text-ui-fg-base small:text-[15px]"
             data-testid="product-title"
           >
             {product.title}
@@ -70,7 +83,7 @@ export default async function ProductPreview({
               {listingDetails.slice(0, 2).map((detail) => (
                 <span
                   key={detail}
-                  className="rounded-full bg-gray-100 px-2 py-0.5 text-small-regular text-ui-fg-subtle"
+                  className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] leading-4 text-ui-fg-subtle small:px-2 small:text-small-regular"
                 >
                   {detail}
                 </span>
@@ -78,7 +91,7 @@ export default async function ProductPreview({
             </div>
           )}
           {cardDescription && (
-            <p className="line-clamp-1 text-small-regular text-ui-fg-subtle">
+            <p className="line-clamp-1 text-[11px] leading-4 text-ui-fg-subtle small:text-small-regular">
               {cardDescription}
             </p>
           )}
@@ -89,7 +102,7 @@ export default async function ProductPreview({
             </span>
           </div>
         </div>
-      </div>
-    </LocalizedClientLink>
+      </LocalizedClientLink>
+    </div>
   )
 }
