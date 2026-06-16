@@ -50,7 +50,7 @@ const ShareListingButton = ({
       className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 bg-white/95 text-ui-fg-base shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
       data-testid="share-listing-button"
     >
-      <Share size={16} />
+      <Share width={16} height={16} />
     </button>
   )
 }

@@ -73,7 +73,7 @@ const SaveListingButton = ({
         } ${error ? "text-rose-600" : ""}`}
         data-testid="save-listing-button"
       >
-        <Heart size={16} />
+        <Heart width={16} height={16} />
       </button>
     )
   }

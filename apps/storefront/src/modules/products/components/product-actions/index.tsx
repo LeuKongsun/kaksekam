@@ -4,11 +4,12 @@ import type { ProductSeller } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Divider from "@modules/common/components/divider"
+import Modal from "@modules/common/components/modal"
+import ListingInquiryForm from "@modules/products/components/listing-inquiry-form"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
 import { isEqual } from "lodash"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import ProductPrice from "../product-price"
 import { useRouter } from "next/navigation"
 
 type ProductActionsProps = {
@@ -16,27 +17,32 @@ type ProductActionsProps = {
   region: HttpTypes.StoreRegion
   seller?: ProductSeller | null
   disabled?: boolean
+  productId: string
 }
 
 const optionsAsKeymap = (
-  variantOptions: HttpTypes.StoreProductVariant["options"]
+  variantOptions: HttpTypes.StoreProductVariant["options"],
 ) => {
-  return variantOptions?.reduce((acc: Record<string, string>, varopt) => {
-    if (varopt.option_id) acc[varopt.option_id] = varopt.value
-    return acc
-  }, {}) ?? {}
+  return (
+    variantOptions?.reduce((acc: Record<string, string>, varopt) => {
+      if (varopt.option_id) acc[varopt.option_id] = varopt.value
+      return acc
+    }, {}) ?? {}
+  )
 }
 
 export default function ProductActions({
   product,
   seller,
   disabled,
+  productId,
 }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
+  const [isInquiryOpen, setIsInquiryOpen] = useState(false)
 
   // If there is only 1 variant, preselect the options
   useEffect(() => {
@@ -94,8 +100,8 @@ export default function ProductActions({
   const contactHref = seller?.email
     ? `mailto:${seller.email}?subject=${contactSubject}`
     : seller?.phone
-    ? `tel:${seller.phone.replace(/[^\d+]/g, "")}`
-    : undefined
+      ? `tel:${seller.phone.replace(/[^\d+]/g, "")}`
+      : undefined
   const canContact = !disabled && isValidVariant && !!contactHref
   const replyRate = seller?.trust_stats?.reply_rate
 
@@ -103,10 +109,24 @@ export default function ProductActions({
     <>
       <div className="flex flex-col gap-y-4 rounded-md border border-gray-200 bg-white p-4">
         <div>
-          <div className="text-base-semi">Contact farmer</div>
-          <p className="mt-1 text-small-regular text-ui-fg-subtle">
-            Send an inquiry or use the farmer contact details below.
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-base-semi">Contact farmer</div>
+              <p className="mt-1 text-small-regular text-ui-fg-subtle">
+                Ask a question or arrange details with the seller.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsInquiryOpen(true)}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-ui-fg-base shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
+              aria-label="Send inquiry"
+              title="Send inquiry"
+              data-testid="open-inquiry-modal-button"
+            >
+              <MessageIcon />
+            </button>
+          </div>
         </div>
         <div>
           {(product.variants?.length ?? 0) > 1 && (
@@ -129,8 +149,6 @@ export default function ProductActions({
             </div>
           )}
         </div>
-
-        <ProductPrice product={product} variant={selectedVariant} />
 
         {seller && (
           <div className="rounded-md bg-gray-50 p-4 text-small-regular">
@@ -198,16 +216,51 @@ export default function ProductActions({
           {!isValidVariant
             ? "Select listing option"
             : contactHref
-            ? "Contact seller"
-            : "Seller contact unavailable"}
+              ? "Contact seller"
+              : "Seller contact unavailable"}
         </a>
 
         <div className="rounded-md border border-ui-border-base p-4 text-small-regular text-ui-fg-subtle">
-          Message the seller to confirm availability, price, inspection, and
-          pickup or delivery. This platform does not process checkout or
-          payment.
+          Use comments or inquiry to ask questions, negotiate details, and
+          arrange inspection, pickup, or delivery. This platform does not
+          process checkout or payment.
         </div>
       </div>
+      <Modal
+        isOpen={isInquiryOpen}
+        close={() => setIsInquiryOpen(false)}
+        size="medium"
+        data-testid="listing-inquiry-modal"
+      >
+        <Modal.Title>Send inquiry</Modal.Title>
+        <div className="pt-4">
+          <ListingInquiryForm productId={productId} />
+        </div>
+      </Modal>
     </>
   )
 }
+
+const MessageIcon = () => (
+  <svg
+    width="17"
+    height="17"
+    viewBox="0 0 20 20"
+    fill="none"
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M4.5 5.5h11v7h-7L5 15.5v-3h-.5v-7Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6.75 7.75h6.5M6.75 10.25h4.5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+  </svg>
+)

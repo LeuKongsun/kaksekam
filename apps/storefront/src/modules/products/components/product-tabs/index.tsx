@@ -1,5 +1,6 @@
 "use client"
 
+import type React from "react"
 import Accordion from "./accordion"
 import type { StoreProductWithListing } from "@lib/data/products"
 
@@ -8,8 +9,11 @@ type ProductTabsProps = {
 }
 
 const ProductTabs = ({ product }: ProductTabsProps) => {
+  const listingDetails = getListingGroups(product).some((group) =>
+    group.rows.some((row) => Boolean(row[1])),
+  )
   const tabs = [
-    {
+    listingDetails && {
       label: "Listing details",
       component: <ProductInfoTab product={product} />,
     },
@@ -17,7 +21,11 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
       label: "How to arrange",
       component: <ContactInfoTab />,
     },
-  ]
+  ].filter(Boolean) as Array<{ label: string; component: React.ReactNode }>
+
+  if (!tabs.length) {
+    return null
+  }
 
   return (
     <div className="w-full">
@@ -37,9 +45,10 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
   )
 }
 
-const ProductInfoTab = ({ product }: ProductTabsProps) => {
+const getListingGroups = (product: StoreProductWithListing) => {
   const listing = product.listing
-  const listingGroups = [
+
+  return [
     {
       title: "Listing",
       rows: [
@@ -80,13 +89,17 @@ const ProductInfoTab = ({ product }: ProductTabsProps) => {
       ],
     },
   ]
+}
+
+const ProductInfoTab = ({ product }: ProductTabsProps) => {
+  const listingGroups = getListingGroups(product)
 
   return (
     <div className="text-small-regular py-8">
       <div className="grid grid-cols-1 gap-6">
         {listingGroups.map((group) => {
           const rows = group.rows.filter((row): row is [string, string] =>
-            Boolean(row[1])
+            Boolean(row[1]),
           )
 
           if (!rows.length) {
@@ -107,14 +120,6 @@ const ProductInfoTab = ({ product }: ProductTabsProps) => {
             </div>
           )
         })}
-        {!listing && (
-          <div>
-            <span className="font-semibold">Listing details</span>
-            <p className="mt-2 max-w-sm text-ui-fg-subtle">
-              Details are unavailable for this listing.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   )

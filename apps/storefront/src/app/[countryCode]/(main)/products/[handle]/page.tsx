@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { retrieveCustomer } from "@lib/data/customer"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
@@ -13,7 +14,7 @@ type Props = {
 export async function generateStaticParams() {
   try {
     const countryCodes = await listRegions().then((regions) =>
-      regions?.map((r) => r.countries?.map((c) => c.iso_2)).flat()
+      regions?.map((r) => r.countries?.map((c) => c.iso_2)).flat(),
     )
 
     if (!countryCodes) {
@@ -39,14 +40,14 @@ export async function generateStaticParams() {
         countryData.products.map((product) => ({
           countryCode: countryData.country,
           handle: product.handle,
-        }))
+        })),
       )
       .filter((param) => param.handle)
   } catch (error) {
     console.error(
       `Failed to generate static paths for product pages: ${
         error instanceof Error ? error.message : "Unknown error"
-      }.`
+      }.`,
     )
     return []
   }
@@ -54,7 +55,7 @@ export async function generateStaticParams() {
 
 function getImagesForVariant(
   product: HttpTypes.StoreProduct,
-  selectedVariantId?: string
+  selectedVariantId?: string,
 ) {
   if (!selectedVariantId || !product.variants) {
     return product.images
@@ -100,7 +101,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function ProductPage(props: Props) {
   const params = await props.params
-  const region = await getRegion(params.countryCode)
+  const [region, customer] = await Promise.all([
+    getRegion(params.countryCode),
+    retrieveCustomer().catch(() => null),
+  ])
   const searchParams = await props.searchParams
 
   const selectedVariantId = searchParams.v_id
@@ -119,6 +123,9 @@ export default async function ProductPage(props: Props) {
   }
 
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
+  const customerName =
+    customer &&
+    `${customer.first_name ?? ""} ${customer.last_name ?? ""}`.trim()
 
   return (
     <ProductTemplate
@@ -126,6 +133,15 @@ export default async function ProductPage(props: Props) {
       region={region}
       countryCode={params.countryCode}
       images={images ?? []}
+      customer={
+        customer
+          ? {
+              id: customer.id,
+              name: customerName || customer.email,
+              email: customer.email,
+            }
+          : null
+      }
     />
   )
 }
