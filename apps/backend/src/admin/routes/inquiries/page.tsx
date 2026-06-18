@@ -2,12 +2,20 @@ import { defineRouteConfig } from "@medusajs/admin-sdk"
 import {
   EmptyState,
   FilterPanel,
-  OpsPage,
   OpsSection,
-  SignalCard,
 } from "../../components/marketplace-ops"
-import { Button, StatusBadge, Table, Text, toast } from "@medusajs/ui"
-import { useEffect, useMemo, useState } from "react"
+import {
+  Button,
+  DropdownMenu,
+  FocusModal,
+  IconButton,
+  StatusBadge,
+  Table,
+  Text,
+  Tooltip,
+  toast,
+} from "@medusajs/ui"
+import { ReactNode, useEffect, useMemo, useState } from "react"
 
 type AdminInquiry = {
   id: string
@@ -84,6 +92,9 @@ const InquiriesPage = () => {
   const [statusFilter, setStatusFilter] = useState<InquiryStatusFilter>("new")
   const [sellerVerificationFilter, setSellerVerificationFilter] =
     useState<SellerVerificationFilter>("all")
+  const [selectedInquiry, setSelectedInquiry] = useState<AdminInquiry | null>(
+    null,
+  )
   const counts = useMemo(
     () => ({
       new: inquiries.filter((inquiry) => inquiry.status === "new").length,
@@ -194,69 +205,34 @@ const InquiriesPage = () => {
   }, [])
 
   return (
-    <OpsPage
-      title="Marketplace inquiries"
-      subtitle={`${counts.new} new, ${counts.read} read, ${counts.replied} replied, ${counts.archived} archived.`}
-      actions={
-        <Button
-          size="small"
-          variant="secondary"
-          onClick={() => void loadInquiries()}
-          isLoading={isLoading}
-        >
-          Refresh
-        </Button>
-      }
-    >
-      <OpsSection>
-        <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-4">
-          <SignalCard
-            label="New"
-            value={counts.new}
-            tone={counts.new > 0 ? "attention" : "neutral"}
-          />
-          <SignalCard
-            label="Stale open"
-            value={counts.stale}
-            detail="2+ days old"
-            tone={counts.stale > 0 ? "danger" : "neutral"}
-          />
-          <SignalCard
-            label="Unverified sellers"
-            value={counts.unverifiedSeller}
-            tone={counts.unverifiedSeller > 0 ? "attention" : "neutral"}
-          />
-          <SignalCard label="Replied" value={counts.replied} tone="success" />
-        </div>
-      </OpsSection>
-
+    <div className="flex flex-col gap-y-6">
       <OpsSection
-        title="Buyer message queue"
-        subtitle="Track open buyer interest, seller responsiveness, and stale messages."
+        title="Marketplace inquiries"
+        subtitle={`${counts.new} new, ${counts.read} read, ${counts.replied} replied, ${counts.archived} archived.`}
+        actions={
+          <Tooltip content="Refresh">
+            <IconButton
+              aria-label="Refresh marketplace inquiries"
+              size="small"
+              variant="transparent"
+              onClick={() => void loadInquiries()}
+              isLoading={isLoading}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        }
       >
         <FilterPanel>
-          <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[1fr_180px_180px]">
-            <label className="flex flex-col gap-y-1">
-              <Text className="text-ui-fg-subtle" size="small">
-                Search
-              </Text>
-              <input
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Buyer, seller, listing, message"
-                className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
-              />
-            </label>
-            <label className="flex flex-col gap-y-1">
-              <Text className="text-ui-fg-subtle" size="small">
-                Status
-              </Text>
+          <div className="flex flex-col gap-2 px-6 py-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center">
               <select
+                aria-label="Filter by inquiry status"
                 value={statusFilter}
                 onChange={(event) =>
                   setStatusFilter(event.target.value as InquiryStatusFilter)
                 }
-                className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+                className="txt-compact-small h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-2.5 text-ui-fg-base outline-none md:w-[180px]"
               >
                 <option value="all">All statuses</option>
                 <option value="new">New</option>
@@ -264,25 +240,31 @@ const InquiriesPage = () => {
                 <option value="replied">Replied</option>
                 <option value="archived">Archived</option>
               </select>
-            </label>
-            <label className="flex flex-col gap-y-1">
-              <Text className="text-ui-fg-subtle" size="small">
-                Seller verification
-              </Text>
               <select
+                aria-label="Filter by seller verification"
                 value={sellerVerificationFilter}
                 onChange={(event) =>
                   setSellerVerificationFilter(
                     event.target.value as SellerVerificationFilter,
                   )
                 }
-                className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+                className="txt-compact-small h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-2.5 text-ui-fg-base outline-none md:w-[180px]"
               >
                 <option value="all">All sellers</option>
                 <option value="verified">Verified</option>
                 <option value="unverified">Unverified</option>
               </select>
-            </label>
+            </div>
+            <div>
+              <input
+                aria-label="Search inquiries"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search"
+                type="search"
+                className="txt-compact-small h-8 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-2.5 text-ui-fg-base outline-none placeholder:text-ui-fg-muted md:w-[240px]"
+              />
+            </div>
           </div>
         </FilterPanel>
 
@@ -300,9 +282,10 @@ const InquiriesPage = () => {
           <Table>
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell>Inquiry</Table.HeaderCell>
+                <Table.HeaderCell>Buyer</Table.HeaderCell>
                 <Table.HeaderCell>Listing</Table.HeaderCell>
                 <Table.HeaderCell>Seller</Table.HeaderCell>
+                <Table.HeaderCell>Age</Table.HeaderCell>
                 <Table.HeaderCell>Status</Table.HeaderCell>
                 <Table.HeaderCell className="text-right">
                   Actions
@@ -312,108 +295,47 @@ const InquiriesPage = () => {
             <Table.Body>
               {filteredInquiries.map((inquiry) => (
                 <Table.Row key={inquiry.id}>
-                  <Table.Cell>
-                    <div className="flex max-w-[360px] flex-col gap-y-1">
-                      <Text weight="plus">{inquiry.buyer_name}</Text>
-                      <Text
-                        className={
-                          inquiry.status !== "replied" &&
-                          inquiry.status !== "archived" &&
-                          getAgeInDays(inquiry.created_at) >= 2
-                            ? "text-ui-fg-error"
-                            : "text-ui-fg-subtle"
-                        }
-                        size="small"
-                      >
-                        {formatInquiryAge(inquiry.created_at)}
-                      </Text>
-                      <Text className="text-ui-fg-subtle" size="small">
-                        {inquiry.buyer_email}
-                        {inquiry.buyer_phone ? ` | ${inquiry.buyer_phone}` : ""}
-                      </Text>
-                      <Text
-                        className="line-clamp-2 text-ui-fg-subtle"
-                        size="small"
-                      >
-                        {inquiry.message}
-                      </Text>
-                    </div>
+                  <Table.Cell className="max-w-[180px] truncate">
+                    {inquiry.buyer_name}
                   </Table.Cell>
-                  <Table.Cell>
-                    <div className="flex max-w-[260px] flex-col gap-y-1">
-                      <Text>
-                        {inquiry.product?.title ?? "Listing unavailable"}
-                      </Text>
-                      <Text className="text-ui-fg-subtle" size="small">
-                        {inquiry.product?.listing?.status ?? "Unknown status"}
-                      </Text>
-                    </div>
+                  <Table.Cell className="max-w-[260px] truncate">
+                    {inquiry.product?.title ?? "Listing unavailable"}
                   </Table.Cell>
-                  <Table.Cell>
-                    <div className="flex flex-col gap-y-1">
-                      <div className="flex items-center gap-x-2">
-                        <Text>
-                          {inquiry.product?.seller?.display_name ??
-                            "Unknown seller"}
-                        </Text>
-                        {inquiry.product?.seller?.verification_status ===
-                          "verified" && (
-                          <StatusBadge color="green">Verified</StatusBadge>
-                        )}
-                      </div>
-                      {inquiry.product?.seller?.handle && (
-                        <Text className="text-ui-fg-subtle" size="small">
-                          @{inquiry.product.seller.handle}
-                        </Text>
-                      )}
-                    </div>
+                  <Table.Cell className="max-w-[200px] truncate">
+                    {inquiry.product?.seller?.display_name ?? "Unknown seller"}
+                  </Table.Cell>
+                  <Table.Cell
+                    className={
+                      inquiry.status !== "replied" &&
+                      inquiry.status !== "archived" &&
+                      getAgeInDays(inquiry.created_at) >= 2
+                        ? "text-ui-fg-error"
+                        : undefined
+                    }
+                  >
+                    {formatInquiryAge(inquiry.created_at)}
                   </Table.Cell>
                   <Table.Cell>
                     <StatusBadge color={statusColor[inquiry.status]}>
                       {statusLabel[inquiry.status]}
                     </StatusBadge>
-                    {inquiry.replied_at && (
-                      <Text className="mt-1 text-ui-fg-subtle" size="small">
-                        Replied{" "}
-                        {new Date(inquiry.replied_at).toLocaleDateString()}
-                      </Text>
-                    )}
                   </Table.Cell>
-                  <Table.Cell>
-                    <div className="flex min-w-[260px] justify-end gap-x-2">
+                  <Table.Cell className="text-right">
+                    <div className="flex justify-end gap-2">
                       <Button
                         size="small"
-                        variant="secondary"
-                        disabled={inquiry.status === "read"}
-                        isLoading={updatingId === inquiry.id}
-                        onClick={() =>
-                          void updateInquiryStatus(inquiry, "read")
-                        }
+                        variant="transparent"
+                        onClick={() => setSelectedInquiry(inquiry)}
                       >
-                        Read
+                        Details
                       </Button>
-                      <Button
-                        size="small"
-                        variant="secondary"
-                        disabled={inquiry.status === "replied"}
+                      <InquiryActions
+                        inquiry={inquiry}
                         isLoading={updatingId === inquiry.id}
-                        onClick={() =>
-                          void updateInquiryStatus(inquiry, "replied")
+                        onUpdate={(status) =>
+                          void updateInquiryStatus(inquiry, status)
                         }
-                      >
-                        Replied
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="secondary"
-                        disabled={inquiry.status === "archived"}
-                        isLoading={updatingId === inquiry.id}
-                        onClick={() =>
-                          void updateInquiryStatus(inquiry, "archived")
-                        }
-                      >
-                        Archive
-                      </Button>
+                      />
                     </div>
                   </Table.Cell>
                 </Table.Row>
@@ -422,9 +344,180 @@ const InquiriesPage = () => {
           </Table>
         )}
       </OpsSection>
-    </OpsPage>
+      <InquiryDetailsDialog
+        inquiry={selectedInquiry}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedInquiry(null)
+          }
+        }}
+      />
+    </div>
   )
 }
+
+const InquiryActions = ({
+  inquiry,
+  isLoading,
+  onUpdate,
+}: {
+  inquiry: AdminInquiry
+  isLoading: boolean
+  onUpdate: (status: AdminInquiry["status"]) => void
+}) => (
+  <DropdownMenu>
+    <DropdownMenu.Trigger asChild>
+      <Button size="small" variant="transparent" disabled={isLoading}>
+        More
+      </Button>
+    </DropdownMenu.Trigger>
+    <DropdownMenu.Content align="end">
+      <DropdownMenu.Item
+        disabled={inquiry.status === "read"}
+        onSelect={() => onUpdate("read")}
+      >
+        Mark as read
+      </DropdownMenu.Item>
+      <DropdownMenu.Item
+        disabled={inquiry.status === "replied"}
+        onSelect={() => onUpdate("replied")}
+      >
+        Mark as replied
+      </DropdownMenu.Item>
+      <DropdownMenu.Separator />
+      <DropdownMenu.Item
+        disabled={inquiry.status === "archived"}
+        onSelect={() => onUpdate("archived")}
+      >
+        Archive inquiry
+      </DropdownMenu.Item>
+    </DropdownMenu.Content>
+  </DropdownMenu>
+)
+
+const InquiryDetailsDialog = ({
+  inquiry,
+  onOpenChange,
+}: {
+  inquiry: AdminInquiry | null
+  onOpenChange: (open: boolean) => void
+}) => (
+  <FocusModal open={Boolean(inquiry)} onOpenChange={onOpenChange}>
+    <FocusModal.Content className="inset-auto left-1/2 top-1/2 h-auto max-h-[calc(100%-32px)] w-[calc(100%-32px)] max-w-[680px] -translate-x-1/2 -translate-y-1/2">
+      <FocusModal.Header>
+        <FocusModal.Title>Inquiry details</FocusModal.Title>
+      </FocusModal.Header>
+      {inquiry && (
+        <FocusModal.Body className="overflow-y-auto px-6 py-5">
+          <div className="flex flex-col gap-y-5">
+            <div>
+              <Text weight="plus">{inquiry.buyer_name}</Text>
+              <Text className="mt-1 text-ui-fg-subtle" size="small">
+                {inquiry.message}
+              </Text>
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <DetailItem label="Buyer email">
+                {inquiry.buyer_email}
+              </DetailItem>
+              <DetailItem label="Buyer phone">
+                {inquiry.buyer_phone ?? "None"}
+              </DetailItem>
+              <DetailItem label="Listing">
+                {inquiry.product?.title ?? "Listing unavailable"}
+              </DetailItem>
+              <DetailItem label="Listing status">
+                {inquiry.product?.listing?.status ?? "Unknown"}
+              </DetailItem>
+              <DetailItem label="Seller">
+                {inquiry.product?.seller?.display_name ?? "Unknown seller"}
+              </DetailItem>
+              <DetailItem label="Seller handle">
+                {inquiry.product?.seller?.handle
+                  ? `@${inquiry.product.seller.handle}`
+                  : "None"}
+              </DetailItem>
+              <DetailItem label="Seller verification">
+                {inquiry.product?.seller?.verification_status ?? "Unknown"}
+              </DetailItem>
+              <DetailItem label="Received">
+                {new Intl.DateTimeFormat(undefined, {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(new Date(inquiry.created_at))}
+              </DetailItem>
+              {inquiry.replied_at && (
+                <DetailItem label="Replied">
+                  {new Intl.DateTimeFormat(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  }).format(new Date(inquiry.replied_at))}
+                </DetailItem>
+              )}
+            </div>
+          </div>
+        </FocusModal.Body>
+      )}
+    </FocusModal.Content>
+  </FocusModal>
+)
+
+const DetailItem = ({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) => (
+  <div>
+    <Text className="text-ui-fg-subtle" size="small">
+      {label}
+    </Text>
+    <Text className="mt-1" size="small">
+      {children}
+    </Text>
+  </div>
+)
+
+const RefreshIcon = () => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    height="16"
+    viewBox="0 0 24 24"
+    width="16"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M20 7v5h-5"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+    <path
+      d="M4 17v-5h5"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+    <path
+      d="M6.1 9a7 7 0 0 1 11.6-2.6L20 8.7"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+    <path
+      d="M17.9 15a7 7 0 0 1-11.6 2.6L4 15.3"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+  </svg>
+)
 
 export const config = defineRouteConfig({
   label: "Marketplace inquiries",

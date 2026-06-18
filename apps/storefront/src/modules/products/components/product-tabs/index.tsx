@@ -1,158 +1,59 @@
 "use client"
 
-import type React from "react"
-import Accordion from "./accordion"
-import type { StoreProductWithListing } from "@lib/data/products"
-
-type ProductTabsProps = {
-  product: StoreProductWithListing
-}
-
-const ProductTabs = ({ product }: ProductTabsProps) => {
-  const listingDetails = getListingGroups(product).some((group) =>
-    group.rows.some((row) => Boolean(row[1])),
-  )
-  const tabs = [
-    listingDetails && {
-      label: "Listing details",
-      component: <ProductInfoTab product={product} />,
-    },
-    {
-      label: "How to arrange",
-      component: <ContactInfoTab />,
-    },
-  ].filter(Boolean) as Array<{ label: string; component: React.ReactNode }>
-
-  if (!tabs.length) {
-    return null
-  }
-
+const ProductTabs = () => {
   return (
-    <div className="w-full">
-      <Accordion type="multiple">
-        {tabs.map((tab, i) => (
-          <Accordion.Item
-            key={i}
-            title={tab.label}
-            headingSize="medium"
-            value={tab.label}
-          >
-            {tab.component}
-          </Accordion.Item>
-        ))}
-      </Accordion>
+    <div className="flex w-full flex-col gap-4">
+      <BuyerSafetyTips />
     </div>
   )
 }
 
-const getListingGroups = (product: StoreProductWithListing) => {
-  const listing = product.listing
-
-  return [
-    {
-      title: "Listing",
-      rows: [
-        ["Category", listing?.category],
-        ["Location", listing?.location],
-        ["Availability", listing?.availability],
-        ["Condition", listing?.condition],
-        ["Preferred contact", listing?.contact_preference],
-      ],
-    },
-    {
-      title: "Product or service",
-      rows: [
-        [
-          "Quantity",
-          listing?.quantity && listing.unit
-            ? `${listing.quantity} ${listing.unit}`
-            : listing?.quantity,
-        ],
-        ["Variety/type", listing?.variety],
-        ["Production method", listing?.production_method],
-        ["Harvest/season", listing?.harvest_date],
-        ["Service area", listing?.service_area],
-      ],
-    },
-    {
-      title: "Livestock or equipment",
-      rows: [
-        ["Breed", listing?.breed],
-        ["Age", listing?.age],
-        ["Sex", listing?.sex],
-        ["Health notes", listing?.health_notes],
-        ["Brand", listing?.brand],
-        ["Model", listing?.equipment_model],
-        ["Year", listing?.year],
-        ["Pack size", listing?.pack_size],
-        ["Expiry/production date", listing?.expiry_date],
-      ],
-    },
+const BuyerSafetyTips = () => {
+  const tips = [
+    "Meet the seller in a public or familiar place whenever possible.",
+    "Inspect the product carefully before agreeing to buy or pay.",
+    "Use comments or inquiry to confirm availability, condition, and pickup details.",
+    "Avoid sending money before you are comfortable with the seller and listing.",
+    "Keep a record of messages, agreed price, pickup time, and seller contact details.",
   ]
-}
-
-const ProductInfoTab = ({ product }: ProductTabsProps) => {
-  const listingGroups = getListingGroups(product)
 
   return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-1 gap-6">
-        {listingGroups.map((group) => {
-          const rows = group.rows.filter((row): row is [string, string] =>
-            Boolean(row[1]),
-          )
-
-          if (!rows.length) {
-            return null
-          }
-
-          return (
-            <div key={group.title}>
-              <span className="font-semibold">{group.title}</span>
-              <dl className="mt-3 grid grid-cols-1 gap-3 small:grid-cols-2">
-                {rows.map(([label, value]) => (
-                  <div key={label}>
-                    <dt className="text-ui-fg-subtle">{label}</dt>
-                    <dd>{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )
-        })}
+    <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-small-regular">
+      <div className="flex items-center gap-2 text-amber-800">
+        <AlertIcon />
+        <h3 className="text-base-semi">Safety Tips for Buyers</h3>
       </div>
+      <ol className="mt-4 list-decimal space-y-3 pl-5 text-ui-fg-subtle">
+        {tips.map((tip) => (
+          <li key={tip}>{tip}</li>
+        ))}
+      </ol>
     </div>
   )
 }
 
-const ContactInfoTab = () => {
-  return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-1 gap-y-6">
-        <div>
-          <span className="font-semibold">Contact the seller</span>
-          <p className="max-w-sm">
-            Ask questions, confirm the listing is still available, and arrange
-            inspection details directly with the seller.
-          </p>
-        </div>
-        <div>
-          <span className="font-semibold">Arrange privately</span>
-          <p className="max-w-sm">
-            Payment, pickup, delivery, and handover are arranged between buyer
-            and seller outside this platform.
-          </p>
-        </div>
-        <div>
-          <span className="font-semibold">Stay safe</span>
-          <p className="max-w-sm">
-            Meet in a safe place, check the item carefully, and avoid sending
-            money before you are comfortable with the arrangement.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
+const AlertIcon = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 20 20"
+    fill="none"
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M10 3.25 18 16H2L10 3.25Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M10 7.5v4M10 14.25h.01"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+  </svg>
+)
 
 export default ProductTabs

@@ -9,6 +9,7 @@ import RelatedProducts from "@modules/products/components/related-products"
 import CommentSection from "@modules/products/components/comment-section"
 import ProductInfo from "@modules/products/templates/product-info"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
@@ -45,6 +46,8 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         data-testid="product-container"
       >
         <div className="flex min-w-0 flex-col gap-y-6">
+          <ProductBreadcrumb product={product} countryCode={countryCode} />
+          <ImageGallery images={images} />
           <ProductInfo
             product={product}
             actions={
@@ -57,7 +60,6 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
               </Suspense>
             }
           />
-          <ImageGallery images={images} />
         </div>
 
         <div className="flex w-full flex-col gap-y-4 large:sticky large:top-24">
@@ -74,7 +76,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           >
             <ProductActionsWrapper id={product.id} region={region} />
           </Suspense>
-          <ProductTabs product={product} />
+          <ProductTabs />
         </div>
       </div>
       <CommentSection
@@ -84,7 +86,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         customer={customer}
       />
       <div
-        className="mx-auto my-16 w-full max-w-[1120px] small:my-32"
+        className="mx-auto mb-16 mt-4 w-full max-w-[1120px] small:mb-24 small:mt-6"
         data-testid="related-products-container"
       >
         <Suspense fallback={<SkeletonRelatedProducts />}>
@@ -92,6 +94,43 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         </Suspense>
       </div>
     </>
+  )
+}
+
+const ProductBreadcrumb = ({
+  product,
+  countryCode,
+}: {
+  product: StoreProductWithListing
+  countryCode: string
+}) => {
+  const crumbs = [
+    { label: "Home", href: `/${countryCode}` },
+    { label: "Listings", href: `/${countryCode}/store` },
+    product.listing?.category && {
+      label: product.listing.category,
+      href: `/${countryCode}/store?category=${encodeURIComponent(
+        product.listing.category,
+      )}`,
+    },
+  ].filter(Boolean) as Array<{ label: string; href: string }>
+
+  return (
+    <nav
+      aria-label="Breadcrumb"
+      className="flex flex-wrap items-center gap-2 text-small-regular text-ui-fg-subtle"
+    >
+      {crumbs.map((crumb, index) => (
+        <React.Fragment key={crumb.href}>
+          {index > 0 && <span className="text-ui-fg-muted">/</span>}
+          <Link href={crumb.href} className="hover:text-ui-fg-base">
+            {crumb.label}
+          </Link>
+        </React.Fragment>
+      ))}
+      <span className="text-ui-fg-muted">/</span>
+      <span className="line-clamp-1 text-ui-fg-base">{product.title}</span>
+    </nav>
   )
 }
 

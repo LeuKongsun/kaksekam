@@ -1,4 +1,4 @@
-import { Text, clx } from "@modules/common/components/ui"
+import { Text } from "@modules/common/components/ui"
 import { VariantPrice } from "types/global"
 
 export default async function PreviewPrice({ price }: { price: VariantPrice }) {
@@ -16,12 +16,7 @@ export default async function PreviewPrice({ price }: { price: VariantPrice }) {
           {price.original_price}
         </Text>
       )}
-      <Text
-        className={clx("text-small-semi text-ui-fg-base", {
-          "text-ui-fg-interactive": price.price_type === "sale",
-        })}
-        data-testid="price"
-      >
+      <Text className="text-small-semi text-[#ff385c]" data-testid="price">
         {price.calculated_price}
       </Text>
     </>

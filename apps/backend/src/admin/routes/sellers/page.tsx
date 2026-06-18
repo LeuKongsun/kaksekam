@@ -2,12 +2,20 @@ import { defineRouteConfig } from "@medusajs/admin-sdk"
 import {
   EmptyState,
   FilterPanel,
-  OpsPage,
   OpsSection,
-  SignalCard,
 } from "../../components/marketplace-ops"
-import { Button, StatusBadge, Table, Text, toast } from "@medusajs/ui"
-import { useEffect, useMemo, useState } from "react"
+import {
+  Button,
+  DropdownMenu,
+  FocusModal,
+  IconButton,
+  StatusBadge,
+  Table,
+  Text,
+  Tooltip,
+  toast,
+} from "@medusajs/ui"
+import { ReactNode, useEffect, useMemo, useState } from "react"
 
 type AdminSeller = {
   id: string
@@ -53,6 +61,7 @@ const SellersPage = () => {
   const [statusFilter, setStatusFilter] = useState<SellerStatusFilter>("all")
   const [verificationFilter, setVerificationFilter] =
     useState<VerificationFilter>("all")
+  const [selectedSeller, setSelectedSeller] = useState<AdminSeller | null>(null)
 
   const sellerCounts = useMemo(
     () => ({
@@ -162,100 +171,64 @@ const SellersPage = () => {
   }, [])
 
   return (
-    <OpsPage
-      title="Marketplace sellers"
-      subtitle={`${sellerCounts.active} active, ${sellerCounts.verified} verified, ${sellerCounts.suspended} suspended.`}
-      actions={
-        <Button
-          size="small"
-          variant="secondary"
-          onClick={() => void loadSellers()}
-          isLoading={isLoading}
-        >
-          Refresh
-        </Button>
-      }
-    >
-      <OpsSection>
-        <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-4">
-          <SignalCard
-            label="Active sellers"
-            value={sellerCounts.active}
-            tone="success"
-          />
-          <SignalCard
-            label="Unverified"
-            value={sellerCounts.unverified}
-            tone={sellerCounts.unverified > 0 ? "attention" : "neutral"}
-          />
-          <SignalCard
-            label="Pending listings"
-            value={sellerCounts.withPendingListings}
-            detail="Need moderation"
-            tone={
-              sellerCounts.withPendingListings > 0 ? "attention" : "neutral"
-            }
-          />
-          <SignalCard
-            label="Low reply rate"
-            value={sellerCounts.lowReplyRate}
-            detail="Below 50%"
-            tone={sellerCounts.lowReplyRate > 0 ? "danger" : "neutral"}
-          />
-        </div>
-      </OpsSection>
-
+    <div className="flex flex-col gap-y-6">
       <OpsSection
-        title="Seller trust desk"
-        subtitle="Verify credible sellers, watch response quality, and suspend accounts that should not trade."
+        title="Marketplace sellers"
+        subtitle={`${sellerCounts.active} active, ${sellerCounts.verified} verified, ${sellerCounts.suspended} suspended.`}
+        actions={
+          <Tooltip content="Refresh">
+            <IconButton
+              aria-label="Refresh marketplace sellers"
+              size="small"
+              variant="transparent"
+              onClick={() => void loadSellers()}
+              isLoading={isLoading}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        }
       >
         <FilterPanel>
-          <div className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[1fr_180px_180px]">
-            <label className="flex flex-col gap-y-1">
-              <Text className="text-ui-fg-subtle" size="small">
-                Search
-              </Text>
-              <input
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Seller, handle, contact, location"
-                className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
-              />
-            </label>
-            <label className="flex flex-col gap-y-1">
-              <Text className="text-ui-fg-subtle" size="small">
-                Status
-              </Text>
+          <div className="flex flex-col gap-2 px-6 py-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center">
               <select
+                aria-label="Filter by seller status"
                 value={statusFilter}
                 onChange={(event) =>
                   setStatusFilter(event.target.value as SellerStatusFilter)
                 }
-                className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+                className="txt-compact-small h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-2.5 text-ui-fg-base outline-none md:w-[180px]"
               >
                 <option value="all">All statuses</option>
                 <option value="active">Active</option>
                 <option value="suspended">Suspended</option>
               </select>
-            </label>
-            <label className="flex flex-col gap-y-1">
-              <Text className="text-ui-fg-subtle" size="small">
-                Verification
-              </Text>
               <select
+                aria-label="Filter by verification"
                 value={verificationFilter}
                 onChange={(event) =>
                   setVerificationFilter(
                     event.target.value as VerificationFilter,
                   )
                 }
-                className="h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base outline-none"
+                className="txt-compact-small h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-2.5 text-ui-fg-base outline-none md:w-[180px]"
               >
                 <option value="all">All sellers</option>
                 <option value="verified">Verified</option>
                 <option value="unverified">Unverified</option>
               </select>
-            </label>
+            </div>
+            <div>
+              <input
+                aria-label="Search sellers"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search"
+                type="search"
+                className="txt-compact-small h-8 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-2.5 text-ui-fg-base outline-none placeholder:text-ui-fg-muted md:w-[240px]"
+              />
+            </div>
           </div>
         </FilterPanel>
 
@@ -274,9 +247,11 @@ const SellersPage = () => {
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>Seller</Table.HeaderCell>
-                <Table.HeaderCell>Listings</Table.HeaderCell>
-                <Table.HeaderCell>Inquiries</Table.HeaderCell>
+                <Table.HeaderCell>Handle</Table.HeaderCell>
+                <Table.HeaderCell>Contact</Table.HeaderCell>
                 <Table.HeaderCell>Status</Table.HeaderCell>
+                <Table.HeaderCell>Verification</Table.HeaderCell>
+                <Table.HeaderCell>Listings</Table.HeaderCell>
                 <Table.HeaderCell className="text-right">
                   Actions
                 </Table.HeaderCell>
@@ -285,50 +260,14 @@ const SellersPage = () => {
             <Table.Body>
               {filteredSellers.map((seller) => (
                 <Table.Row key={seller.id}>
-                  <Table.Cell>
-                    <div className="flex max-w-[360px] flex-col gap-y-1">
-                      <div className="flex items-center gap-x-2">
-                        <Text weight="plus">{seller.display_name}</Text>
-                        {seller.verification_status === "verified" && (
-                          <StatusBadge color="green">Verified</StatusBadge>
-                        )}
-                      </div>
-                      <Text className="text-ui-fg-subtle" size="small">
-                        @{seller.handle}
-                      </Text>
-                      <Text className="text-ui-fg-subtle" size="small">
-                        {seller.email ??
-                          seller.phone ??
-                          seller.location ??
-                          "No contact"}
-                      </Text>
-                    </div>
+                  <Table.Cell className="max-w-[220px] truncate">
+                    {seller.display_name}
                   </Table.Cell>
-                  <Table.Cell>
-                    <Text size="small">
-                      {seller.listing_stats.active} active /{" "}
-                      {seller.listing_stats.total} total
-                    </Text>
-                    <Text className="text-ui-fg-subtle" size="small">
-                      {seller.listing_stats.pending} pending,{" "}
-                      {seller.listing_stats.rejected} rejected
-                    </Text>
+                  <Table.Cell className="max-w-[180px] truncate">
+                    @{seller.handle}
                   </Table.Cell>
-                  <Table.Cell>
-                    <Text size="small">
-                      {seller.inquiry_stats.total} received
-                    </Text>
-                    <Text className="text-ui-fg-subtle" size="small">
-                      {seller.inquiry_stats.reply_rate === null
-                        ? "No reply history"
-                        : `${seller.inquiry_stats.reply_rate}% reply rate`}
-                    </Text>
-                    {seller.inquiry_stats.reply_rate !== null &&
-                      seller.inquiry_stats.reply_rate < 50 && (
-                        <Text className="text-ui-fg-subtle" size="small">
-                          Needs response follow-up
-                        </Text>
-                      )}
+                  <Table.Cell className="max-w-[220px] truncate">
+                    {seller.email ?? seller.phone ?? seller.location ?? "No contact"}
                   </Table.Cell>
                   <Table.Cell>
                     <StatusBadge color={statusColor[seller.status]}>
@@ -336,50 +275,36 @@ const SellersPage = () => {
                     </StatusBadge>
                   </Table.Cell>
                   <Table.Cell>
-                    <div className="flex min-w-[260px] justify-end gap-x-2">
+                    <StatusBadge
+                      color={
+                        seller.verification_status === "verified"
+                          ? "green"
+                          : "grey"
+                      }
+                    >
+                      {seller.verification_status === "verified"
+                        ? "Verified"
+                        : "Unverified"}
+                    </StatusBadge>
+                  </Table.Cell>
+                  <Table.Cell>
+                    {seller.listing_stats.active} active /{" "}
+                    {seller.listing_stats.total} total
+                  </Table.Cell>
+                  <Table.Cell className="text-right">
+                    <div className="flex justify-end gap-2">
                       <Button
                         size="small"
-                        variant="secondary"
-                        disabled={seller.verification_status === "verified"}
-                        isLoading={updatingId === seller.id}
-                        onClick={() =>
-                          void updateSeller(seller, {
-                            verification_status: "verified",
-                          })
-                        }
+                        variant="transparent"
+                        onClick={() => setSelectedSeller(seller)}
                       >
-                        Verify
+                        Details
                       </Button>
-                      <Button
-                        size="small"
-                        variant="secondary"
-                        disabled={seller.verification_status === "unverified"}
+                      <SellerActions
+                        seller={seller}
                         isLoading={updatingId === seller.id}
-                        onClick={() =>
-                          void updateSeller(seller, {
-                            verification_status: "unverified",
-                          })
-                        }
-                      >
-                        Unverify
-                      </Button>
-                      <Button
-                        size="small"
-                        variant={
-                          seller.status === "active" ? "danger" : "secondary"
-                        }
-                        isLoading={updatingId === seller.id}
-                        onClick={() =>
-                          void updateSeller(seller, {
-                            status:
-                              seller.status === "active"
-                                ? "suspended"
-                                : "active",
-                          })
-                        }
-                      >
-                        {seller.status === "active" ? "Suspend" : "Reactivate"}
-                      </Button>
+                        onUpdate={(update) => void updateSeller(seller, update)}
+                      />
                     </div>
                   </Table.Cell>
                 </Table.Row>
@@ -388,9 +313,186 @@ const SellersPage = () => {
           </Table>
         )}
       </OpsSection>
-    </OpsPage>
+      <SellerDetailsDialog
+        seller={selectedSeller}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedSeller(null)
+          }
+        }}
+      />
+    </div>
   )
 }
+
+const SellerActions = ({
+  seller,
+  isLoading,
+  onUpdate,
+}: {
+  seller: AdminSeller
+  isLoading: boolean
+  onUpdate: (
+    update: Pick<Partial<AdminSeller>, "status" | "verification_status">,
+  ) => void
+}) => (
+  <DropdownMenu>
+    <DropdownMenu.Trigger asChild>
+      <Button size="small" variant="transparent" disabled={isLoading}>
+        More
+      </Button>
+    </DropdownMenu.Trigger>
+    <DropdownMenu.Content align="end">
+      <DropdownMenu.Item
+        disabled={seller.verification_status === "verified"}
+        onSelect={() => onUpdate({ verification_status: "verified" })}
+      >
+        Verify seller
+      </DropdownMenu.Item>
+      <DropdownMenu.Item
+        disabled={seller.verification_status === "unverified"}
+        onSelect={() => onUpdate({ verification_status: "unverified" })}
+      >
+        Remove verification
+      </DropdownMenu.Item>
+      <DropdownMenu.Separator />
+      <DropdownMenu.Item
+        className={seller.status === "active" ? "text-ui-fg-error" : undefined}
+        onSelect={() =>
+          onUpdate({
+            status: seller.status === "active" ? "suspended" : "active",
+          })
+        }
+      >
+        {seller.status === "active" ? "Suspend seller" : "Reactivate seller"}
+      </DropdownMenu.Item>
+    </DropdownMenu.Content>
+  </DropdownMenu>
+)
+
+const SellerDetailsDialog = ({
+  seller,
+  onOpenChange,
+}: {
+  seller: AdminSeller | null
+  onOpenChange: (open: boolean) => void
+}) => (
+  <FocusModal open={Boolean(seller)} onOpenChange={onOpenChange}>
+    <FocusModal.Content className="inset-auto left-1/2 top-1/2 h-auto max-h-[calc(100%-32px)] w-[calc(100%-32px)] max-w-[680px] -translate-x-1/2 -translate-y-1/2">
+      <FocusModal.Header>
+        <FocusModal.Title>Seller details</FocusModal.Title>
+      </FocusModal.Header>
+      {seller && (
+        <FocusModal.Body className="overflow-y-auto px-6 py-5">
+          <div className="flex flex-col gap-y-5">
+            <div>
+              <Text weight="plus">{seller.display_name}</Text>
+              <Text className="mt-1 text-ui-fg-subtle" size="small">
+                @{seller.handle}
+              </Text>
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <DetailItem label="Email">{seller.email ?? "None"}</DetailItem>
+              <DetailItem label="Phone">{seller.phone ?? "None"}</DetailItem>
+              <DetailItem label="Location">
+                {seller.location ?? "None"}
+              </DetailItem>
+              <DetailItem label="Status">{seller.status}</DetailItem>
+              <DetailItem label="Verification">
+                {seller.verification_status}
+              </DetailItem>
+              <DetailItem label="Created">
+                {new Intl.DateTimeFormat(undefined, {
+                  dateStyle: "medium",
+                }).format(new Date(seller.created_at))}
+              </DetailItem>
+              <DetailItem label="Listings">
+                {seller.listing_stats.active} active,{" "}
+                {seller.listing_stats.pending} pending,{" "}
+                {seller.listing_stats.rejected} rejected,{" "}
+                {seller.listing_stats.total} total
+              </DetailItem>
+              <DetailItem label="Inquiries">
+                {seller.inquiry_stats.total} total,{" "}
+                {seller.inquiry_stats.replied} replied,{" "}
+                {seller.inquiry_stats.reply_rate === null
+                  ? "no reply history"
+                  : `${seller.inquiry_stats.reply_rate}% reply rate`}
+              </DetailItem>
+            </div>
+            {seller.bio && (
+              <div>
+                <Text className="text-ui-fg-subtle" size="small">
+                  Bio
+                </Text>
+                <Text className="mt-1" size="small">
+                  {seller.bio}
+                </Text>
+              </div>
+            )}
+          </div>
+        </FocusModal.Body>
+      )}
+    </FocusModal.Content>
+  </FocusModal>
+)
+
+const DetailItem = ({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) => (
+  <div>
+    <Text className="text-ui-fg-subtle" size="small">
+      {label}
+    </Text>
+    <Text className="mt-1" size="small">
+      {children}
+    </Text>
+  </div>
+)
+
+const RefreshIcon = () => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    height="16"
+    viewBox="0 0 24 24"
+    width="16"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M20 7v5h-5"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+    <path
+      d="M4 17v-5h5"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+    <path
+      d="M6.1 9a7 7 0 0 1 11.6-2.6L20 8.7"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+    <path
+      d="M17.9 15a7 7 0 0 1-11.6 2.6L4 15.3"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+  </svg>
+)
 
 export const config = defineRouteConfig({
   label: "Marketplace sellers",
