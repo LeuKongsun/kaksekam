@@ -22,6 +22,7 @@ type SellerProduct = {
     phone: string | null
     location: string | null
     bio: string | null
+    avatar_url: string | null
     status: string
     verification_status: string
     created_at: string
@@ -94,6 +95,7 @@ async function listActiveProductsForSeller(query: any, handle: string) {
         "seller.phone",
         "seller.location",
         "seller.bio",
+        "seller.avatar_url",
         "seller.status",
         "seller.verification_status",
         "seller.created_at",
@@ -152,13 +154,14 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const marketplaceService: MarketplaceModuleService =
     req.scope.resolve(MARKETPLACE_MODULE)
   const handle = req.params.handle
-  const products = await listActiveProductsForSeller(query, handle)
-  const seller = products[0]?.seller
+  const [seller] = await marketplaceService.listSellers({ handle })
 
-  if (!seller) {
+  if (!seller || seller.status !== "active") {
     res.status(404).json({ message: "Seller not found." })
     return
   }
+
+  const products = await listActiveProductsForSeller(query, handle)
 
   const inquiries = await marketplaceService.listListingInquiries({
     seller_id: seller.id,

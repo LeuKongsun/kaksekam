@@ -58,6 +58,7 @@ type ProductWithMarketplace = {
     phone: string | null
     location: string | null
     bio: string | null
+    avatar_url: string | null
     verification_status: string
   } | null
   listing?: {
@@ -186,6 +187,7 @@ async function listProductsForCustomer(
         "seller.phone",
         "seller.location",
         "seller.bio",
+        "seller.avatar_url",
         "seller.verification_status",
         "listing.id",
         "listing.status",

@@ -16,6 +16,7 @@ export type ProductSeller = {
   phone: string | null
   location: string | null
   bio: string | null
+  avatar_url: string | null
   status: "active" | "suspended"
   verification_status?: "unverified" | "verified"
   created_at?: string

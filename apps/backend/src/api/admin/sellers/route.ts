@@ -108,6 +108,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         phone: seller.phone,
         location: seller.location,
         bio: seller.bio,
+        avatar_url: seller.avatar_url,
         status: seller.status,
         verification_status: seller.verification_status,
         created_at: seller.created_at,

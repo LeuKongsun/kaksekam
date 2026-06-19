@@ -6,7 +6,16 @@ import {
 } from "@lib/data/seller-listings"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
-import { useActionState, useState } from "react"
+import { Photo, PlusMini, XMarkMini } from "@medusajs/icons"
+import {
+  ChangeEvent,
+  SelectHTMLAttributes,
+  useActionState,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 type SellerListingEditorProps = {
   listing: SellerListing
@@ -30,8 +39,17 @@ const categoryOptions = [
   "Other",
 ]
 
+const MAX_PHOTO_UPLOADS = 6
+const supportedCurrencyCodes = new Set(["khr", "usd"])
+const selectFieldClassName =
+  "h-11 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-3 pb-1 pt-4 text-ui-fg-base hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active focus:outline-none"
+
 const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
+  const existingImages = useMemo(() => getListingImages(listing), [listing])
   const [category, setCategory] = useState(listing.category ?? "Produce")
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const imageInputRef = useRef<HTMLInputElement>(null)
   const [state, formAction] = useActionState(
     updateSellerListing.bind(null, listing.id),
     {
@@ -41,195 +59,281 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
   )
   const canEdit = editableStatuses.has(listing.status)
   const amount = listing.price?.calculated_amount
-  const currencyCode = listing.price?.currency_code ?? "eur"
+  const listingCurrencyCode = listing.price?.currency_code ?? "khr"
+  const currencyCode = supportedCurrencyCodes.has(listingCurrencyCode)
+    ? listingCurrencyCode
+    : "khr"
+
+  useEffect(() => {
+    const previews = imageFiles.map((file) => URL.createObjectURL(file))
+
+    setImagePreviews(previews)
+
+    return () => previews.forEach((preview) => URL.revokeObjectURL(preview))
+  }, [imageFiles])
+
+  const syncImageInput = (files: File[]) => {
+    if (!imageInputRef.current || typeof DataTransfer === "undefined") {
+      return
+    }
+
+    const transfer = new DataTransfer()
+    files.forEach((file) => transfer.items.add(file))
+    imageInputRef.current.files = transfer.files
+  }
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files ?? [])
+
+    if (!selectedFiles.length) {
+      return
+    }
+
+    setImageFiles((currentFiles) => {
+      const mergedFiles = [...currentFiles, ...selectedFiles].slice(
+        0,
+        Math.max(0, MAX_PHOTO_UPLOADS - existingImages.length)
+      )
+
+      syncImageInput(mergedFiles)
+
+      return mergedFiles
+    })
+  }
+
+  const removeImage = (indexToRemove: number) => {
+    setImageFiles((currentFiles) => {
+      const nextFiles = currentFiles.filter(
+        (_file, index) => index !== indexToRemove
+      )
+
+      syncImageInput(nextFiles)
+
+      return nextFiles
+    })
+  }
+
+  if (!canEdit) {
+    return (
+      <div className="rounded-md border border-gray-200 bg-white p-5 text-small-regular text-ui-fg-subtle shadow-sm">
+        This listing can no longer be edited.
+      </div>
+    )
+  }
+
+  const remainingPhotoSlots = Math.max(
+    0,
+    MAX_PHOTO_UPLOADS - existingImages.length - imageFiles.length
+  )
 
   return (
-    <div>
-      {canEdit ? (
-        <form
-          action={formAction}
-          className="rounded-md border border-gray-200 bg-white p-5 text-left shadow-sm"
-        >
-          <div className="mb-4">
-            <h3 className="text-base-semi">Edit listing</h3>
-            <p className="text-small-regular text-ui-fg-subtle">
-              Saving changes sends the listing back to review.
-            </p>
-          </div>
+    <form
+      action={formAction}
+      className="rounded-md border border-gray-200 bg-white p-4"
+    >
+      <div className="mb-4">
+        <h2 className="text-large-semi">Edit product</h2>
+      </div>
 
-          {state.success && (
-            <div className="mb-4 rounded-md bg-green-50 px-3 py-2 text-small-regular text-green-700">
-              Listing updated and sent for review.
-            </div>
-          )}
-          {state.error && (
-            <div className="mb-4 rounded-md bg-rose-50 px-3 py-2 text-small-regular text-rose-700">
-              {state.error}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 gap-4">
-            <FormSection
-              title="Listing basics"
-              description="Saving changes sends this listing back through review, so keep buyer-facing details complete."
-            />
-
-            <Input
-              label="Title"
-              name="title"
-              defaultValue={listing.title}
-              required
-            />
-
-            <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-              Description<span className="text-rose-500">*</span>
-              <textarea
-                name="description"
-                required
-                rows={4}
-                defaultValue={listing.description ?? ""}
-                className="w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
-              />
-            </label>
-
-            <FormSection
-              title="Photos"
-              description="Add clear photos or keep existing image URLs so buyers can inspect the listing before contacting you."
-            />
-
-            <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-              Upload more photos
-              <input
-                name="images"
-                type="file"
-                accept="image/*"
-                multiple
-                className="block w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base file:mr-4 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-small-regular file:text-ui-fg-base hover:bg-ui-bg-field-hover"
-              />
-            </label>
-
-            <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-              Photo URLs
-              <textarea
-                name="image_urls"
-                rows={3}
-                defaultValue={listing.image_urls.join("\n")}
-                className="w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
-              />
-            </label>
-
-            <FormSection
-              title="Marketplace details"
-              description="These fields affect buyer filters, saved searches, and moderation review."
-            />
-
-            <div className="grid grid-cols-1 gap-4 small:grid-cols-[1fr_140px]">
-              <Input
-                label="Price"
-                name="price"
-                type="number"
-                min="1"
-                defaultValue={amount ?? ""}
-                required
-              />
-              <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-                Currency
-                <select
-                  name="currency_code"
-                  defaultValue={currencyCode}
-                  className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
-                >
-                  <option value="eur">EUR</option>
-                  <option value="usd">USD</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-              <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-                Farming category
-                <select
-                  name="category"
-                  value={category}
-                  onChange={(event) => setCategory(event.target.value)}
-                  className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
-                >
-                  {categoryOptions.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <Input
-                label="Farm or pickup location"
-                name="location"
-                defaultValue={listing.location ?? ""}
-              />
-              <Input
-                label="Quantity"
-                name="quantity"
-                defaultValue={listing.quantity ?? ""}
-              />
-              <Input
-                label="Unit"
-                name="unit"
-                defaultValue={listing.unit ?? ""}
-              />
-              <Input
-                label="Availability"
-                name="availability"
-                defaultValue={listing.availability ?? ""}
-              />
-              <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-                Condition
-                <select
-                  name="condition"
-                  defaultValue={listing.condition ?? ""}
-                  className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
-                >
-                  <option value="">Not specified</option>
-                  <option value="Fresh">Fresh</option>
-                  <option value="Organic">Organic</option>
-                  <option value="Used">Used</option>
-                  <option value="New">New</option>
-                </select>
-              </label>
-              <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-                Preferred contact
-                <select
-                  name="contact_preference"
-                  defaultValue={listing.contact_preference ?? ""}
-                  className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
-                >
-                  <option value="">Any contact method</option>
-                  <option value="Phone">Phone</option>
-                  <option value="Email">Email</option>
-                </select>
-              </label>
-            </div>
-
-            <CategoryGuidance category={category} />
-
-            <CategorySpecificFields listing={listing} category={category} />
-
-            <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-small-regular text-ui-fg-subtle">
-              Review price, location, quantity, availability, and contact
-              preference before saving. Active listings are hidden while edited
-              changes wait for review.
-            </div>
-
-            <SubmitButton data-testid="update-listing-button">
-              Save changes
-            </SubmitButton>
-          </div>
-        </form>
-      ) : (
-        <div className="rounded-md border border-gray-200 bg-white p-5 text-small-regular text-ui-fg-subtle shadow-sm">
-          This listing can no longer be edited.
+      {state.success && (
+        <div className="mb-4 rounded-md bg-green-50 px-3 py-2 text-small-regular text-green-700">
+          Listing updated and sent for review.
         </div>
       )}
-    </div>
+      {state.error && (
+        <div className="mb-4 rounded-md bg-rose-50 px-3 py-2 text-small-regular text-rose-700">
+          {state.error}
+        </div>
+      )}
+
+      <input type="hidden" name="image_urls" value={existingImages.join("\n")} />
+
+      <div className="grid grid-cols-1 gap-4">
+        <Input
+          label="Title"
+          name="title"
+          defaultValue={listing.title}
+          required
+        />
+
+        <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
+          <span>
+            Description<span className="text-rose-500">*</span>
+          </span>
+          <textarea
+            name="description"
+            required
+            rows={5}
+            defaultValue={listing.description ?? ""}
+            className="w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
+          />
+        </label>
+
+        <FormSection
+          title="Photos"
+          description="Keep current photos and add clear new photos for review."
+        />
+
+        <div className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
+          <div className="flex items-center justify-between gap-3">
+            <span>Upload photos</span>
+            <span className="text-xsmall-regular text-ui-fg-muted">
+              {existingImages.length + imageFiles.length}/{MAX_PHOTO_UPLOADS}
+            </span>
+          </div>
+          <input
+            ref={imageInputRef}
+            name="images"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageChange}
+            className="sr-only"
+          />
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {existingImages.map((imageUrl, index) => (
+              <div
+                key={imageUrl}
+                className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md border border-ui-border-base bg-ui-bg-subtle"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl}
+                  alt={`Current photo ${index + 1}`}
+                  className="h-full w-full object-cover"
+                />
+                <span className="absolute bottom-1 left-1 rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-ui-fg-subtle shadow-sm">
+                  Current
+                </span>
+              </div>
+            ))}
+            {imagePreviews.map((preview, index) => (
+              <div
+                key={`${imageFiles[index]?.name ?? "photo"}-${index}`}
+                className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md border border-ui-border-base bg-ui-bg-subtle"
+              >
+                <div
+                  aria-label={`Selected photo ${index + 1}`}
+                  className="h-full w-full bg-cover bg-center"
+                  style={{ backgroundImage: `url(${preview})` }}
+                />
+                <button
+                  type="button"
+                  aria-label={`Remove photo ${index + 1}`}
+                  onClick={() => removeImage(index)}
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-ui-fg-subtle shadow-elevation-card-rest transition-colors hover:text-ui-fg-base"
+                >
+                  <XMarkMini />
+                </button>
+              </div>
+            ))}
+            {remainingPhotoSlots > 0 && (
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-ui-border-base bg-ui-bg-field text-ui-fg-subtle transition-colors hover:bg-ui-bg-field-hover hover:text-ui-fg-base focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
+              >
+                {imageFiles.length || existingImages.length ? (
+                  <PlusMini />
+                ) : (
+                  <Photo />
+                )}
+                <span className="text-xsmall-regular">Add photo</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <FormSection
+          title="Marketplace details"
+          description="These fields power buyer filters, saved searches, and listing review."
+        />
+
+        <div className="grid grid-cols-1 gap-4 small:grid-cols-[1fr_140px]">
+          <Input
+            label="Price"
+            name="price"
+            type="number"
+            min="1"
+            defaultValue={amount ?? ""}
+            required
+          />
+          <SelectField
+            label="Currency"
+            name="currency_code"
+            defaultValue={currencyCode}
+          >
+            <option value="khr">KHR</option>
+            <option value="usd">USD</option>
+          </SelectField>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
+          <SelectField
+            label="Farming category"
+            name="category"
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+          >
+            {categoryOptions.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </SelectField>
+          <Input
+            label="Farm or pickup location"
+            name="location"
+            defaultValue={listing.location ?? ""}
+          />
+          <Input
+            label="Quantity"
+            name="quantity"
+            defaultValue={listing.quantity ?? ""}
+          />
+          <Input label="Unit" name="unit" defaultValue={listing.unit ?? ""} />
+          <Input
+            label="Availability"
+            name="availability"
+            defaultValue={listing.availability ?? ""}
+          />
+          <SelectField
+            label="Condition"
+            name="condition"
+            defaultValue={listing.condition ?? ""}
+          >
+            <option value="">Not specified</option>
+            <option value="Fresh">Fresh</option>
+            <option value="Organic">Organic</option>
+            <option value="Used">Used</option>
+            <option value="New">New</option>
+          </SelectField>
+          <SelectField
+            label="Preferred contact"
+            name="contact_preference"
+            defaultValue={listing.contact_preference ?? ""}
+          >
+            <option value="">Any contact method</option>
+            <option value="Phone">Phone</option>
+            <option value="Email">Email</option>
+          </SelectField>
+        </div>
+
+        <CategoryGuidance category={category} />
+
+        <CategorySpecificFields listing={listing} category={category} />
+
+        <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-small-regular text-ui-fg-subtle">
+          Review price, location, quantity, availability, photos, and contact
+          preference before saving. Active listings are hidden while edited
+          changes wait for review.
+        </div>
+
+        <SubmitButton data-testid="update-listing-button">
+          Save changes
+        </SubmitButton>
+      </div>
+    </form>
   )
 }
 
@@ -246,13 +350,32 @@ const FormSection = ({
   </div>
 )
 
+type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
+  label: string
+}
+
+const SelectField = ({ label, children, ...props }: SelectFieldProps) => (
+  <label className="relative flex w-full text-small-regular text-ui-fg-subtle">
+    <select {...props} className={selectFieldClassName}>
+      {children}
+    </select>
+    <span className="pointer-events-none absolute left-3 top-1 text-xsmall-regular text-ui-fg-subtle">
+      {label}
+    </span>
+  </label>
+)
+
 const categoryGuidance: Record<string, string> = {
-  Produce: "Add variety, harvest season, and production method so buyers can judge freshness and fit.",
-  Livestock: "Add breed, age, sex, and health notes. Buyers need enough information before arranging inspection.",
+  Produce:
+    "Add variety, harvest season, and production method so buyers can judge freshness and fit.",
+  Livestock:
+    "Add breed, age, sex, and health notes. Buyers need enough information before arranging inspection.",
   Seeds: "Add variety, pack size, and production or expiry date.",
   Fertilizer: "Add type, pack size, and expiry or production date.",
-  Equipment: "Add brand, model, year, and condition so buyers can compare equipment quickly.",
-  Tools: "Add brand, model, year, and condition for easier inspection planning.",
+  Equipment:
+    "Add brand, model, year, and condition so buyers can compare equipment quickly.",
+  Tools:
+    "Add brand, model, year, and condition for easier inspection planning.",
   Services: "Add service area and describe what is included in the service.",
   Other: "Add any category-specific details buyers need before contacting you.",
 }
@@ -274,25 +397,26 @@ const CategorySpecificFields = ({
   if (category === "Produce") {
     return (
       <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input label="Variety" name="variety" defaultValue={listing.variety ?? ""} />
+        <Input
+          label="Variety"
+          name="variety"
+          defaultValue={listing.variety ?? ""}
+        />
         <Input
           label="Harvest date or season"
           name="harvest_date"
           defaultValue={listing.harvest_date ?? ""}
         />
-        <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-          Production method
-          <select
-            name="production_method"
-            defaultValue={listing.production_method ?? ""}
-            className="h-11 rounded-md border border-ui-border-base bg-ui-bg-field px-3 text-ui-fg-base"
-          >
-            <option value="">Not specified</option>
-            <option value="Organic">Organic</option>
-            <option value="Conventional">Conventional</option>
-            <option value="Regenerative">Regenerative</option>
-          </select>
-        </label>
+        <SelectField
+          label="Production method"
+          name="production_method"
+          defaultValue={listing.production_method ?? ""}
+        >
+          <option value="">Not specified</option>
+          <option value="Organic">Organic</option>
+          <option value="Conventional">Conventional</option>
+          <option value="Regenerative">Regenerative</option>
+        </SelectField>
       </div>
     )
   }
@@ -362,5 +486,10 @@ const CategorySpecificFields = ({
 
   return null
 }
+
+const getListingImages = (listing: SellerListing) =>
+  Array.from(new Set([listing.thumbnail, ...(listing.image_urls ?? [])])).filter(
+    Boolean
+  ) as string[]
 
 export default SellerListingEditor

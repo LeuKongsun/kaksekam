@@ -59,6 +59,77 @@ export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
   return updateRes
 }
 
+export const updateCustomerProfile = async (
+  _currentState: Record<string, unknown>,
+  formData: FormData
+): Promise<{ success: boolean; error: string | null }> => {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const addressId = formData.get("addressId") as string
+  const addressFields = [
+    "address_1",
+    "address_2",
+    "city",
+    "postal_code",
+    "province",
+    "country_code",
+    "company",
+  ]
+  const shouldSaveAddress =
+    !!addressId ||
+    addressFields.some((field) => String(formData.get(field) ?? "").trim())
+
+  try {
+    await sdk.store.customer.update(
+      {
+        first_name: formData.get("first_name") as string,
+        last_name: formData.get("last_name") as string,
+        phone: formData.get("phone") as string,
+      },
+      {},
+      headers
+    )
+
+    if (shouldSaveAddress) {
+      const address = {
+        first_name: formData.get("first_name") as string,
+        last_name: formData.get("last_name") as string,
+        company: formData.get("company") as string,
+        address_1: formData.get("address_1") as string,
+        address_2: formData.get("address_2") as string,
+        city: formData.get("city") as string,
+        postal_code: formData.get("postal_code") as string,
+        province: formData.get("province") as string,
+        country_code: formData.get("country_code") as string,
+        phone: formData.get("phone") as string,
+      }
+
+      if (addressId) {
+        await sdk.store.customer.updateAddress(addressId, address, {}, headers)
+      } else {
+        await sdk.store.customer.createAddress(
+          {
+            ...address,
+            is_default_billing: true,
+            is_default_shipping: false,
+          },
+          {},
+          headers
+        )
+      }
+    }
+
+    const customerCacheTag = await getCacheTag("customers")
+    revalidateTag(customerCacheTag)
+
+    return { success: true, error: null }
+  } catch (error) {
+    return { success: false, error: String(error) }
+  }
+}
+
 export async function signup(_currentState: unknown, formData: FormData) {
   const password = formData.get("password") as string
   const customerForm = {

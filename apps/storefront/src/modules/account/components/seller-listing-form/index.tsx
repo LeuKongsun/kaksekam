@@ -184,8 +184,8 @@ const SellerListingForm = () => {
 
         <div className="grid grid-cols-1 gap-4 small:grid-cols-[1fr_140px]">
           <Input label="Price" name="price" type="number" min="1" required />
-          <SelectField label="Currency" name="currency_code" defaultValue="eur">
-            <option value="eur">EUR</option>
+          <SelectField label="Currency" name="currency_code" defaultValue="khr">
+            <option value="khr">KHR</option>
             <option value="usd">USD</option>
           </SelectField>
         </div>

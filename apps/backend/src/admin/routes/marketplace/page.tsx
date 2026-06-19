@@ -25,6 +25,9 @@ type MarketplaceListing = {
   handle: string
   description: string | null
   thumbnail: string | null
+  images: {
+    url: string
+  }[]
   status: "pending_review" | "active" | "rejected"
   moderation_note: string | null
   reviewed_at: string | null
@@ -159,6 +162,15 @@ const listingDetailRows = (listing: MarketplaceListing): [string, string][] =>
   ] as [string, string | null][]).filter(
     (row): row is [string, string] => Boolean(row[1]),
   )
+
+const listingImages = (listing: MarketplaceListing) => {
+  const urls = [
+    listing.thumbnail,
+    ...listing.images.map((image) => image.url),
+  ].filter((url): url is string => Boolean(url))
+
+  return Array.from(new Set(urls))
+}
 
 const MarketplacePage = () => {
   const [listings, setListings] = useState<MarketplaceListing[]>([])
@@ -606,6 +618,22 @@ const ListingDetailsDialog = ({
       {listing && (
         <FocusModal.Body className="overflow-y-auto px-6 py-5">
           <div className="flex flex-col gap-y-5">
+            {listingImages(listing).length > 0 && (
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {listingImages(listing).map((imageUrl) => (
+                  <div
+                    key={imageUrl}
+                    className="aspect-square overflow-hidden rounded-md border border-ui-border-base bg-ui-bg-subtle"
+                  >
+                    <img
+                      alt=""
+                      className="h-full w-full object-cover"
+                      src={imageUrl}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
             <div>
               <Text weight="plus">{listing.title}</Text>
               <Text className="mt-1 text-ui-fg-subtle" size="small">
@@ -622,7 +650,11 @@ const ListingDetailsDialog = ({
                   listing.seller?.location ??
                   "No contact"}
               </DetailItem>
-              <DetailItem label="Price">{formatPrice(listing.price)}</DetailItem>
+              <DetailItem label="Price">
+                <span className="text-ui-fg-error">
+                  {formatPrice(listing.price)}
+                </span>
+              </DetailItem>
               <DetailItem label="Submitted">
                 {formatDate(listing.created_at)}
               </DetailItem>

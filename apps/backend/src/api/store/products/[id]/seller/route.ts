@@ -25,6 +25,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       "seller.phone",
       "seller.location",
       "seller.bio",
+      "seller.avatar_url",
       "seller.status",
       "seller.verification_status",
       "seller.created_at",

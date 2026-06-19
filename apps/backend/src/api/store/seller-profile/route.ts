@@ -14,6 +14,7 @@ type UpdateSellerProfileBody = {
   phone?: string
   location?: string
   bio?: string
+  avatar_url?: string
 }
 
 async function getSellerForCustomer(
@@ -78,6 +79,7 @@ export async function PATCH(
     phone: cleanOptionalText(body.phone),
     location: cleanOptionalText(body.location),
     bio: cleanOptionalText(body.bio),
+    avatar_url: cleanOptionalText(body.avatar_url),
     status: "active" as const,
   }
   const seller = existingSeller

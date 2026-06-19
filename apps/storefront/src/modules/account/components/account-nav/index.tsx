@@ -115,7 +115,7 @@ const AccountNav = ({
       <div className="small:hidden" data-testid="mobile-account-nav">
         {route !== `/${countryCode}/account` ? (
           <LocalizedClientLink
-            href="/account"
+            href="/account/listings"
             className="flex items-center gap-x-2 text-small-regular py-2"
             data-testid="account-main-link"
           >
@@ -175,16 +175,6 @@ const AccountNav = ({
           </div>
           <div className="text-base-regular">
             <ul className="flex mb-0 justify-start items-start flex-col gap-y-3">
-              <li>
-                <AccountNavLink
-                  href="/account"
-                  route={route!}
-                  icon={DashboardIcon}
-                  data-testid="overview-link"
-                >
-                  Overview
-                </AccountNavLink>
-              </li>
               {marketplaceLinks.map((link) => (
                 <li key={link.href}>
                   <AccountNavLink
@@ -288,47 +278,6 @@ const AccountNavLink = ({
       {Icon && <Icon size={16} className="text-ui-fg-muted" />}
       {children}
     </LocalizedClientLink>
-  )
-}
-
-function DashboardIcon({
-  size = 16,
-  className,
-}: {
-  size?: string | number
-  className?: string
-}) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-hidden="true"
-    >
-      <path
-        d="M3.5 4.75C3.5 4.05964 4.05964 3.5 4.75 3.5H8.25C8.94036 3.5 9.5 4.05964 9.5 4.75V8.25C9.5 8.94036 8.94036 9.5 8.25 9.5H4.75C4.05964 9.5 3.5 8.94036 3.5 8.25V4.75Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M10.5 4.75C10.5 4.05964 11.0596 3.5 11.75 3.5H15.25C15.9404 3.5 16.5 4.05964 16.5 4.75V8.25C16.5 8.94036 15.9404 9.5 15.25 9.5H11.75C11.0596 9.5 10.5 8.94036 10.5 8.25V4.75Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M3.5 11.75C3.5 11.0596 4.05964 10.5 4.75 10.5H8.25C8.94036 10.5 9.5 11.0596 9.5 11.75V15.25C9.5 15.9404 8.94036 16.5 8.25 16.5H4.75C4.05964 16.5 3.5 15.9404 3.5 15.25V11.75Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M10.5 11.75C10.5 11.0596 11.0596 10.5 11.75 10.5H15.25C15.9404 10.5 16.5 11.0596 16.5 11.75V15.25C16.5 15.9404 15.9404 16.5 15.25 16.5H11.75C11.0596 16.5 10.5 15.9404 10.5 15.25V11.75Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-    </svg>
   )
 }
 

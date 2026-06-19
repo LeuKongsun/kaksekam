@@ -103,8 +103,7 @@ export default function ProductActions({
       ? `tel:${seller.phone.replace(/[^\d+]/g, "")}`
       : undefined
   const canContact = !disabled && isValidVariant && !!contactHref
-  const replyRate = seller?.trust_stats?.reply_rate
-
+  const sellerImage = seller?.avatar_url ?? product.thumbnail
   return (
     <>
       <div className="flex flex-col gap-y-4 rounded-md border border-gray-200 bg-white p-4">
@@ -152,20 +151,41 @@ export default function ProductActions({
 
         {seller && (
           <div className="rounded-md bg-gray-50 p-4 text-small-regular">
-            <LocalizedClientLink
-              href={`/sellers/${seller.handle}`}
-              className="inline-flex items-center gap-x-2 font-medium text-ui-fg-base hover:text-ui-fg-interactive"
-            >
-              <span>{seller.display_name}</span>
-              {seller.verification_status === "verified" && (
-                <span className="rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-medium uppercase text-green-700">
-                  Verified
-                </span>
-              )}
-            </LocalizedClientLink>
-            {seller.location && (
-              <div className="mt-1 text-ui-fg-subtle">{seller.location}</div>
-            )}
+            <div className="flex min-w-0 items-center gap-3">
+              <LocalizedClientLink
+                href={`/sellers/${seller.handle}`}
+                className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ui-fg-base text-small-semi text-white"
+              >
+                {sellerImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={sellerImage}
+                    alt={seller.display_name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  seller.display_name.slice(0, 1).toUpperCase()
+                )}
+              </LocalizedClientLink>
+              <div className="min-w-0">
+                <LocalizedClientLink
+                  href={`/sellers/${seller.handle}`}
+                  className="inline-flex max-w-full items-center gap-x-2 font-medium text-ui-fg-base hover:text-ui-fg-interactive"
+                >
+                  <span className="truncate">{seller.display_name}</span>
+                  {seller.verification_status === "verified" && (
+                    <span className="shrink-0 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-medium uppercase text-green-700">
+                      Verified
+                    </span>
+                  )}
+                </LocalizedClientLink>
+                {seller.location && (
+                  <div className="mt-1 truncate text-ui-fg-subtle">
+                    {seller.location}
+                  </div>
+                )}
+              </div>
+            </div>
             {seller.bio && (
               <p className="mt-3 line-clamp-3 whitespace-pre-line text-ui-fg-subtle">
                 {seller.bio}
@@ -176,34 +196,6 @@ export default function ProductActions({
                 {seller.email ?? seller.phone}
               </div>
             )}
-            {seller.trust_stats && (
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <div className="rounded-md bg-white p-2">
-                  <div className="text-[11px] uppercase text-ui-fg-subtle">
-                    Profile
-                  </div>
-                  <div className="text-small-semi text-ui-fg-base">
-                    {seller.trust_stats.profile_completeness}% complete
-                  </div>
-                </div>
-                <div className="rounded-md bg-white p-2">
-                  <div className="text-[11px] uppercase text-ui-fg-subtle">
-                    Replies
-                  </div>
-                  <div className="text-small-semi text-ui-fg-base">
-                    {replyRate === null || replyRate === undefined
-                      ? "No history yet"
-                      : `${replyRate}% rate`}
-                  </div>
-                </div>
-              </div>
-            )}
-            <LocalizedClientLink
-              href={`/sellers/${seller.handle}`}
-              className="mt-3 inline-flex text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
-            >
-              View full seller profile
-            </LocalizedClientLink>
           </div>
         )}
 

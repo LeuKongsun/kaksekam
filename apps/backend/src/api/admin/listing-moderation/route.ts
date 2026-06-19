@@ -7,6 +7,9 @@ type ModerationProduct = {
   handle: string
   description: string | null
   thumbnail: string | null
+  images?: {
+    url: string
+  }[] | null
   listing?: {
     id: string
     status: string
@@ -88,6 +91,7 @@ async function listModerationProducts(query: any) {
         "handle",
         "description",
         "thumbnail",
+        "images.url",
         "listing.id",
         "listing.status",
         "listing.moderation_note",
@@ -201,6 +205,7 @@ export async function GET(_req: MedusaRequest, res: MedusaResponse) {
       handle: product.handle,
       description: product.description,
       thumbnail: product.thumbnail,
+      images: product.images ?? [],
       status: product.listing!.status,
       moderation_note: product.listing!.moderation_note,
       reviewed_at: product.listing!.reviewed_at,

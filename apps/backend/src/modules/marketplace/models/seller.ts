@@ -9,6 +9,7 @@ const Seller = model.define("seller", {
   phone: model.text().nullable(),
   location: model.text().nullable(),
   bio: model.text().nullable(),
+  avatar_url: model.text().nullable(),
   status: model.enum(["active", "suspended"]).default("active"),
   verification_status: model.enum(["unverified", "verified"]).default("unverified"),
 })

@@ -38,23 +38,17 @@ export default async function ListingsPage(props: {
       expired: 0,
     },
   )
-  const totalPages = Math.max(1, Math.ceil(listings.length / PAGE_SIZE))
   const requestedPage = Number(searchParams.page)
   const page =
-    Number.isFinite(requestedPage) && requestedPage > 0
-      ? Math.min(requestedPage, totalPages)
-      : 1
-  const pageStart = (page - 1) * PAGE_SIZE
-  const paginatedListings = listings.slice(pageStart, pageStart + PAGE_SIZE)
+    Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1
 
   return (
     <SellerListings
-      listings={paginatedListings}
+      listings={listings}
       totalListings={listings.length}
       statusCounts={statusCounts}
       page={page}
       pageSize={PAGE_SIZE}
-      totalPages={totalPages}
     />
   )
 }

@@ -10,6 +10,57 @@ export type SellerProfileState = {
   error: string | null
 }
 
+type UploadedFile = {
+  url?: string
+}
+
+const getAvatarFile = (formData: FormData) => {
+  const file = formData.get("avatar")
+
+  if (
+    file &&
+    typeof file === "object" &&
+    "size" in file &&
+    "arrayBuffer" in file &&
+    typeof file.arrayBuffer === "function" &&
+    Number(file.size) > 0
+  ) {
+    return file as File
+  }
+
+  return null
+}
+
+const uploadSellerAvatar = async (
+  formData: FormData,
+  headers: Record<string, string>
+) => {
+  const file = getAvatarFile(formData)
+
+  if (!file) {
+    return String(formData.get("avatar_url") ?? "") || null
+  }
+
+  const { files } = await sdk.client.fetch<{ files: UploadedFile[] }>(
+    `/store/listing-uploads`,
+    {
+      method: "POST",
+      headers,
+      body: {
+        files: [
+          {
+            filename: file.name,
+            mimeType: file.type,
+            content: Buffer.from(await file.arrayBuffer()).toString("base64"),
+          },
+        ],
+      },
+    }
+  )
+
+  return files[0]?.url ?? null
+}
+
 export const retrieveAccountSellerProfile =
   async (): Promise<ProductSeller | null> => {
     const headers = {
@@ -35,6 +86,9 @@ export async function updateAccountSellerProfile(
   }
 
   try {
+    const handle = String(formData.get("handle") ?? "")
+    const avatarUrl = await uploadSellerAvatar(formData, headers)
+
     await sdk.client.fetch(`/store/seller-profile`, {
       method: "PATCH",
       headers,
@@ -45,12 +99,16 @@ export async function updateAccountSellerProfile(
         phone: formData.get("phone"),
         location: formData.get("location"),
         bio: formData.get("bio"),
+        avatar_url: avatarUrl,
       },
     })
 
     revalidatePath("/[countryCode]/account", "page")
     revalidatePath("/[countryCode]/account/seller-profile", "page")
     revalidatePath("/[countryCode]/account/listings", "page")
+    if (handle) {
+      revalidatePath(`/[countryCode]/sellers/${handle}`, "page")
+    }
 
     return { success: true, error: null }
   } catch (error) {
