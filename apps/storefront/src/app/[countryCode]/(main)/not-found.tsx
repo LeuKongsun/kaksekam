@@ -14,7 +14,7 @@ export default function NotFound() {
       <p className="text-small-regular text-ui-fg-base">
         The page you tried to access does not exist.
       </p>
-      <InteractiveLink href="/store">Browse listings</InteractiveLink>
+      <InteractiveLink href="/">Browse listings</InteractiveLink>
     </div>
   )
 }

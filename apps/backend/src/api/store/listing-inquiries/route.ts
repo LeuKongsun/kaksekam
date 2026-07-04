@@ -78,6 +78,7 @@ export async function POST(
     return
   }
 
+  const createdAt = new Date().toISOString()
   const inquiry = await marketplaceService.createListingInquiries({
     listing_id: product.listing.id,
     product_id: product.id,
@@ -86,10 +87,18 @@ export async function POST(
     buyer_name: buyerName,
     buyer_email: buyerEmail,
     buyer_phone: buyerPhone,
-    message,
     status: "new",
     replied_at: null,
+    last_message_at: createdAt,
   })
 
-  res.status(201).json({ inquiry })
+  const inquiryMessage = await marketplaceService.createListingInquiryMessages({
+    inquiry_id: inquiry.id,
+    sender_type: "buyer",
+    sender_id: customerId,
+    body: message,
+    read_at: null,
+  })
+
+  res.status(201).json({ inquiry: { ...inquiry, messages: [inquiryMessage] } })
 }

@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { richTextToPlainText, sanitizeRichText } from "@lib/util/rich-text"
 import { revalidatePath } from "next/cache"
 import { getAuthHeaders, removeAuthToken } from "./cookies"
 
@@ -12,7 +13,13 @@ export type SellerListing = {
   description: string | null
   thumbnail: string | null
   image_urls: string[]
-  status: "draft" | "pending_review" | "active" | "sold" | "rejected" | "expired"
+  status:
+    | "draft"
+    | "pending_review"
+    | "active"
+    | "sold"
+    | "rejected"
+    | "expired"
   moderation_note: string | null
   reviewed_at: string | null
   reviewer_id: string | null
@@ -20,22 +27,7 @@ export type SellerListing = {
   location: string | null
   quantity: string | null
   unit: string | null
-  availability: string | null
   condition: string | null
-  contact_preference: string | null
-  variety: string | null
-  production_method: string | null
-  harvest_date: string | null
-  breed: string | null
-  age: string | null
-  sex: string | null
-  health_notes: string | null
-  brand: string | null
-  equipment_model: string | null
-  year: string | null
-  pack_size: string | null
-  expiry_date: string | null
-  service_area: string | null
   created_at: string
   updated_at: string
   seller: {
@@ -86,7 +78,7 @@ const getImageFiles = (formData: FormData) =>
 
 const uploadListingImages = async (
   formData: FormData,
-  headers: Record<string, string>
+  headers: Record<string, string>,
 ) => {
   const files = getImageFiles(formData)
 
@@ -99,7 +91,7 @@ const uploadListingImages = async (
       filename: file.name,
       mimeType: file.type,
       content: Buffer.from(await file.arrayBuffer()).toString("base64"),
-    }))
+    })),
   )
   const { files: uploadedFiles } = await sdk.client.fetch<{
     files: UploadedFile[]
@@ -116,10 +108,29 @@ const uploadListingImages = async (
 
 const getListingImageUrls = async (
   formData: FormData,
-  headers: Record<string, string>
+  headers: Record<string, string>,
 ) => {
   const pastedUrls = String(formData.get("image_urls") ?? "")
   const uploadedUrls = await uploadListingImages(formData, headers)
+  const imageOrder = String(formData.get("image_order") ?? "")
+    .split(/\r?\n/)
+    .map((value) => value.trim())
+    .filter(Boolean)
+
+  if (imageOrder.length) {
+    let uploadedIndex = 0
+
+    return imageOrder
+      .map((value) => {
+        if (value.startsWith("new:")) {
+          return uploadedUrls[uploadedIndex++]
+        }
+
+        return value
+      })
+      .filter(Boolean)
+      .join("\n")
+  }
 
   return [pastedUrls, ...uploadedUrls].filter(Boolean).join("\n")
 }
@@ -149,7 +160,7 @@ export const listSellerListings = async (): Promise<SellerListing[]> => {
 
 export async function createSellerListing(
   _currentState: SellerListingState,
-  formData: FormData
+  formData: FormData,
 ): Promise<SellerListingState> {
   const headers = await getAuthHeaders()
 
@@ -159,13 +170,16 @@ export async function createSellerListing(
 
   try {
     const imageUrls = await getListingImageUrls(formData, headers)
+    const description = sanitizeRichText(
+      String(formData.get("description") ?? ""),
+    )
 
     await sdk.client.fetch(`/store/seller-listings`, {
       method: "POST",
       headers,
       body: {
         title: formData.get("title"),
-        description: formData.get("description"),
+        description: richTextToPlainText(description) ? description : "",
         image_urls: imageUrls,
         price: formData.get("price"),
         currency_code: formData.get("currency_code") || "khr",
@@ -173,22 +187,7 @@ export async function createSellerListing(
         location: formData.get("location"),
         quantity: formData.get("quantity"),
         unit: formData.get("unit"),
-        availability: formData.get("availability"),
         condition: formData.get("condition"),
-        contact_preference: formData.get("contact_preference"),
-        variety: formData.get("variety"),
-        production_method: formData.get("production_method"),
-        harvest_date: formData.get("harvest_date"),
-        breed: formData.get("breed"),
-        age: formData.get("age"),
-        sex: formData.get("sex"),
-        health_notes: formData.get("health_notes"),
-        brand: formData.get("brand"),
-        equipment_model: formData.get("equipment_model"),
-        year: formData.get("year"),
-        pack_size: formData.get("pack_size"),
-        expiry_date: formData.get("expiry_date"),
-        service_area: formData.get("service_area"),
       },
     })
 
@@ -210,7 +209,7 @@ export async function createSellerListing(
 export async function updateSellerListing(
   listingId: string,
   _currentState: SellerListingState,
-  formData: FormData
+  formData: FormData,
 ): Promise<SellerListingState> {
   const headers = await getAuthHeaders()
 
@@ -220,13 +219,16 @@ export async function updateSellerListing(
 
   try {
     const imageUrls = await getListingImageUrls(formData, headers)
+    const description = sanitizeRichText(
+      String(formData.get("description") ?? ""),
+    )
 
     await sdk.client.fetch(`/store/seller-listings/${listingId}`, {
       method: "PATCH",
       headers,
       body: {
         title: formData.get("title"),
-        description: formData.get("description"),
+        description: richTextToPlainText(description) ? description : "",
         image_urls: imageUrls,
         price: formData.get("price"),
         currency_code: formData.get("currency_code") || "khr",
@@ -234,22 +236,7 @@ export async function updateSellerListing(
         location: formData.get("location"),
         quantity: formData.get("quantity"),
         unit: formData.get("unit"),
-        availability: formData.get("availability"),
         condition: formData.get("condition"),
-        contact_preference: formData.get("contact_preference"),
-        variety: formData.get("variety"),
-        production_method: formData.get("production_method"),
-        harvest_date: formData.get("harvest_date"),
-        breed: formData.get("breed"),
-        age: formData.get("age"),
-        sex: formData.get("sex"),
-        health_notes: formData.get("health_notes"),
-        brand: formData.get("brand"),
-        equipment_model: formData.get("equipment_model"),
-        year: formData.get("year"),
-        pack_size: formData.get("pack_size"),
-        expiry_date: formData.get("expiry_date"),
-        service_area: formData.get("service_area"),
       },
     })
 
@@ -269,7 +256,7 @@ export async function updateSellerListing(
 }
 
 export async function withdrawSellerListing(
-  listingId: string
+  listingId: string,
 ): Promise<SellerListingState> {
   const headers = await getAuthHeaders()
 
@@ -299,7 +286,7 @@ export async function withdrawSellerListing(
 }
 
 export async function markSellerListingSold(
-  listingId: string
+  listingId: string,
 ): Promise<SellerListingState> {
   const headers = await getAuthHeaders()
 

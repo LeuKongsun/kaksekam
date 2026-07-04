@@ -1,4 +1,5 @@
 import { SavedListing } from "@lib/data/saved-listings"
+import { richTextToPlainText } from "@lib/util/rich-text"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Eye from "@modules/common/icons/eye"
 import Package from "@modules/common/icons/package"
@@ -69,7 +70,7 @@ const SavedListingsTable = ({
     <div className="overflow-x-auto">
       <table className="w-full table-fixed border-collapse text-left">
         <thead className="border-b border-gray-200 bg-gray-50">
-          <tr className="text-[11px] font-medium uppercase text-ui-fg-subtle">
+          <tr className="text-xsmall-semi font-medium uppercase text-ui-fg-subtle">
             <th className="w-[34%] px-4 py-3">Listing</th>
             <th className="w-[22%] px-4 py-3">Seller</th>
             <th className="w-[14%] px-4 py-3">Price</th>
@@ -104,6 +105,7 @@ const SavedListingRow = ({
   savedListing: SavedListing
 }) => {
   const seller = savedListing.product.seller
+  const plainDescription = richTextToPlainText(savedListing.product.description)
 
   return (
     <tr className="align-middle hover:bg-gray-50/70">
@@ -131,7 +133,7 @@ const SavedListingRow = ({
               {savedListing.product.title}
             </LocalizedClientLink>
             <p className="truncate text-small-regular text-ui-fg-subtle">
-              {savedListing.product.description || "No description added."}
+              {plainDescription || "No description added."}
             </p>
           </div>
         </div>

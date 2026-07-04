@@ -8,9 +8,16 @@ import ProductActions from "@modules/products/components/product-actions"
 export default async function ProductActionsWrapper({
   id,
   region,
+  customer,
 }: {
   id: string
   region: HttpTypes.StoreRegion
+  customer: {
+    id: string
+    name: string
+    email: string
+    phone: string | null
+  } | null
 }) {
   const isMockProduct = id.startsWith("mock-product-")
   const [product, seller] = await Promise.all([
@@ -31,6 +38,7 @@ export default async function ProductActionsWrapper({
       productId={product.id}
       region={region}
       seller={seller}
+      customer={customer}
     />
   )
 }

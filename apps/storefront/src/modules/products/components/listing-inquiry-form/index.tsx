@@ -7,9 +7,18 @@ import { useActionState } from "react"
 
 type ListingInquiryFormProps = {
   productId: string
+  customer?: {
+    id: string
+    name: string
+    email: string
+    phone: string | null
+  } | null
 }
 
-const ListingInquiryForm = ({ productId }: ListingInquiryFormProps) => {
+const ListingInquiryForm = ({
+  productId,
+  customer,
+}: ListingInquiryFormProps) => {
   const [state, formAction] = useActionState(
     sendListingInquiry.bind(null, productId),
     {
@@ -19,15 +28,10 @@ const ListingInquiryForm = ({ productId }: ListingInquiryFormProps) => {
   )
 
   return (
-    <form action={formAction} className="rounded-md border border-gray-200 bg-white p-4">
-      <div className="mb-4">
-        <h2 className="text-base-semi">Send inquiry</h2>
-        <p className="mt-1 text-small-regular text-ui-fg-subtle">
-          Ask about availability, pickup, inspection, or payment arrangements.
-          The seller will receive this in their marketplace inbox.
-        </p>
-      </div>
-
+    <form
+      action={formAction}
+      className="rounded-md border border-gray-200 bg-white p-4"
+    >
       {state.success && (
         <div className="mb-4 rounded-md bg-green-50 px-3 py-2 text-small-regular text-green-700">
           Inquiry sent to the seller.
@@ -40,11 +44,17 @@ const ListingInquiryForm = ({ productId }: ListingInquiryFormProps) => {
       )}
 
       <div className="grid grid-cols-1 gap-4">
-        <Input label="Your name" name="buyer_name" required />
-        <Input label="Email" name="buyer_email" type="email" required />
-        <Input label="Phone" name="buyer_phone" />
+        {!customer && (
+          <>
+            <Input label="Your name" name="buyer_name" required />
+            <Input label="Email" name="buyer_email" type="email" required />
+            <Input label="Phone" name="buyer_phone" />
+          </>
+        )}
         <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-          Message<span className="text-rose-500">*</span>
+          <span>
+            Message<span className="text-rose-500">*</span>
+          </span>
           <textarea
             name="message"
             required

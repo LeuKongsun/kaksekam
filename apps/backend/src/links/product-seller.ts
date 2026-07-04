@@ -4,6 +4,9 @@ import ProductModule from "@medusajs/medusa/product"
 import MarketplaceModule from "../modules/marketplace"
 
 export default defineLink(
-  ProductModule.linkable.product,
+  {
+    linkable: ProductModule.linkable.product,
+    isList: true,
+  },
   MarketplaceModule.linkable.seller
 )

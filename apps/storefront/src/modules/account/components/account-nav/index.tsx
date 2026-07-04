@@ -17,7 +17,7 @@ import User from "@modules/common/icons/user"
 const marketplaceLinks = [
   {
     href: "/account/listings",
-    label: "Listings",
+    label: "Products",
     testId: "listings-link",
     icon: Package,
   },
@@ -53,7 +53,7 @@ const buyerLinks = [
 const mobileShortcutLinks = [
   {
     href: "/account/listings",
-    label: "Listings",
+    label: "Products",
     testId: "mobile-listings-link",
     icon: Package,
   },

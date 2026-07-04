@@ -10,6 +10,9 @@ async function ProductOnboardingCta() {
     return null
   }
 
+  const backendUrl =
+    process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "http://localhost:9000"
+
   return (
     <Container className="max-w-4xl h-full bg-ui-bg-subtle w-full p-8">
       <div className="flex flex-col gap-y-4 center">
@@ -19,7 +22,7 @@ async function ProductOnboardingCta() {
         <Text className="text-ui-fg-subtle text-small-regular">
           You can now continue setting up marketplace moderation in the admin.
         </Text>
-        <a href="http://localhost:7001/a/listing-moderation">
+        <a href={`${backendUrl}/app/marketplace`}>
           <Button className="w-full">Continue setup in admin</Button>
         </a>
       </div>

@@ -83,7 +83,7 @@ const CartDropdown = ({
         <PopoverButton className="h-full">
           <LocalizedClientLink
             className="hover:text-ui-fg-base"
-            href="/store"
+            href="/"
             data-testid="nav-cart-link"
           >
             Browse listings
@@ -212,7 +212,7 @@ const CartDropdown = ({
                   </div>
                   <span>Marketplace listings do not use cart checkout.</span>
                   <div>
-                    <LocalizedClientLink href="/store">
+                    <LocalizedClientLink href="/">
                       <>
                         <span className="sr-only">Go to listings page</span>
                         <Button onClick={close}>Browse listings</Button>

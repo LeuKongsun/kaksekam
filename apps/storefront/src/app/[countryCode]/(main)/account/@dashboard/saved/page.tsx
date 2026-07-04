@@ -6,7 +6,7 @@ import { notFound } from "next/navigation"
 
 export const metadata: Metadata = {
   title: "Saved listings",
-  description: "View your saved classifieds listings.",
+  description: "View your saved marketplace products.",
 }
 
 const PAGE_SIZE = 10

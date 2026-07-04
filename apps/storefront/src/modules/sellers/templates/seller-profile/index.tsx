@@ -1,5 +1,6 @@
 import { SellerProfile } from "@lib/data/sellers"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { richTextToPlainText } from "@lib/util/rich-text"
 import Package from "@modules/common/icons/package"
 
 type SellerProfileTemplateProps = {
@@ -130,52 +131,56 @@ const ListingCard = ({
   listing,
 }: {
   listing: SellerProfile["listings"][number]
-}) => (
-  <LocalizedClientLink
-    href={`/products/${listing.handle}`}
-    className="group block h-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm transition-colors hover:border-ui-fg-base"
-  >
-    <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-      {listing.thumbnail ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={listing.thumbnail}
-          alt={listing.title}
-          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-        />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center text-ui-fg-muted">
-          <Package size={28} />
-        </div>
-      )}
-    </div>
-    <div className="p-4">
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="min-w-0 truncate text-base-semi text-ui-fg-base">
-          {listing.title}
-        </h3>
-        <div className="shrink-0 text-small-semi text-ui-fg-base">
-          {formatPrice(listing)}
-        </div>
-      </div>
-      <p className="mt-1 line-clamp-2 min-h-[40px] text-small-regular text-ui-fg-subtle">
-        {listing.description || "No description added."}
-      </p>
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {listing.category && (
-          <span className="rounded-md bg-gray-100 px-2 py-1 text-small-regular text-ui-fg-subtle">
-            {listing.category}
-          </span>
-        )}
-        {listing.location && (
-          <span className="rounded-md bg-gray-100 px-2 py-1 text-small-regular text-ui-fg-subtle">
-            {listing.location}
-          </span>
+}) => {
+  const plainDescription = richTextToPlainText(listing.description)
+
+  return (
+    <LocalizedClientLink
+      href={`/products/${listing.handle}`}
+      className="group block h-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm transition-colors hover:border-ui-fg-base"
+    >
+      <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+        {listing.thumbnail ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={listing.thumbnail}
+            alt={listing.title}
+            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-ui-fg-muted">
+            <Package size={28} />
+          </div>
         )}
       </div>
-    </div>
-  </LocalizedClientLink>
-)
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="min-w-0 truncate text-base-semi text-ui-fg-base">
+            {listing.title}
+          </h3>
+          <div className="shrink-0 text-small-semi text-ui-fg-base">
+            {formatPrice(listing)}
+          </div>
+        </div>
+        <p className="mt-1 line-clamp-2 min-h-[40px] text-small-regular text-ui-fg-subtle">
+          {plainDescription || "No description added."}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {listing.category && (
+            <span className="rounded-md bg-gray-100 px-2 py-1 text-small-regular text-ui-fg-subtle">
+              {listing.category}
+            </span>
+          )}
+          {listing.location && (
+            <span className="rounded-md bg-gray-100 px-2 py-1 text-small-regular text-ui-fg-subtle">
+              {listing.location}
+            </span>
+          )}
+        </div>
+      </div>
+    </LocalizedClientLink>
+  )
+}
 
 const PhoneIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">

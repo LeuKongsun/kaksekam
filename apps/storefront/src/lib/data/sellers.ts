@@ -17,22 +17,7 @@ export type SellerProfileListing = {
   location: string | null
   quantity: string | null
   unit: string | null
-  availability: string | null
   condition: string | null
-  contact_preference: string | null
-  variety: string | null
-  production_method: string | null
-  harvest_date: string | null
-  breed: string | null
-  age: string | null
-  sex: string | null
-  health_notes: string | null
-  brand: string | null
-  equipment_model: string | null
-  year: string | null
-  pack_size: string | null
-  expiry_date: string | null
-  service_area: string | null
   price: {
     calculated_amount?: number
     currency_code?: string

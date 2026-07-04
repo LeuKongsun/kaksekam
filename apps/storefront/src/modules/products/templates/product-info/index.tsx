@@ -1,91 +1,106 @@
-import React from "react"
 import type { StoreProductWithListing } from "@lib/data/products"
-import { Heading, Text } from "@modules/common/components/ui"
+import { getProductPrice } from "@lib/util/get-product-price"
+import RichTextContent from "@modules/common/components/rich-text-content"
+import { Heading } from "@modules/common/components/ui"
 
 type ProductInfoProps = {
   product: StoreProductWithListing
-  actions?: React.ReactNode
 }
 
-const ProductInfo = ({ product, actions }: ProductInfoProps) => {
+type ListingStatus = NonNullable<StoreProductWithListing["listing"]>["status"]
+
+const statusBadges: Record<ListingStatus, { label: string; className: string }> =
+  {
+    active: {
+      label: "Active listing",
+      className: "bg-green-50 text-green-700",
+    },
+    sold: { label: "Sold", className: "bg-sky-50 text-sky-700" },
+    expired: { label: "Expired", className: "bg-gray-100 text-gray-600" },
+    pending_review: {
+      label: "Pending review",
+      className: "bg-amber-50 text-amber-700",
+    },
+    rejected: { label: "Not available", className: "bg-red-50 text-red-700" },
+    draft: { label: "Draft", className: "bg-gray-100 text-gray-600" },
+  }
+
+const ProductInfo = ({ product }: ProductInfoProps) => {
   const listing = product.listing
+  const statusBadge = statusBadges[listing?.status ?? "active"]
+  const { cheapestPrice } = getProductPrice({ product })
   const listingDetails = [
     ["Category", listing?.category],
     ["Location", listing?.location],
-    ["Availability", listing?.availability],
     ["Condition", listing?.condition],
-    ["Preferred contact", listing?.contact_preference],
-  ].filter((row): row is [string, string] => Boolean(row[1]))
-  const productDetails = [
     [
       "Quantity",
       listing?.quantity && listing.unit
         ? `${listing.quantity} ${listing.unit}`
         : listing?.quantity,
     ],
-    ["Variety/type", listing?.variety],
-    ["Production method", listing?.production_method],
-    ["Harvest/season", listing?.harvest_date],
-    ["Service area", listing?.service_area],
-  ].filter((row): row is [string, string] => Boolean(row[1]))
-  const additionalDetails = [
-    ["Breed", listing?.breed],
-    ["Age", listing?.age],
-    ["Sex", listing?.sex],
-    ["Health notes", listing?.health_notes],
-    ["Brand", listing?.brand],
-    ["Model", listing?.equipment_model],
-    ["Year", listing?.year],
-    ["Pack size", listing?.pack_size],
-    ["Expiry/production date", listing?.expiry_date],
   ].filter((row): row is [string, string] => Boolean(row[1]))
 
   return (
     <div id="product-info">
       <div className="flex flex-col gap-y-4">
         <div>
-          <span className="rounded-full bg-green-50 px-3 py-1 text-small-semi uppercase text-green-700">
-            Active listing
+          <span
+            className={`rounded-full px-3 py-1 text-small-semi uppercase ${statusBadge.className}`}
+            data-testid="listing-status-badge"
+          >
+            {statusBadge.label}
           </span>
         </div>
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <Heading
-              level="h2"
-              className="text-3xl leading-10 text-ui-fg-base"
-              data-testid="product-title"
+        <Heading
+          level="h2"
+          className="text-3xl-semi leading-tight text-ui-fg-base"
+          data-testid="product-title"
+        >
+          {product.title}
+        </Heading>
+
+        <div className="flex flex-wrap items-baseline gap-x-3">
+          {cheapestPrice ? (
+            <>
+              {cheapestPrice.price_type === "sale" && (
+                <span className="text-large-regular text-ui-fg-muted line-through">
+                  {cheapestPrice.original_price}
+                </span>
+              )}
+              <span
+                className="text-2xl-semi text-brand"
+                data-testid="product-price"
+              >
+                {cheapestPrice.calculated_price}
+              </span>
+              {listing?.quantity && listing.unit && (
+                <span className="text-base-regular text-ui-fg-subtle">
+                  {listing.quantity} {listing.unit}
+                </span>
+              )}
+            </>
+          ) : (
+            <span
+              className="text-large-semi text-ui-fg-base"
+              data-testid="product-price"
             >
-              {product.title}
-            </Heading>
-          </div>
-          {actions && <div className="shrink-0 pt-1">{actions}</div>}
+              Contact seller for price
+            </span>
+          )}
         </div>
 
-        {(listingDetails.length > 0 ||
-          productDetails.length > 0 ||
-          additionalDetails.length > 0) && (
+        {listingDetails.length > 0 && (
           <div className="space-y-5 border-y border-ui-border-base py-5">
-            {listingDetails.length > 0 && (
-              <DetailGroup rows={listingDetails} />
-            )}
-            {productDetails.length > 0 && (
-              <DetailGroup title="Product or service" rows={productDetails} />
-            )}
-            {additionalDetails.length > 0 && (
-              <DetailGroup
-                title="Livestock or equipment"
-                rows={additionalDetails}
-              />
-            )}
+            <DetailGroup rows={listingDetails} />
           </div>
         )}
 
-        <Text
-          className="whitespace-pre-line text-medium text-ui-fg-subtle"
+        <RichTextContent
+          content={product.description}
+          className="prose prose-sm max-w-none whitespace-pre-line text-medium text-ui-fg-subtle [&_a]:text-ui-fg-interactive [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
           data-testid="product-description"
-        >
-          {product.description}
-        </Text>
+        />
       </div>
     </div>
   )

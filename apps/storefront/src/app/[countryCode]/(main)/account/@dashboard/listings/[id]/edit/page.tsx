@@ -6,8 +6,8 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 export const metadata: Metadata = {
-  title: "Edit listing",
-  description: "Edit a marketplace listing.",
+  title: "Edit product",
+  description: "Edit a marketplace product.",
 }
 
 export default async function EditListingPage(props: {
@@ -33,16 +33,16 @@ export default async function EditListingPage(props: {
     <div className="w-full" data-testid="edit-listing-page-wrapper">
       <div className="mb-8 grid grid-cols-1 gap-4 small:grid-cols-[1fr_auto]">
         <div>
-          <h1 className="text-2xl-semi">Edit listing</h1>
+          <h1 className="text-2xl-semi">Edit product</h1>
           <p className="mt-2 max-w-2xl text-base-regular text-ui-fg-subtle">
-            Update listing details and submit changes for admin review.
+            Update product details and submit changes for admin review.
           </p>
         </div>
         <LocalizedClientLink
           href="/account/listings"
           className="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 px-4 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
         >
-          Back to listings
+          Back to products
         </LocalizedClientLink>
       </div>
 

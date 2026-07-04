@@ -9,9 +9,9 @@ const ListingInquiry = model.define("listing_inquiry", {
   buyer_name: model.text(),
   buyer_email: model.text(),
   buyer_phone: model.text().nullable(),
-  message: model.text(),
   status: model.enum(["new", "read", "replied", "archived"]).default("new"),
   replied_at: model.text().nullable(),
+  last_message_at: model.text().nullable(),
 })
 
 export default ListingInquiry

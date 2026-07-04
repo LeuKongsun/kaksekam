@@ -14,3 +14,9 @@ export const getInquiryStatusUpdate = (
   status,
   ...(status === "replied" ? { replied_at: now.toISOString() } : {}),
 })
+
+export const getInquiryReplyUpdate = (now = new Date()) => ({
+  status: "replied" as const,
+  replied_at: now.toISOString(),
+  last_message_at: now.toISOString(),
+})

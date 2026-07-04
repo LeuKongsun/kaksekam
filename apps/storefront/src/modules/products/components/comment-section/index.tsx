@@ -117,10 +117,6 @@ const CommentSection = ({
           >
             Comments on {productTitle}
           </h2>
-          <p className="mt-1 max-w-2xl text-small-regular text-ui-fg-subtle">
-            Ask a question or share a practical note before contacting the
-            seller.
-          </p>
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-small-regular text-ui-fg-subtle">
           <span>
@@ -135,63 +131,53 @@ const CommentSection = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 large:grid-cols-[360px_minmax(0,1fr)]">
-        <div className="flex flex-col gap-6">
-          {customer ? (
-            <form
-              onSubmit={handleSubmit}
-              className="rounded-md border border-ui-border-base bg-white p-4"
-            >
-              <div className="mb-4 rounded-md bg-ui-bg-subtle px-3 py-2 text-small-regular text-ui-fg-subtle">
-                Posting as{" "}
-                <span className="text-ui-fg-base">{customer.name}</span>
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-                  <span>
-                    Comment <span className="text-rose-500">*</span>
-                  </span>
-                  <textarea
-                    value={body}
-                    onChange={(event) => setBody(event.target.value)}
-                    rows={3}
-                    className="w-full resize-none rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
-                    placeholder="Share a question or field note about this listing."
-                  />
-                </label>
-                <div className="flex flex-col gap-3 small:items-start">
-                  {status ? (
-                    <p className="text-small-regular text-ui-fg-subtle">
-                      {status}
-                    </p>
-                  ) : (
-                    <p className="text-small-regular text-ui-fg-muted">
-                      Saved in this browser.
-                    </p>
-                  )}
-                  <Button type="submit" size="small" className="small:w-auto">
-                    Post comment
-                  </Button>
-                </div>
-              </div>
-            </form>
-          ) : (
-            <div className="rounded-md border border-ui-border-base bg-white p-4">
-              <h3 className="text-base-semi text-ui-fg-base">
-                Sign in to comment
-              </h3>
-              <p className="mt-1 text-small-regular text-ui-fg-subtle">
-                Comments are linked to marketplace accounts.
-              </p>
-              <a
-                href={`/${countryCode}/account`}
-                className="mt-4 inline-flex h-8 items-center justify-center rounded-md bg-black px-3 text-small-regular font-medium text-white transition-colors hover:bg-gray-800"
-              >
-                Sign in
-              </a>
+      <div className="flex flex-col gap-4">
+        {customer ? (
+          <form
+            onSubmit={handleSubmit}
+            className="rounded-md border border-ui-border-base bg-white p-4"
+          >
+            <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
+              <span>
+                Comment <span className="text-rose-500">*</span>
+              </span>
+              <textarea
+                value={body}
+                onChange={(event) => setBody(event.target.value)}
+                rows={1}
+                className="w-full resize-none rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
+                placeholder="Share a question or field note about this listing."
+              />
+            </label>
+            <div className="mt-3 flex flex-col gap-3 small:flex-row small:items-center small:justify-between">
+              {status ? (
+                <p className="text-small-regular text-ui-fg-subtle">{status}</p>
+              ) : (
+                <p className="text-small-regular text-ui-fg-muted">
+                  Saved in this browser.
+                </p>
+              )}
+              <Button type="submit" size="small" className="small:w-auto">
+                Comment
+              </Button>
             </div>
-          )}
-        </div>
+          </form>
+        ) : (
+          <div className="rounded-md border border-ui-border-base bg-white p-4">
+            <h3 className="text-base-semi text-ui-fg-base">
+              Sign in to comment
+            </h3>
+            <p className="mt-1 text-small-regular text-ui-fg-subtle">
+              Comments are linked to marketplace accounts.
+            </p>
+            <a
+              href={`/${countryCode}/account`}
+              className="mt-4 inline-flex h-8 items-center justify-center rounded-md bg-black px-3 text-small-regular font-medium text-white transition-colors hover:bg-gray-800"
+            >
+              Sign in
+            </a>
+          </div>
+        )}
 
         <div className="flex flex-col gap-3">
           {comments.length > 0 ? (

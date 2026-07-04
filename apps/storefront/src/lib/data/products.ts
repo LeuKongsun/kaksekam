@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { matchesListingFilters } from "@lib/marketplace/listing-filters"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -36,28 +37,21 @@ export type StoreProductWithListing = HttpTypes.StoreProduct & {
     location: string | null
     quantity: string | null
     unit: string | null
-    availability: string | null
     condition: string | null
-    contact_preference: string | null
-    variety: string | null
-    production_method: string | null
-    harvest_date: string | null
-    breed: string | null
-    age: string | null
-    sex: string | null
-    health_notes: string | null
-    brand: string | null
-    equipment_model: string | null
-    year: string | null
-    pack_size: string | null
-    expiry_date: string | null
-    service_area: string | null
   } | null
 }
+
+// Demo sample listings. Disable by setting NEXT_PUBLIC_ENABLE_MOCK_LISTINGS=false.
+const mockListingsEnabled =
+  process.env.NEXT_PUBLIC_ENABLE_MOCK_LISTINGS !== "false"
 
 const findMockProducts = (
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductListParams
 ) => {
+  if (!mockListingsEnabled) {
+    return []
+  }
+
   if (queryParams?.handle) {
     return mockProducts.filter((product) => product.handle === queryParams.handle)
   }
@@ -114,6 +108,24 @@ export const listProducts = async ({
   const next = {
     ...(await getCacheOptions("products")),
   }
+  const fields = [
+    "*variants.calculated_price",
+    "*variants.prices",
+    "+variants.inventory_quantity",
+    "*variants.images",
+    "+metadata",
+    "+tags",
+    "+listing.id",
+    "+listing.status",
+    "+listing.category",
+    "+listing.location",
+    "+listing.quantity",
+    "+listing.unit",
+    "+listing.condition",
+    queryParams?.fields,
+  ]
+    .filter(Boolean)
+    .join(",")
 
   return sdk.client
     .fetch<{ products: StoreProductWithListing[]; count: number }>(
@@ -124,9 +136,8 @@ export const listProducts = async ({
           limit,
           offset,
           region_id: region?.id,
-          fields:
-            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,+metadata,+tags,+listing.id,+listing.status,+listing.category,+listing.location,+listing.quantity,+listing.unit,+listing.availability,+listing.condition,+listing.contact_preference,+listing.variety,+listing.production_method,+listing.harvest_date,+listing.breed,+listing.age,+listing.sex,+listing.health_notes,+listing.brand,+listing.equipment_model,+listing.year,+listing.pack_size,+listing.expiry_date,+listing.service_area,",
           ...queryParams,
+          fields,
         },
         headers,
         next,
@@ -135,12 +146,13 @@ export const listProducts = async ({
     )
     .then(({ products, count }) => {
       const activeProducts = products.filter(
-        (product) => product.listing?.status === "active"
+        (product) =>
+          product.listing?.status === "active" && product.listing.category
       )
       const matchedMockProducts = findMockProducts(queryParams)
       const visibleProducts = [...activeProducts, ...matchedMockProducts]
       const activeCount = visibleProducts.length
-      const nextPage = count > offset + limit ? pageParam + 1 : null
+      const nextPage = products.length === limit ? _pageParam + 1 : null
 
       return {
         response: {
@@ -167,17 +179,45 @@ export const retrieveProductSeller = async (
     .then(({ seller }) => seller)
 }
 
+const LISTING_FETCH_PAGE_SIZE = 100
+
+const listAllActiveProducts = async (
+  countryCode: string
+): Promise<StoreProductWithListing[]> => {
+  const products: StoreProductWithListing[] = []
+  let pageParam = 1
+
+  while (true) {
+    const { response, nextPage } = await listProducts({
+      pageParam,
+      queryParams: {
+        limit: LISTING_FETCH_PAGE_SIZE,
+      },
+      countryCode,
+    })
+
+    products.push(...response.products)
+
+    if (!nextPage) {
+      break
+    }
+
+    pageParam = nextPage
+  }
+
+  return products
+}
+
 /**
- * This will fetch 100 products to the Next.js cache and sort them based on the sortBy parameter.
- * It will then return the paginated products based on the page and limit parameters.
+ * Fetches active listings, applies marketplace filters against listing fields,
+ * sorts the results, and paginates them for the browse page.
  */
 export const listProductsWithSort = async ({
-  page = 0,
+  page = 1,
   queryParams,
   sortBy = "created_at",
   listingCategory,
   listingLocation,
-  listingAvailability,
   listingCondition,
   listingQuery,
   countryCode,
@@ -187,7 +227,6 @@ export const listProductsWithSort = async ({
   sortBy?: SortOptions
   listingCategory?: string
   listingLocation?: string
-  listingAvailability?: string
   listingCondition?: string
   listingQuery?: string
   countryCode: string
@@ -197,90 +236,33 @@ export const listProductsWithSort = async ({
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
 }> => {
   const limit = queryParams?.limit || 12
+  const currentPage = Math.max(page, 1)
+  const filters = {
+    query: listingQuery,
+    category: listingCategory,
+    location: listingLocation,
+    condition: listingCondition,
+  }
 
-  const {
-    response: { products },
-  } = await listProducts({
-    pageParam: 0,
-    queryParams: {
-      ...queryParams,
-      limit: 100,
-    },
-    countryCode,
-  })
-
-  const normalizedCategory = listingCategory?.trim().toLowerCase()
-  const normalizedLocation = listingLocation?.trim().toLowerCase()
-  const normalizedAvailability = listingAvailability?.trim().toLowerCase()
-  const normalizedCondition = listingCondition?.trim().toLowerCase()
-  const normalizedQuery = listingQuery?.trim().toLowerCase()
-  const productsWithMockListings = [...products, ...mockProducts]
-  const filteredProducts = productsWithMockListings.filter((product) => {
-    const categoryMatches =
-      !normalizedCategory ||
-      product.listing?.category?.toLowerCase() === normalizedCategory
-    const locationMatches =
-      !normalizedLocation ||
-      product.listing?.location?.toLowerCase().includes(normalizedLocation)
-    const availabilityMatches =
-      !normalizedAvailability ||
-      product.listing?.availability?.toLowerCase().includes(
-        normalizedAvailability
-      )
-    const conditionMatches =
-      !normalizedCondition ||
-      product.listing?.condition?.toLowerCase().includes(normalizedCondition)
-    const searchText = [
-      product.title,
-      product.subtitle,
-      product.description,
-      product.listing?.category,
-      product.listing?.location,
-      product.listing?.quantity,
-      product.listing?.unit,
-      product.listing?.availability,
-      product.listing?.condition,
-      product.listing?.contact_preference,
-      product.listing?.variety,
-      product.listing?.production_method,
-      product.listing?.harvest_date,
-      product.listing?.breed,
-      product.listing?.age,
-      product.listing?.sex,
-      product.listing?.health_notes,
-      product.listing?.brand,
-      product.listing?.equipment_model,
-      product.listing?.year,
-      product.listing?.pack_size,
-      product.listing?.expiry_date,
-      product.listing?.service_area,
-      ...(product.tags?.map((tag) => tag.value) ?? []),
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase()
-    const queryMatches = !normalizedQuery || searchText.includes(normalizedQuery)
-
-    return (
-      categoryMatches &&
-      locationMatches &&
-      availabilityMatches &&
-      conditionMatches &&
-      queryMatches
-    )
-  })
+  const activeProducts = await listAllActiveProducts(countryCode)
+  const productsWithMockListings = mockListingsEnabled
+    ? [
+        ...activeProducts,
+        ...mockProducts.filter((product) => product.listing?.status === "active"),
+      ]
+    : activeProducts
+  const filteredProducts = productsWithMockListings.filter((product) =>
+    matchesListingFilters(product, filters)
+  )
   const sortedProducts = sortProducts(filteredProducts, sortBy)
-
-  const pageParam = (page - 1) * limit
-
+  const offset = (currentPage - 1) * limit
   const filteredCount = filteredProducts.length
-  const nextPage = filteredCount > pageParam + limit ? pageParam + limit : null
-
-  const paginatedProducts = sortedProducts.slice(pageParam, pageParam + limit)
+  const nextPage =
+    filteredCount > offset + limit ? currentPage + 1 : null
 
   return {
     response: {
-      products: paginatedProducts,
+      products: sortedProducts.slice(offset, offset + limit),
       count: filteredCount,
     },
     nextPage,

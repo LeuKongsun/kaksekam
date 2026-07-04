@@ -12,22 +12,7 @@ const Listing = model.define("listing", {
   location: model.text().nullable(),
   quantity: model.text().nullable(),
   unit: model.text().nullable(),
-  availability: model.text().nullable(),
   condition: model.text().nullable(),
-  contact_preference: model.text().nullable(),
-  variety: model.text().nullable(),
-  production_method: model.text().nullable(),
-  harvest_date: model.text().nullable(),
-  breed: model.text().nullable(),
-  age: model.text().nullable(),
-  sex: model.text().nullable(),
-  health_notes: model.text().nullable(),
-  brand: model.text().nullable(),
-  equipment_model: model.text().nullable(),
-  year: model.text().nullable(),
-  pack_size: model.text().nullable(),
-  expiry_date: model.text().nullable(),
-  service_area: model.text().nullable(),
 })
 
 export default Listing

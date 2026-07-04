@@ -1,5 +1,6 @@
 import { Text } from "@modules/common/components/ui"
 import { getProductPrice } from "@lib/util/get-product-price"
+import { richTextToPlainText } from "@lib/util/rich-text"
 import type { StoreProductWithListing } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -34,12 +35,10 @@ export default async function ProductPreview({
       ? `${product.listing.quantity} ${product.listing.unit}`
       : product.listing?.quantity,
   ].filter(Boolean)
-  const secondaryDetails = [
-    product.listing?.availability,
-    product.listing?.condition,
-  ].filter(Boolean)
+  const secondaryDetails = [product.listing?.condition].filter(Boolean)
   const cardDescription =
-    product.description || secondaryDetails.slice(0, 2).join(" · ")
+    richTextToPlainText(product.description) ||
+    secondaryDetails.slice(0, 2).join(" · ")
   const isMockProduct = product.id.startsWith("mock-product-")
 
   return (
@@ -73,7 +72,7 @@ export default async function ProductPreview({
         />
         <div className="flex min-h-[128px] flex-col gap-1.5 p-2.5 small:min-h-[136px] small:gap-2 small:p-4">
           <Text
-            className="line-clamp-2 text-small-semi text-ui-fg-base small:text-[15px]"
+            className="line-clamp-2 text-small-semi font-bold text-brand"
             data-testid="product-title"
           >
             {product.title}
@@ -83,7 +82,7 @@ export default async function ProductPreview({
               {listingDetails.slice(0, 2).map((detail) => (
                 <span
                   key={detail}
-                  className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] leading-4 text-ui-fg-subtle small:px-2 small:text-small-regular"
+                  className="rounded-full bg-gray-100 px-2 py-0.5 text-xsmall-regular text-ui-fg-subtle"
                 >
                   {detail}
                 </span>
@@ -91,7 +90,7 @@ export default async function ProductPreview({
             </div>
           )}
           {cardDescription && (
-            <p className="line-clamp-1 text-[11px] leading-4 text-ui-fg-subtle small:text-small-regular">
+            <p className="line-clamp-1 text-xsmall-regular text-ui-fg-subtle">
               {cardDescription}
             </p>
           )}

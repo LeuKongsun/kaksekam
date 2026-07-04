@@ -7,7 +7,6 @@ const SavedSearch = model.define("saved_search", {
   query: model.text().nullable(),
   category: model.text().nullable(),
   location: model.text().nullable(),
-  availability: model.text().nullable(),
   condition: model.text().nullable(),
 })
 

@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 
 export default async function OrderConfirmedPage(props: Props) {
   const params = await props.params
-  redirect(`/${params.countryCode}/store`)
+  redirect(`/${params.countryCode}`)
 }

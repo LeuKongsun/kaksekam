@@ -16,7 +16,7 @@ import {
   Tooltip,
   toast,
 } from "@medusajs/ui"
-import { ReactNode, useEffect, useMemo, useState } from "react"
+import { ReactNode, SVGProps, useEffect, useMemo, useState } from "react"
 
 type MarketplaceListing = {
   id: string
@@ -42,22 +42,7 @@ type MarketplaceListing = {
   location: string | null
   quantity: string | null
   unit: string | null
-  availability: string | null
   condition: string | null
-  contact_preference: string | null
-  variety: string | null
-  production_method: string | null
-  harvest_date: string | null
-  breed: string | null
-  age: string | null
-  sex: string | null
-  health_notes: string | null
-  brand: string | null
-  equipment_model: string | null
-  year: string | null
-  pack_size: string | null
-  expiry_date: string | null
-  service_area: string | null
   created_at: string
   seller: {
     id: string
@@ -143,22 +128,7 @@ const listingDetailRows = (listing: MarketplaceListing): [string, string][] =>
         ? `${listing.quantity} ${listing.unit}`
         : listing.quantity,
     ],
-    ["Availability", listing.availability],
     ["Condition", listing.condition],
-    ["Contact preference", listing.contact_preference],
-    ["Variety", listing.variety],
-    ["Production method", listing.production_method],
-    ["Harvest date", listing.harvest_date],
-    ["Breed", listing.breed],
-    ["Age", listing.age],
-    ["Sex", listing.sex],
-    ["Health notes", listing.health_notes],
-    ["Brand", listing.brand],
-    ["Model", listing.equipment_model],
-    ["Year", listing.year],
-    ["Pack size", listing.pack_size],
-    ["Expiry date", listing.expiry_date],
-    ["Service area", listing.service_area],
   ] as [string, string | null][]).filter(
     (row): row is [string, string] => Boolean(row[1]),
   )
@@ -834,8 +804,26 @@ const RefreshIcon = () => (
   </svg>
 )
 
+const MarketplaceIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+    <path
+      d="M3 8.5h14l-1.2-4.25A1.75 1.75 0 0 0 14.12 3H5.88A1.75 1.75 0 0 0 4.2 4.25L3 8.5Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M4.5 8.5V16h11V8.5M8 16v-4h4v4"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
 export const config = defineRouteConfig({
   label: "Marketplace",
+  icon: MarketplaceIcon,
   rank: 44,
 })
 

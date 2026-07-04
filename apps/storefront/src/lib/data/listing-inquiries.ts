@@ -3,6 +3,7 @@
 import { sdk } from "@lib/config"
 import { revalidatePath } from "next/cache"
 import { getAuthHeaders, removeAuthToken } from "./cookies"
+import { retrieveCustomer } from "./customer"
 
 type InquiryState = {
   success: boolean
@@ -26,10 +27,11 @@ export type SellerInquiry = {
   buyer_name: string
   buyer_email: string
   buyer_phone: string | null
-  message: string
   status: "new" | "read" | "replied" | "archived"
   replied_at: string | null
+  last_message_at: string | null
   created_at: string
+  messages: InquiryMessage[]
   product: {
     id: string
     title: string
@@ -40,6 +42,16 @@ export type SellerInquiry = {
       status: string
     } | null
   } | null
+}
+
+export type InquiryMessage = {
+  id: string
+  inquiry_id: string
+  sender_type: "buyer" | "seller"
+  sender_id: string | null
+  body: string
+  read_at: string | null
+  created_at: string
 }
 
 export type BuyerInquiry = SellerInquiry & {
@@ -62,6 +74,11 @@ export async function sendListingInquiry(
   formData: FormData
 ): Promise<InquiryState> {
   const headers = await getAuthHeaders()
+  const customer = headers.authorization ? await retrieveCustomer() : null
+  const customerName = customer
+    ? `${customer.first_name ?? ""} ${customer.last_name ?? ""}`.trim() ||
+      customer.email
+    : null
 
   try {
     await sdk.client.fetch(`/store/listing-inquiries`, {
@@ -69,9 +86,9 @@ export async function sendListingInquiry(
       headers,
       body: {
         product_id: productId,
-        buyer_name: formData.get("buyer_name"),
-        buyer_email: formData.get("buyer_email"),
-        buyer_phone: formData.get("buyer_phone"),
+        buyer_name: customerName ?? formData.get("buyer_name"),
+        buyer_email: customer?.email ?? formData.get("buyer_email"),
+        buyer_phone: customer?.phone ?? formData.get("buyer_phone"),
         message: formData.get("message"),
       },
     })
@@ -159,4 +176,78 @@ export async function updateSellerInquiryStatus(
   }
 
   revalidatePath("/[countryCode]/account/inquiries", "page")
+}
+
+export async function replyToBuyerInquiry(
+  inquiryId: string,
+  formData: FormData
+) {
+  const headers = await getAuthHeaders()
+  const replyMessage = String(formData.get("reply_message") ?? "").trim()
+
+  if (!headers.authorization) {
+    throw new Error("You must be signed in to send messages.")
+  }
+
+  if (!replyMessage) {
+    throw new Error("Message is required.")
+  }
+
+  try {
+    await sdk.client.fetch(`/store/buyer-inquiries/${inquiryId}`, {
+      method: "POST",
+      headers,
+      body: {
+        message: replyMessage,
+      },
+    })
+  } catch (error) {
+    if (isUnauthorizedError(error)) {
+      await handleUnauthorizedInquiry()
+      revalidatePath("/[countryCode]/account/buyer-inquiries", "page")
+      return
+    }
+
+    throw error
+  }
+
+  revalidatePath("/[countryCode]/account/buyer-inquiries", "page")
+  revalidatePath("/[countryCode]/account/inquiries", "page")
+}
+
+export async function replyToSellerInquiry(
+  inquiryId: string,
+  formData: FormData
+) {
+  const headers = await getAuthHeaders()
+  const replyMessage = String(formData.get("reply_message") ?? "").trim()
+
+  if (!headers.authorization) {
+    throw new Error("You must be signed in to reply to inquiries.")
+  }
+
+  if (!replyMessage) {
+    throw new Error("Reply message is required.")
+  }
+
+  try {
+    await sdk.client.fetch(`/store/seller-inquiries/${inquiryId}`, {
+      method: "PATCH",
+      headers,
+      body: {
+        reply_message: replyMessage,
+      },
+    })
+  } catch (error) {
+    if (isUnauthorizedError(error)) {
+      await handleUnauthorizedInquiry()
+      revalidatePath("/[countryCode]/account/inquiries", "page")
+      return
+    }
+
+    throw error
+  }
+
+  revalidatePath("/[countryCode]/account/inquiries", "page")
+  revalidatePath("/[countryCode]/account/buyer-inquiries", "page")
 }

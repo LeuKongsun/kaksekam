@@ -41,7 +41,7 @@ describe("saved search utils", () => {
     ).toBe(true)
   })
 
-  it("matches active listings by availability and condition", () => {
+  it("matches active listings by condition", () => {
     expect(
       productMatchesSavedSearch(
         {
@@ -50,12 +50,10 @@ describe("saved search utils", () => {
             status: "active",
             category: "Produce",
             location: "Takeo Province",
-            availability: "Ready now",
             condition: "Organic",
           },
         },
         {
-          availability: "ready",
           condition: "organic",
         }
       )

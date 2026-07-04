@@ -23,7 +23,7 @@ type TextProps = HTMLAttributes<HTMLParagraphElement> & {
 export const Text = forwardRef<HTMLParagraphElement, TextProps>(
   ({ className, as: Component = "p", children, ...props }, ref) => {
     return (
-      <Component ref={ref} className={clsx("text-base", className)} {...props}>
+      <Component ref={ref} className={clsx("text-base-regular", className)} {...props}>
         {children}
       </Component>
     )
@@ -87,9 +87,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           variant === "secondary" &&
             "bg-white text-black border border-gray-200 hover:bg-gray-50",
           variant === "transparent" && "bg-transparent hover:bg-gray-100",
-          size === "small" && "h-8 px-3 text-sm",
-          size === "medium" && "h-10 px-4",
-          size === "large" && "h-12 px-6 text-lg",
+          size === "small" && "h-9 px-3 text-small-regular",
+          size === "medium" && "h-11 px-4 text-base-regular",
+          size === "large" && "h-12 px-6 text-large-regular",
           className
         )}
         {...props}
@@ -221,7 +221,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           className={clsx(
-            "flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-11 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-base-regular placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           {...props}
@@ -240,7 +240,7 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>(
     return (
       <table
         ref={ref}
-        className={clsx("w-full caption-bottom text-sm", className)}
+        className={clsx("w-full caption-bottom text-base-regular", className)}
         {...props}
       >
         {children}

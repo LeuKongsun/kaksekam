@@ -16,7 +16,7 @@ export default async function PreviewPrice({ price }: { price: VariantPrice }) {
           {price.original_price}
         </Text>
       )}
-      <Text className="text-small-semi text-[#ff385c]" data-testid="price">
+      <Text className="text-small-semi font-bold text-red-600" data-testid="price">
         {price.calculated_price}
       </Text>
     </>

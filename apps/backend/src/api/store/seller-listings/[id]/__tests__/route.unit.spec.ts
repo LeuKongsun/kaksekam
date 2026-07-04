@@ -151,22 +151,7 @@ describe("store seller listing route", () => {
       location: "Takeo",
       quantity: null,
       unit: null,
-      availability: null,
       condition: null,
-      contact_preference: null,
-      variety: null,
-      production_method: null,
-      harvest_date: null,
-      breed: null,
-      age: null,
-      sex: null,
-      health_notes: null,
-      brand: null,
-      equipment_model: null,
-      year: null,
-      pack_size: null,
-      expiry_date: null,
-      service_area: null,
     })
     expect(res.json).toHaveBeenCalledWith({
       listing: {

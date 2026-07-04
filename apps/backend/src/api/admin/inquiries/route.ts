@@ -21,6 +21,20 @@ type InquiryProduct = {
   } | null
 }
 
+async function getInquiryMessages(
+  marketplaceService: MarketplaceModuleService,
+  inquiryId: string
+) {
+  const messages = await marketplaceService.listListingInquiryMessages({
+    inquiry_id: inquiryId,
+  })
+
+  return messages.sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  )
+}
+
 async function getInquiryProduct(query: any, productId: string) {
   const { data } = await query.graph({
     entity: "product",
@@ -52,19 +66,27 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const products = await Promise.all(
     inquiries.map((inquiry) => getInquiryProduct(query, inquiry.product_id))
   )
+  const messages = await Promise.all(
+    inquiries.map((inquiry) => getInquiryMessages(marketplaceService, inquiry.id))
+  )
   const productById = new Map(
     products.filter(Boolean).map((product) => [product!.id, product])
+  )
+  const messagesByInquiryId = new Map(
+    inquiries.map((inquiry, index) => [inquiry.id, messages[index]])
   )
 
   res.json({
     inquiries: inquiries
       .sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(b.last_message_at ?? b.created_at).getTime() -
+          new Date(a.last_message_at ?? a.created_at).getTime()
       )
       .map((inquiry) => ({
         ...inquiry,
         product: productById.get(inquiry.product_id) ?? null,
+        messages: messagesByInquiryId.get(inquiry.id) ?? [],
       })),
   })
 }

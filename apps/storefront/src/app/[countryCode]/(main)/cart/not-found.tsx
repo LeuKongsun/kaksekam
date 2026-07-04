@@ -15,7 +15,7 @@ export default function NotFound() {
         Marketplace listings are handled through direct seller inquiries, not
         cart checkout.
       </p>
-      <InteractiveLink href="/store">Browse listings</InteractiveLink>
+      <InteractiveLink href="/">Browse listings</InteractiveLink>
     </div>
   )
 }

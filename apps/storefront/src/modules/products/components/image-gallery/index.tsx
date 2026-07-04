@@ -3,12 +3,14 @@
 import { HttpTypes } from "@medusajs/types"
 import Image from "next/image"
 import { useRef, useState } from "react"
+import type { ReactNode } from "react"
 
 type ImageGalleryProps = {
   images: HttpTypes.StoreProductImage[]
+  actions?: ReactNode
 }
 
-const ImageGallery = ({ images }: ImageGalleryProps) => {
+const ImageGallery = ({ images, actions }: ImageGalleryProps) => {
   const [activeIndex, setActiveIndex] = useState(0)
   const trackRef = useRef<HTMLDivElement | null>(null)
   const slideRefs = useRef<Array<HTMLDivElement | null>>([])
@@ -35,44 +37,49 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
 
   if (!images.length) {
     return (
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md bg-ui-bg-subtle" />
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md bg-ui-bg-subtle">
+        {actions && <div className="absolute right-3 top-3 z-10">{actions}</div>}
+      </div>
     )
   }
 
   return (
     <div className="flex w-full flex-col gap-y-3">
-      <div
-        ref={trackRef}
-        onScroll={handleScroll}
-        className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-md"
-        aria-label="Listing images"
-      >
-        {images.map((image, index) => {
-          return (
-            <div
-              key={image.id}
-              ref={(element) => {
-                slideRefs.current[index] = element
-              }}
-              className="relative aspect-[4/3] w-full shrink-0 snap-center overflow-hidden rounded-md bg-ui-bg-subtle"
-              id={image.id}
-            >
-              {!!image.url && (
-                <Image
-                  src={image.url}
-                  priority={index === 0}
-                  className="absolute inset-0"
-                  alt={`Listing image ${index + 1}`}
-                  fill
-                  sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-                  style={{
-                    objectFit: "cover",
-                  }}
-                />
-              )}
-            </div>
-          )
-        })}
+      <div className="relative">
+        {actions && <div className="absolute right-3 top-3 z-10">{actions}</div>}
+        <div
+          ref={trackRef}
+          onScroll={handleScroll}
+          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-md"
+          aria-label="Listing images"
+        >
+          {images.map((image, index) => {
+            return (
+              <div
+                key={image.id}
+                ref={(element) => {
+                  slideRefs.current[index] = element
+                }}
+                className="relative aspect-[4/3] w-full shrink-0 snap-center overflow-hidden rounded-md bg-ui-bg-subtle"
+                id={image.id}
+              >
+                {!!image.url && (
+                  <Image
+                    src={image.url}
+                    priority={index === 0}
+                    className="absolute inset-0"
+                    alt={`Listing image ${index + 1}`}
+                    fill
+                    sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
+                    style={{
+                      objectFit: "cover",
+                    }}
+                  />
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {images.length > 1 && (

@@ -49,6 +49,23 @@
   }
 }
 
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  :root {
+    --brand-primary: #15803d;
+    --brand-primary-hover: #166534;
+    --brand-primary-soft: #f0fdf4;
+    --brand-primary-ring: rgb(21 128 61 / 35%);
+  }
+
+  body {
+    @apply text-base-regular text-ui-fg-base antialiased;
+  }
+}
+
 @layer components {
   .content-container {
     @apply max-w-[1440px] w-full mx-auto px-6;
@@ -59,54 +76,86 @@
   }
 
   .text-xsmall-regular {
-    @apply text-[10px] leading-4 font-normal;
+    @apply text-[13px] leading-5 font-normal;
+  }
+
+  .text-xsmall-semi {
+    @apply text-[13px] leading-5 font-semibold;
   }
 
   .text-small-regular {
-    @apply text-xs leading-5 font-normal;
+    @apply text-[15px] leading-6 font-normal;
   }
 
   .text-small-semi {
-    @apply text-xs leading-5 font-semibold;
+    @apply text-[15px] leading-6 font-semibold;
   }
 
   .text-base-regular {
-    @apply text-sm leading-6 font-normal;
+    @apply text-[17px] leading-7 font-normal;
   }
 
   .text-base-semi {
-    @apply text-sm leading-6 font-semibold;
+    @apply text-[17px] leading-7 font-semibold;
   }
 
   .text-large-regular {
-    @apply text-base leading-6 font-normal;
+    @apply text-[19px] leading-7 font-normal;
   }
 
   .text-large-semi {
-    @apply text-base leading-6 font-semibold;
+    @apply text-[19px] leading-7 font-semibold;
   }
 
   .text-xl-regular {
-    @apply text-2xl leading-[36px] font-normal;
+    @apply text-[24px] leading-8 font-normal;
   }
 
   .text-xl-semi {
-    @apply text-2xl leading-[36px] font-semibold;
+    @apply text-[24px] leading-8 font-semibold;
   }
 
   .text-2xl-regular {
-    @apply text-[30px] leading-[48px] font-normal;
-  }
-
-  .text-2xl-semi {
-    @apply text-[30px] leading-[48px] font-semibold;
-  }
-
-  .text-3xl-regular {
     @apply text-[32px] leading-[44px] font-normal;
   }
 
-  .text-3xl-semi {
+  .text-2xl-semi {
     @apply text-[32px] leading-[44px] font-semibold;
+  }
+
+  .text-3xl-regular {
+    @apply text-[36px] leading-[48px] font-normal;
+  }
+
+  .text-3xl-semi {
+    @apply text-[36px] leading-[48px] font-semibold;
+  }
+
+  .brand-search-button {
+    @apply inline-flex min-h-[3.5rem] min-w-[7.5rem] flex-1 items-center justify-center border-0 px-6 text-small-semi text-white transition-colors small:flex-none;
+    background-color: var(--brand-primary);
+  }
+
+  .brand-search-button:hover {
+    background-color: var(--brand-primary-hover);
+  }
+
+  .brand-search-button:focus-visible {
+    outline: 2px solid var(--brand-primary-ring);
+    outline-offset: 2px;
+  }
+
+  .brand-filter-button {
+    @apply inline-flex min-h-[3.5rem] min-w-[3.5rem] shrink-0 items-center justify-center border-l border-gray-200 bg-white text-ui-fg-subtle transition-colors;
+  }
+
+  .brand-filter-button:hover {
+    @apply text-ui-fg-base;
+    background-color: #f9fafb;
+  }
+
+  .brand-filter-button.is-active {
+    background-color: var(--brand-primary);
+    color: #fff;
   }
 }

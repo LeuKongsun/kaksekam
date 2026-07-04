@@ -231,7 +231,7 @@ const InfoItem = ({
   children: React.ReactNode
 }) => (
   <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
-    <div className="text-[11px] font-medium uppercase text-ui-fg-muted">
+    <div className="text-xsmall-semi font-medium uppercase text-ui-fg-muted">
       {label}
     </div>
     <div className="mt-1 text-base-regular text-ui-fg-base">{children}</div>

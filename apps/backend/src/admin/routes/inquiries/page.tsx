@@ -15,17 +15,17 @@ import {
   Tooltip,
   toast,
 } from "@medusajs/ui"
-import { ReactNode, useEffect, useMemo, useState } from "react"
+import { ReactNode, SVGProps, useEffect, useMemo, useState } from "react"
 
 type AdminInquiry = {
   id: string
   buyer_name: string
   buyer_email: string
   buyer_phone: string | null
-  message: string
   status: "new" | "read" | "replied" | "archived"
   created_at: string
   replied_at: string | null
+  messages: AdminInquiryMessage[]
   product: {
     id: string
     title: string
@@ -42,6 +42,13 @@ type AdminInquiry = {
       verification_status: "unverified" | "verified"
     } | null
   } | null
+}
+
+type AdminInquiryMessage = {
+  id: string
+  sender_type: "buyer" | "seller"
+  body: string
+  created_at: string
 }
 
 type InquiriesResponse = {
@@ -130,7 +137,7 @@ const InquiriesPage = () => {
         inquiry.buyer_name,
         inquiry.buyer_email,
         inquiry.buyer_phone,
-        inquiry.message,
+        ...inquiry.messages.map((message) => message.body),
         inquiry.product?.title,
         inquiry.product?.handle,
         inquiry.product?.seller?.display_name,
@@ -207,12 +214,12 @@ const InquiriesPage = () => {
   return (
     <div className="flex flex-col gap-y-6">
       <OpsSection
-        title="Marketplace inquiries"
+        title="Inquiries"
         subtitle={`${counts.new} new, ${counts.read} read, ${counts.replied} replied, ${counts.archived} archived.`}
         actions={
           <Tooltip content="Refresh">
             <IconButton
-              aria-label="Refresh marketplace inquiries"
+              aria-label="Refresh inquiries"
               size="small"
               variant="transparent"
               onClick={() => void loadInquiries()}
@@ -412,9 +419,33 @@ const InquiryDetailsDialog = ({
           <div className="flex flex-col gap-y-5">
             <div>
               <Text weight="plus">{inquiry.buyer_name}</Text>
-              <Text className="mt-1 text-ui-fg-subtle" size="small">
-                {inquiry.message}
-              </Text>
+              <div className="mt-3 flex flex-col gap-2">
+                {inquiry.messages.length === 0 ? (
+                  <Text className="text-ui-fg-subtle" size="small">
+                    No messages yet.
+                  </Text>
+                ) : (
+                  inquiry.messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className="rounded-md border border-ui-border-base bg-ui-bg-subtle p-3"
+                    >
+                      <Text size="small" weight="plus">
+                        {message.sender_type === "seller" ? "Seller" : "Buyer"}
+                      </Text>
+                      <Text className="mt-1 text-ui-fg-subtle" size="small">
+                        {message.body}
+                      </Text>
+                      <Text className="mt-2 text-ui-fg-muted" size="xsmall">
+                        {new Intl.DateTimeFormat(undefined, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        }).format(new Date(message.created_at))}
+                      </Text>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <DetailItem label="Buyer email">
@@ -519,8 +550,26 @@ const RefreshIcon = () => (
   </svg>
 )
 
+const InquiriesIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+    <path
+      d="M3 8.25A4.25 4.25 0 0 1 7.25 4h5.5A4.25 4.25 0 0 1 17 8.25v1.5A4.25 4.25 0 0 1 12.75 14H9l-4 3v-3.7A4.25 4.25 0 0 1 3 9.75v-1.5Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M7 8h6M7 11h3.5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+  </svg>
+)
+
 export const config = defineRouteConfig({
-  label: "Marketplace inquiries",
+  label: "Inquiries",
+  icon: InquiriesIcon,
   rank: 47,
 })
 

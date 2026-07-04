@@ -8,6 +8,10 @@ type MarketplaceProduct = {
   id: string
   title: string
   handle: string
+  thumbnail: string | null
+  images?: {
+    url: string
+  }[] | null
   listing?: {
     id: string
     status: string
@@ -37,6 +41,8 @@ async function listMarketplaceProducts(query: any) {
         "id",
         "title",
         "handle",
+        "thumbnail",
+        "images.url",
         "listing.id",
         "listing.status",
         "listing.created_at",
@@ -53,7 +59,9 @@ async function listMarketplaceProducts(query: any) {
     })
 
     products.push(
-      ...(data as MarketplaceProduct[]).filter((product) => product.listing),
+      ...(data as MarketplaceProduct[]).filter(
+        (product) => product.listing?.category
+      ),
     )
 
     totalCount = metadata?.count
@@ -156,6 +164,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       product_id: product.id,
       title: product.title,
       handle: product.handle,
+      thumbnail: product.thumbnail,
+      images: product.images ?? [],
       status: product.listing!.status,
       category: product.listing!.category,
       location: product.listing!.location,

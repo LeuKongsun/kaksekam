@@ -1,5 +1,5 @@
 import { MedusaContainer } from "@medusajs/framework"
-import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { MARKETPLACE_MODULE } from "../modules/marketplace"
 import MarketplaceModuleService from "../modules/marketplace/service"
@@ -11,6 +11,7 @@ type ProductWithListing = {
   listing?: {
     id: string
     status: string
+    category: string | null
   } | null
 }
 
@@ -37,7 +38,7 @@ async function listAllProductsWithListings(
   while (hasMoreProducts) {
     const { data, metadata } = await graph({
       entity: "product",
-      fields: ["id", "listing.id", "listing.status"],
+      fields: ["id", "listing.id", "listing.status", "listing.category"],
       pagination: {
         skip,
         take: PRODUCT_PAGE_SIZE,
@@ -64,7 +65,6 @@ export default async function marketplace_demo_listing_status({
   container: MedusaContainer
 }) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
-  const link = container.resolve(ContainerRegistrationKeys.LINK)
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const marketplaceService: MarketplaceModuleService =
     container.resolve(MARKETPLACE_MODULE)
@@ -75,6 +75,17 @@ export default async function marketplace_demo_listing_status({
 
   for (const product of products) {
     if (product.listing?.id) {
+      if (!product.listing.category) {
+        if (product.listing.status !== "expired") {
+          await marketplaceService.updateListings({
+            id: product.listing.id,
+            status: "expired",
+          })
+        }
+
+        continue
+      }
+
       if (product.listing.status !== "active") {
         await marketplaceService.updateListings({
           id: product.listing.id,
@@ -83,27 +94,6 @@ export default async function marketplace_demo_listing_status({
       }
 
       continue
-    }
-
-    const listing = await marketplaceService.createListings({
-      status: "active",
-    })
-
-    try {
-      await link.create({
-        [Modules.PRODUCT]: {
-          product_id: product.id,
-        },
-        [MARKETPLACE_MODULE]: {
-          listing_id: listing.id,
-        },
-      })
-    } catch (error) {
-      logger.debug(
-        `Skipping marketplace listing link for product ${product.id}: ${
-          error instanceof Error ? error.message : "already linked"
-        }`
-      )
     }
   }
 

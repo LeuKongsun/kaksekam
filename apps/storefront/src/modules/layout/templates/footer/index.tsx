@@ -7,10 +7,10 @@ export default async function Footer() {
   const { t } = await getTranslations()
   const trustSignals = t.footer.trustSignals
   const footerLinks = [
-    [t.footer.browseListings, "/store"],
+    [t.footer.browseListings, "/"],
     [t.footer.postListing, "/account/listings"],
     [t.common.account, "/account"],
-    [t.common.inquiries, "/account/inquiries"],
+    [t.common.messages, "/account/inquiries"],
   ]
 
   return (
@@ -20,7 +20,7 @@ export default async function Footer() {
           <div className="max-w-lg">
             <LocalizedClientLink
               href="/"
-              className="txt-compact-xlarge-plus text-[#ff385c] transition-colors hover:text-[#e83152]"
+              className="txt-compact-xlarge-plus text-brand transition-colors hover:text-brand-hover"
             >
               {t.common.brand}
             </LocalizedClientLink>
@@ -42,7 +42,7 @@ export default async function Footer() {
                 className="transition-colors hover:text-ui-fg-base"
                 href={href}
                 data-testid={
-                  href === "/store" ? "footer-browse-link" : undefined
+                  href === "/" ? "footer-browse-link" : undefined
                 }
               >
                 {label}

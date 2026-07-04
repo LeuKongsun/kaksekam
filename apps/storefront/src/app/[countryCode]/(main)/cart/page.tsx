@@ -17,7 +17,7 @@ export default async function Cart() {
           privately.
         </p>
         <LocalizedClientLink
-          href="/store"
+          href="/"
           className="text-ui-fg-base underline underline-offset-4"
         >
           Browse listings

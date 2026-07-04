@@ -17,7 +17,6 @@ type SaveSearchBody = {
   query?: string
   category?: string
   location?: string
-  availability?: string
   condition?: string
 }
 
@@ -32,22 +31,7 @@ type SearchProduct = {
     location: string | null
     quantity: string | null
     unit: string | null
-    availability: string | null
     condition: string | null
-    contact_preference: string | null
-    variety: string | null
-    production_method: string | null
-    harvest_date: string | null
-    breed: string | null
-    age: string | null
-    sex: string | null
-    health_notes: string | null
-    brand: string | null
-    equipment_model: string | null
-    year: string | null
-    pack_size: string | null
-    expiry_date: string | null
-    service_area: string | null
   } | null
   tags?: {
     value?: string | null
@@ -76,22 +60,7 @@ async function listSearchProducts(query: any) {
         "listing.location",
         "listing.quantity",
         "listing.unit",
-        "listing.availability",
         "listing.condition",
-        "listing.contact_preference",
-        "listing.variety",
-        "listing.production_method",
-        "listing.harvest_date",
-        "listing.breed",
-        "listing.age",
-        "listing.sex",
-        "listing.health_notes",
-        "listing.brand",
-        "listing.equipment_model",
-        "listing.year",
-        "listing.pack_size",
-        "listing.expiry_date",
-        "listing.service_area",
       ],
       pagination: {
         skip,
@@ -150,10 +119,9 @@ export async function POST(
   const query = cleanOptionalText(body.query)
   const category = cleanOptionalText(body.category)
   const location = cleanOptionalText(body.location)
-  const availability = cleanOptionalText(body.availability)
   const condition = cleanOptionalText(body.condition)
 
-  if (!query && !category && !location && !availability && !condition) {
+  if (!query && !category && !location && !condition) {
     res.status(400).json({ message: "Add at least one search filter to save." })
     return
   }
@@ -165,7 +133,6 @@ export async function POST(
     query,
     category,
     location,
-    availability,
     condition,
   })
 
@@ -180,7 +147,6 @@ export async function POST(
     query,
     category,
     location,
-    availability,
     condition,
   })
 

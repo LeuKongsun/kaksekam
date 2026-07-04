@@ -23,7 +23,6 @@ export default async function PaginatedProducts({
   productsIds,
   category,
   location,
-  availability,
   condition,
   q,
   countryCode,
@@ -36,7 +35,6 @@ export default async function PaginatedProducts({
   productsIds?: string[]
   category?: string
   location?: string
-  availability?: string
   condition?: string
   q?: string
   countryCode: string
@@ -76,7 +74,6 @@ export default async function PaginatedProducts({
     sortBy,
     listingCategory: category,
     listingLocation: location,
-    listingAvailability: availability,
     listingCondition: condition,
     listingQuery: q,
     countryCode,

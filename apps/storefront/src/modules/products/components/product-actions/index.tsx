@@ -18,6 +18,12 @@ type ProductActionsProps = {
   seller?: ProductSeller | null
   disabled?: boolean
   productId: string
+  customer?: {
+    id: string
+    name: string
+    email: string
+    phone: string | null
+  } | null
 }
 
 const optionsAsKeymap = (
@@ -36,6 +42,7 @@ export default function ProductActions({
   seller,
   disabled,
   productId,
+  customer,
 }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -97,11 +104,12 @@ export default function ProductActions({
   }, [selectedVariant, isValidVariant])
 
   const contactSubject = encodeURIComponent(`Listing inquiry: ${product.title}`)
+  const sellerPhoneHref = seller?.phone
+    ? `tel:${seller.phone.replace(/[^\d+]/g, "")}`
+    : undefined
   const contactHref = seller?.email
     ? `mailto:${seller.email}?subject=${contactSubject}`
-    : seller?.phone
-      ? `tel:${seller.phone.replace(/[^\d+]/g, "")}`
-      : undefined
+    : sellerPhoneHref
   const canContact = !disabled && isValidVariant && !!contactHref
   const sellerImage = seller?.avatar_url ?? product.thumbnail
   return (
@@ -174,7 +182,7 @@ export default function ProductActions({
                 >
                   <span className="truncate">{seller.display_name}</span>
                   {seller.verification_status === "verified" && (
-                    <span className="shrink-0 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-medium uppercase text-green-700">
+                    <span className="shrink-0 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xsmall-semi uppercase text-green-700">
                       Verified
                     </span>
                   )}
@@ -192,8 +200,25 @@ export default function ProductActions({
               </p>
             )}
             {(seller.email || seller.phone) && (
-              <div className="mt-2 text-ui-fg-subtle">
-                {seller.email ?? seller.phone}
+              <div className="mt-3 flex flex-col gap-2 text-ui-fg-subtle">
+                {seller.email && (
+                  <a
+                    href={`mailto:${seller.email}?subject=${contactSubject}`}
+                    className="inline-flex min-w-0 items-center gap-2 hover:text-ui-fg-base"
+                  >
+                    <EmailIcon />
+                    <span className="truncate">{seller.email}</span>
+                  </a>
+                )}
+                {seller.phone && (
+                  <a
+                    href={sellerPhoneHref}
+                    className="inline-flex min-w-0 items-center gap-2 hover:text-ui-fg-base"
+                  >
+                    <PhoneIcon />
+                    <span className="truncate">{seller.phone}</span>
+                  </a>
+                )}
               </div>
             )}
           </div>
@@ -226,7 +251,7 @@ export default function ProductActions({
       >
         <Modal.Title>Send inquiry</Modal.Title>
         <div className="pt-4">
-          <ListingInquiryForm productId={productId} />
+          <ListingInquiryForm productId={productId} customer={customer} />
         </div>
       </Modal>
     </>
@@ -253,6 +278,52 @@ const MessageIcon = () => (
       stroke="currentColor"
       strokeWidth="1.5"
       strokeLinecap="round"
+    />
+  </svg>
+)
+
+const EmailIcon = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 20 20"
+    fill="none"
+    aria-hidden="true"
+    className="shrink-0"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M3.5 5.5h13v9h-13v-9Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+    <path
+      d="m4 6 6 5 6-5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+const PhoneIcon = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 20 20"
+    fill="none"
+    aria-hidden="true"
+    className="shrink-0"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M6.5 3.5 8 7 6.25 8.25c.9 1.9 2.35 3.35 4.25 4.25L11.75 11 15.5 12.5l-.5 3c-.15.85-.9 1.45-1.75 1.35-5.1-.6-9.5-5-10.1-10.1-.1-.85.5-1.6 1.35-1.75l2-.5Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
   </svg>
 )

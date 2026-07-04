@@ -2,11 +2,11 @@ import React, { Suspense } from "react"
 
 import type { StoreProductWithListing } from "@lib/data/products"
 import ImageGallery from "@modules/products/components/image-gallery"
-import ProductActions from "@modules/products/components/product-actions"
 import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
 import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
 import CommentSection from "@modules/products/components/comment-section"
+import ProductActionsSkeleton from "@modules/products/components/product-actions/skeleton"
 import ProductInfo from "@modules/products/templates/product-info"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import Link from "next/link"
@@ -25,6 +25,7 @@ type ProductTemplateProps = {
     id: string
     name: string
     email: string
+    phone: string | null
   } | null
 }
 
@@ -47,9 +48,8 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
       >
         <div className="flex min-w-0 flex-col gap-y-6">
           <ProductBreadcrumb product={product} countryCode={countryCode} />
-          <ImageGallery images={images} />
-          <ProductInfo
-            product={product}
+          <ImageGallery
+            images={images}
             actions={
               <Suspense fallback={null}>
                 <ProductQuickActionsWrapper
@@ -60,21 +60,19 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
               </Suspense>
             }
           />
+          <ProductInfo
+            product={product}
+          />
         </div>
 
         <div className="flex w-full flex-col gap-y-4 large:sticky large:top-24">
           <ProductOnboardingCta />
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                productId={product.id}
-                region={region}
-              />
-            }
-          >
-            <ProductActionsWrapper id={product.id} region={region} />
+          <Suspense fallback={<ProductActionsSkeleton />}>
+            <ProductActionsWrapper
+              id={product.id}
+              region={region}
+              customer={customer}
+            />
           </Suspense>
           <ProductTabs />
         </div>
@@ -106,10 +104,10 @@ const ProductBreadcrumb = ({
 }) => {
   const crumbs = [
     { label: "Home", href: `/${countryCode}` },
-    { label: "Listings", href: `/${countryCode}/store` },
+    { label: "Listings", href: `/${countryCode}` },
     product.listing?.category && {
       label: product.listing.category,
-      href: `/${countryCode}/store?category=${encodeURIComponent(
+      href: `/${countryCode}?category=${encodeURIComponent(
         product.listing.category,
       )}`,
     },
@@ -121,7 +119,7 @@ const ProductBreadcrumb = ({
       className="flex flex-wrap items-center gap-2 text-small-regular text-ui-fg-subtle"
     >
       {crumbs.map((crumb, index) => (
-        <React.Fragment key={crumb.href}>
+        <React.Fragment key={`${crumb.label}-${crumb.href}`}>
           {index > 0 && <span className="text-ui-fg-muted">/</span>}
           <Link href={crumb.href} className="hover:text-ui-fg-base">
             {crumb.label}

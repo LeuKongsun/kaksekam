@@ -23,7 +23,7 @@ export default function ProductPrice({
 
   return (
     <div className="flex flex-col text-ui-fg-base">
-      <span className="text-xl-semi text-[#ff385c]">
+      <span className="text-xl-semi text-brand">
         {!variant && "From "}
         <span
           data-testid="product-price"

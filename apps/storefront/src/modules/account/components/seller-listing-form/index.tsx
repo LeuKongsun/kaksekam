@@ -1,8 +1,13 @@
 "use client"
 
+import {
+  LISTING_CATEGORIES,
+  LISTING_CONDITIONS,
+} from "@lib/marketplace/listing-fields"
 import { createSellerListing } from "@lib/data/seller-listings"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
+import RichTextEditor from "@modules/account/components/rich-text-editor"
 import { Photo, PlusMini, XMarkMini } from "@medusajs/icons"
 import {
   ChangeEvent,
@@ -13,25 +18,21 @@ import {
   useState,
 } from "react"
 
-const categoryOptions = [
-  "Produce",
-  "Livestock",
-  "Seeds",
-  "Fertilizer",
-  "Equipment",
-  "Tools",
-  "Services",
-  "Other",
-]
+const categoryOptions = LISTING_CATEGORIES
 
 const MAX_PHOTO_UPLOADS = 6
+const MAX_PHOTO_FILE_SIZE = 5 * 1024 * 1024
+const MAX_PHOTO_TOTAL_SIZE = 24 * 1024 * 1024
 const selectFieldClassName =
   "h-11 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-3 pb-1 pt-4 text-ui-fg-base hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active focus:outline-none"
+const formatFileSize = (bytes: number) =>
+  `${(bytes / 1024 / 1024).toFixed(bytes >= 1024 * 1024 ? 1 : 0)}MB`
 
 const SellerListingForm = () => {
   const [category, setCategory] = useState("Produce")
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [imageError, setImageError] = useState<string | null>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [state, formAction] = useActionState(createSellerListing, {
     success: false,
@@ -63,11 +64,42 @@ const SellerListingForm = () => {
       return
     }
 
+    const oversizedFile = selectedFiles.find(
+      (file) => file.size > MAX_PHOTO_FILE_SIZE,
+    )
+
+    if (oversizedFile) {
+      setImageError(
+        `${oversizedFile.name} is ${formatFileSize(
+          oversizedFile.size,
+        )}. Please choose photos under ${formatFileSize(MAX_PHOTO_FILE_SIZE)}.`,
+      )
+      event.target.value = ""
+      return
+    }
+
     setImageFiles((currentFiles) => {
       const mergedFiles = [...currentFiles, ...selectedFiles].slice(
         0,
         MAX_PHOTO_UPLOADS,
       )
+      const totalSize = mergedFiles.reduce((sum, file) => sum + file.size, 0)
+
+      if (totalSize > MAX_PHOTO_TOTAL_SIZE) {
+        setImageError(
+          `Selected photos are ${formatFileSize(
+            totalSize,
+          )} total. Please keep uploads under ${formatFileSize(
+            MAX_PHOTO_TOTAL_SIZE,
+          )}.`,
+        )
+        event.target.value = ""
+        syncImageInput(currentFiles)
+
+        return currentFiles
+      }
+
+      setImageError(null)
 
       syncImageInput(mergedFiles)
 
@@ -110,21 +142,11 @@ const SellerListingForm = () => {
       <div className="grid grid-cols-1 gap-4">
         <Input label="Title" name="title" required />
 
-        <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-          <span>
-            Description<span className="text-rose-500">*</span>
-          </span>
-          <textarea
-            name="description"
-            required
-            rows={5}
-            className="w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
-          />
-        </label>
+        <RichTextEditor label="Description" name="description" required />
 
         <FormSection
           title="Photos"
-          description="Upload clear photos. Listings with real photos are easier to approve and trust."
+          description="Upload clear photos. Products with real photos are easier to approve and trust."
         />
 
         <div className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
@@ -134,6 +156,11 @@ const SellerListingForm = () => {
               {imageFiles.length}/{MAX_PHOTO_UPLOADS}
             </span>
           </div>
+          {imageError && (
+            <span className="text-small-regular text-rose-600">
+              {imageError}
+            </span>
+          )}
           <input
             ref={imageInputRef}
             name="images"
@@ -206,33 +233,23 @@ const SellerListingForm = () => {
           <Input label="Farm or pickup location" name="location" />
           <Input label="Quantity" name="quantity" />
           <Input label="Unit" name="unit" />
-          <Input label="Availability" name="availability" />
           <SelectField label="Condition" name="condition" defaultValue="">
             <option value="">Not specified</option>
-            <option value="Fresh">Fresh</option>
-            <option value="Organic">Organic</option>
-            <option value="Used">Used</option>
-            <option value="New">New</option>
-          </SelectField>
-          <SelectField
-            label="Preferred contact"
-            name="contact_preference"
-            defaultValue=""
-          >
-            <option value="">Any contact method</option>
-            <option value="Phone">Phone</option>
-            <option value="Email">Email</option>
+            {LISTING_CONDITIONS.map((condition) => (
+              <option key={condition} value={condition}>
+                {condition}
+              </option>
+            ))}
           </SelectField>
         </div>
 
         <CategoryGuidance category={category} />
 
-        <CategorySpecificFields category={category} />
+        <CategorySpecificFields />
 
         <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-small-regular text-ui-fg-subtle">
-          Before submitting, check that price, location, quantity, availability,
-          photos, and contact preference are clear. Admins review listings
-          before they appear to buyers.
+          Before submitting, check that price, location, quantity, and photos
+          are clear. Admins review listings before they appear to buyers.
         </div>
 
         <SubmitButton data-testid="create-listing-button">
@@ -272,18 +289,14 @@ const SelectField = ({ label, children, ...props }: SelectFieldProps) => (
 )
 
 const categoryGuidance: Record<string, string> = {
-  Produce:
-    "Add variety, harvest season, and production method so buyers can judge freshness and fit.",
-  Livestock:
-    "Add breed, age, sex, and health notes. Buyers need enough information before arranging inspection.",
-  Seeds: "Add variety, pack size, and production or expiry date.",
-  Fertilizer: "Add type, pack size, and expiry or production date.",
-  Equipment:
-    "Add brand, model, year, and condition so buyers can compare equipment quickly.",
-  Tools:
-    "Add brand, model, year, and condition for easier inspection planning.",
-  Services: "Add service area and describe what is included in the service.",
-  Other: "Add any category-specific details buyers need before contacting you.",
+  Produce: "Use the description for any freshness or source notes.",
+  Livestock: "Use the description for animal details and inspection notes.",
+  Seeds: "Use the description for seed details.",
+  Fertilizer: "Use the description for product details.",
+  Equipment: "Use the description for equipment details.",
+  Tools: "Use the description for tool details.",
+  Services: "Use the description for service details.",
+  Other: "Use the description for any extra details buyers need.",
 }
 
 const CategoryGuidance = ({ category }: { category: string }) => (
@@ -293,65 +306,7 @@ const CategoryGuidance = ({ category }: { category: string }) => (
   </div>
 )
 
-const CategorySpecificFields = ({ category }: { category: string }) => {
-  if (category === "Produce") {
-    return (
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input label="Variety" name="variety" />
-        <Input label="Harvest date or season" name="harvest_date" />
-        <SelectField
-          label="Production method"
-          name="production_method"
-          defaultValue=""
-        >
-          <option value="">Not specified</option>
-          <option value="Organic">Organic</option>
-          <option value="Conventional">Conventional</option>
-          <option value="Regenerative">Regenerative</option>
-        </SelectField>
-      </div>
-    )
-  }
-
-  if (category === "Livestock") {
-    return (
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input label="Breed" name="breed" />
-        <Input label="Age" name="age" />
-        <Input label="Sex" name="sex" />
-        <Input label="Health or vaccination notes" name="health_notes" />
-      </div>
-    )
-  }
-
-  if (category === "Equipment" || category === "Tools") {
-    return (
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input label="Brand" name="brand" />
-        <Input label="Model" name="equipment_model" />
-        <Input label="Year" name="year" />
-      </div>
-    )
-  }
-
-  if (category === "Seeds" || category === "Fertilizer") {
-    return (
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input label="Variety or type" name="variety" />
-        <Input label="Pack size" name="pack_size" />
-        <Input label="Expiry or production date" name="expiry_date" />
-      </div>
-    )
-  }
-
-  if (category === "Services") {
-    return (
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input label="Service area" name="service_area" />
-      </div>
-    )
-  }
-
+const CategorySpecificFields = () => {
   return null
 }
 

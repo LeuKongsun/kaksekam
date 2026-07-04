@@ -12,7 +12,7 @@ const BuyerSafetyTips = () => {
   const tips = [
     "Meet the seller in a public or familiar place whenever possible.",
     "Inspect the product carefully before agreeing to buy or pay.",
-    "Use comments or inquiry to confirm availability, condition, and pickup details.",
+    "Use comments or inquiry to confirm condition, pickup details, and timing.",
     "Avoid sending money before you are comfortable with the seller and listing.",
     "Keep a record of messages, agreed price, pickup time, and seller contact details.",
   ]

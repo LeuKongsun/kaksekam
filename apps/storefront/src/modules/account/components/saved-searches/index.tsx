@@ -21,14 +21,11 @@ const getSearchHref = (search: SavedSearch) => {
   if (search.location) {
     params.set("location", search.location)
   }
-  if (search.availability) {
-    params.set("availability", search.availability)
-  }
   if (search.condition) {
     params.set("condition", search.condition)
   }
 
-  return `/store${params.toString() ? `?${params.toString()}` : ""}`
+  return `/${params.toString() ? `?${params.toString()}` : ""}`
 }
 
 const SavedSearches = ({ savedSearches }: SavedSearchesProps) => {
@@ -38,10 +35,10 @@ const SavedSearches = ({ savedSearches }: SavedSearchesProps) => {
         <h2 className="text-base-semi text-ui-fg-base">No saved searches yet</h2>
         <p className="mt-2 text-base-regular text-ui-fg-subtle">
           Save a search from the browse page to return to the same category,
-          location, availability, or condition later.
+          location, or condition later.
         </p>
         <LocalizedClientLink
-          href="/store"
+          href="/"
           className="mt-4 inline-flex rounded-md border border-gray-300 px-4 py-2 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
         >
           Browse listings
@@ -77,9 +74,6 @@ const SavedSearches = ({ savedSearches }: SavedSearchesProps) => {
               )}
               {search.location && (
                 <SearchChip label={`Location: ${search.location}`} />
-              )}
-              {search.availability && (
-                <SearchChip label={`Availability: ${search.availability}`} />
               )}
               {search.condition && (
                 <SearchChip label={`Condition: ${search.condition}`} />
@@ -130,7 +124,7 @@ const RemoveSavedSearchButton = ({
   return (
     <div className="small:text-right">
       <LocalizedClientLink
-        href="/store"
+        href="/"
         className="mb-2 inline-flex rounded-md border border-gray-300 px-3 py-1.5 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
       >
         New search

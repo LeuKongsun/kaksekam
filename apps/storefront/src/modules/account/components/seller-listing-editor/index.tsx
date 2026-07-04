@@ -1,21 +1,12 @@
 "use client"
 
-import {
-  SellerListing,
-  updateSellerListing,
-} from "@lib/data/seller-listings"
+import { SellerListing, updateSellerListing } from "@lib/data/seller-listings"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
+import RichTextEditor from "@modules/account/components/rich-text-editor"
 import { Photo, PlusMini, XMarkMini } from "@medusajs/icons"
-import {
-  ChangeEvent,
-  SelectHTMLAttributes,
-  useActionState,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { useActionState, useEffect, useMemo, useRef, useState } from "react"
+import type { ChangeEvent, DragEvent, SelectHTMLAttributes } from "react"
 
 type SellerListingEditorProps = {
   listing: SellerListing
@@ -40,22 +31,55 @@ const categoryOptions = [
 ]
 
 const MAX_PHOTO_UPLOADS = 6
+const MAX_PHOTO_FILE_SIZE = 5 * 1024 * 1024
+const MAX_PHOTO_TOTAL_SIZE = 24 * 1024 * 1024
 const supportedCurrencyCodes = new Set(["khr", "usd"])
 const selectFieldClassName =
   "h-11 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-3 pb-1 pt-4 text-ui-fg-base hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active focus:outline-none"
+const formatFileSize = (bytes: number) =>
+  `${(bytes / 1024 / 1024).toFixed(bytes >= 1024 * 1024 ? 1 : 0)}MB`
+const createImageId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+type ExistingImageItem = {
+  id: string
+  type: "existing"
+  url: string
+}
+
+type NewImageItem = {
+  id: string
+  type: "new"
+  file: File
+}
+
+type ImageItem = ExistingImageItem | NewImageItem
 
 const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
   const existingImages = useMemo(() => getListingImages(listing), [listing])
+  const initialImageItems = useMemo(
+    () =>
+      existingImages.map((url, index) => ({
+        id: `existing-${index}-${url}`,
+        type: "existing" as const,
+        url,
+      })),
+    [existingImages],
+  )
   const [category, setCategory] = useState(listing.category ?? "Produce")
-  const [imageFiles, setImageFiles] = useState<File[]>([])
-  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [imageItems, setImageItems] = useState<ImageItem[]>(initialImageItems)
+  const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({})
+  const [imageError, setImageError] = useState<string | null>(null)
+  const [draggedImageId, setDraggedImageId] = useState<string | null>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [state, formAction] = useActionState(
     updateSellerListing.bind(null, listing.id),
     {
       success: false,
       error: null as string | null,
-    }
+    },
   )
   const canEdit = editableStatuses.has(listing.status)
   const amount = listing.price?.calculated_amount
@@ -65,12 +89,30 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
     : "khr"
 
   useEffect(() => {
-    const previews = imageFiles.map((file) => URL.createObjectURL(file))
+    setImageItems(initialImageItems)
+  }, [initialImageItems])
+
+  const newImageItems = useMemo(
+    () =>
+      imageItems.filter((item): item is NewImageItem => item.type === "new"),
+    [imageItems],
+  )
+
+  useEffect(() => {
+    const previews = newImageItems.reduce<Record<string, string>>(
+      (acc, item) => {
+        acc[item.id] = URL.createObjectURL(item.file)
+
+        return acc
+      },
+      {},
+    )
 
     setImagePreviews(previews)
 
-    return () => previews.forEach((preview) => URL.revokeObjectURL(preview))
-  }, [imageFiles])
+    return () =>
+      Object.values(previews).forEach((preview) => URL.revokeObjectURL(preview))
+  }, [newImageItems])
 
   const syncImageInput = (files: File[]) => {
     if (!imageInputRef.current || typeof DataTransfer === "undefined") {
@@ -89,28 +131,124 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
       return
     }
 
-    setImageFiles((currentFiles) => {
-      const mergedFiles = [...currentFiles, ...selectedFiles].slice(
+    const oversizedFile = selectedFiles.find(
+      (file) => file.size > MAX_PHOTO_FILE_SIZE,
+    )
+
+    if (oversizedFile) {
+      setImageError(
+        `${oversizedFile.name} is ${formatFileSize(
+          oversizedFile.size,
+        )}. Please choose photos under ${formatFileSize(MAX_PHOTO_FILE_SIZE)}.`,
+      )
+      event.target.value = ""
+      return
+    }
+
+    setImageItems((currentItems) => {
+      const remainingSlots = Math.max(
         0,
-        Math.max(0, MAX_PHOTO_UPLOADS - existingImages.length)
+        MAX_PHOTO_UPLOADS - currentItems.length,
+      )
+      const newItems = selectedFiles.slice(0, remainingSlots).map((file) => ({
+        id: `new-${createImageId()}`,
+        type: "new" as const,
+        file,
+      }))
+      const nextItems = [...currentItems, ...newItems]
+      const totalNewImageSize = nextItems
+        .filter((item): item is NewImageItem => item.type === "new")
+        .reduce((sum, item) => sum + item.file.size, 0)
+
+      if (totalNewImageSize > MAX_PHOTO_TOTAL_SIZE) {
+        setImageError(
+          `New photos are ${formatFileSize(
+            totalNewImageSize,
+          )} total. Please keep uploads under ${formatFileSize(
+            MAX_PHOTO_TOTAL_SIZE,
+          )}.`,
+        )
+        event.target.value = ""
+
+        return currentItems
+      }
+
+      setImageError(null)
+
+      syncImageInput(
+        nextItems
+          .filter((item): item is NewImageItem => item.type === "new")
+          .map((item) => item.file),
       )
 
-      syncImageInput(mergedFiles)
-
-      return mergedFiles
+      return nextItems
     })
   }
 
-  const removeImage = (indexToRemove: number) => {
-    setImageFiles((currentFiles) => {
-      const nextFiles = currentFiles.filter(
-        (_file, index) => index !== indexToRemove
+  const removeImage = (idToRemove: string) => {
+    setImageItems((currentItems) => {
+      const nextItems = currentItems.filter((item) => item.id !== idToRemove)
+
+      syncImageInput(
+        nextItems
+          .filter((item): item is NewImageItem => item.type === "new")
+          .map((item) => item.file),
       )
 
-      syncImageInput(nextFiles)
-
-      return nextFiles
+      return nextItems
     })
+  }
+
+  const moveImage = (fromId: string, toId: string) => {
+    if (fromId === toId) {
+      return
+    }
+
+    setImageItems((currentItems) => {
+      const fromIndex = currentItems.findIndex((item) => item.id === fromId)
+      const toIndex = currentItems.findIndex((item) => item.id === toId)
+
+      if (fromIndex < 0 || toIndex < 0) {
+        return currentItems
+      }
+
+      const nextItems = [...currentItems]
+      const [movedItem] = nextItems.splice(fromIndex, 1)
+      nextItems.splice(toIndex, 0, movedItem)
+
+      syncImageInput(
+        nextItems
+          .filter((item): item is NewImageItem => item.type === "new")
+          .map((item) => item.file),
+      )
+
+      return nextItems
+    })
+  }
+
+  const handleImageDragStart = (
+    event: DragEvent<HTMLDivElement>,
+    imageId: string,
+  ) => {
+    setDraggedImageId(imageId)
+    event.dataTransfer.effectAllowed = "move"
+    event.dataTransfer.setData("text/plain", imageId)
+  }
+
+  const handleImageDrop = (
+    event: DragEvent<HTMLDivElement>,
+    targetImageId: string,
+  ) => {
+    event.preventDefault()
+
+    const sourceImageId =
+      event.dataTransfer.getData("text/plain") || draggedImageId
+
+    if (sourceImageId) {
+      moveImage(sourceImageId, targetImageId)
+    }
+
+    setDraggedImageId(null)
   }
 
   if (!canEdit) {
@@ -121,10 +259,10 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
     )
   }
 
-  const remainingPhotoSlots = Math.max(
-    0,
-    MAX_PHOTO_UPLOADS - existingImages.length - imageFiles.length
-  )
+  const remainingPhotoSlots = Math.max(0, MAX_PHOTO_UPLOADS - imageItems.length)
+  const imageOrder = imageItems
+    .map((item) => (item.type === "existing" ? item.url : `new:${item.id}`))
+    .join("\n")
 
   return (
     <form
@@ -146,7 +284,15 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
         </div>
       )}
 
-      <input type="hidden" name="image_urls" value={existingImages.join("\n")} />
+      <input
+        type="hidden"
+        name="image_urls"
+        value={imageItems
+          .filter((item): item is ExistingImageItem => item.type === "existing")
+          .map((item) => item.url)
+          .join("\n")}
+      />
+      <input type="hidden" name="image_order" value={imageOrder} />
 
       <div className="grid grid-cols-1 gap-4">
         <Input
@@ -156,18 +302,12 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
           required
         />
 
-        <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-          <span>
-            Description<span className="text-rose-500">*</span>
-          </span>
-          <textarea
-            name="description"
-            required
-            rows={5}
-            defaultValue={listing.description ?? ""}
-            className="w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
-          />
-        </label>
+        <RichTextEditor
+          label="Description"
+          name="description"
+          defaultValue={listing.description}
+          required
+        />
 
         <FormSection
           title="Photos"
@@ -178,9 +318,14 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
           <div className="flex items-center justify-between gap-3">
             <span>Upload photos</span>
             <span className="text-xsmall-regular text-ui-fg-muted">
-              {existingImages.length + imageFiles.length}/{MAX_PHOTO_UPLOADS}
+              {imageItems.length}/{MAX_PHOTO_UPLOADS}
             </span>
           </div>
+          {imageError && (
+            <span className="text-small-regular text-rose-600">
+              {imageError}
+            </span>
+          )}
           <input
             ref={imageInputRef}
             name="images"
@@ -191,36 +336,43 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
             className="sr-only"
           />
           <div className="flex gap-3 overflow-x-auto pb-1">
-            {existingImages.map((imageUrl, index) => (
+            {imageItems.map((item, index) => (
               <div
-                key={imageUrl}
-                className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md border border-ui-border-base bg-ui-bg-subtle"
+                key={item.id}
+                draggable
+                onDragStart={(event) => handleImageDragStart(event, item.id)}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => handleImageDrop(event, item.id)}
+                onDragEnd={() => setDraggedImageId(null)}
+                className="relative h-24 w-24 shrink-0 cursor-grab overflow-hidden rounded-md border border-ui-border-base bg-ui-bg-subtle active:cursor-grabbing"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imageUrl}
-                  alt={`Current photo ${index + 1}`}
-                  className="h-full w-full object-cover"
-                />
-                <span className="absolute bottom-1 left-1 rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-medium text-ui-fg-subtle shadow-sm">
-                  Current
+                {item.type === "existing" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={item.url}
+                    alt={`Listing photo ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div
+                    aria-label={`Listing photo ${index + 1}`}
+                    className="h-full w-full bg-cover bg-center"
+                    style={{
+                      backgroundImage: `url(${imagePreviews[item.id] ?? ""})`,
+                    }}
+                  />
+                )}
+                <span className="absolute bottom-1 left-1 rounded-md bg-white/90 px-1.5 py-0.5 text-xsmall-semi font-medium text-ui-fg-subtle shadow-sm">
+                  {index === 0
+                    ? "Cover"
+                    : item.type === "existing"
+                      ? "Current"
+                      : "New"}
                 </span>
-              </div>
-            ))}
-            {imagePreviews.map((preview, index) => (
-              <div
-                key={`${imageFiles[index]?.name ?? "photo"}-${index}`}
-                className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md border border-ui-border-base bg-ui-bg-subtle"
-              >
-                <div
-                  aria-label={`Selected photo ${index + 1}`}
-                  className="h-full w-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${preview})` }}
-                />
                 <button
                   type="button"
-                  aria-label={`Remove photo ${index + 1}`}
-                  onClick={() => removeImage(index)}
+                  aria-label={`Remove listing photo ${index + 1}`}
+                  onClick={() => removeImage(item.id)}
                   className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white text-ui-fg-subtle shadow-elevation-card-rest transition-colors hover:text-ui-fg-base"
                 >
                   <XMarkMini />
@@ -233,11 +385,7 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
                 onClick={() => imageInputRef.current?.click()}
                 className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-ui-border-base bg-ui-bg-field text-ui-fg-subtle transition-colors hover:bg-ui-bg-field-hover hover:text-ui-fg-base focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
               >
-                {imageFiles.length || existingImages.length ? (
-                  <PlusMini />
-                ) : (
-                  <Photo />
-                )}
+                {imageItems.length ? <PlusMini /> : <Photo />}
                 <span className="text-xsmall-regular">Add photo</span>
               </button>
             )}
@@ -292,11 +440,6 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
             defaultValue={listing.quantity ?? ""}
           />
           <Input label="Unit" name="unit" defaultValue={listing.unit ?? ""} />
-          <Input
-            label="Availability"
-            name="availability"
-            defaultValue={listing.availability ?? ""}
-          />
           <SelectField
             label="Condition"
             name="condition"
@@ -308,25 +451,15 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
             <option value="Used">Used</option>
             <option value="New">New</option>
           </SelectField>
-          <SelectField
-            label="Preferred contact"
-            name="contact_preference"
-            defaultValue={listing.contact_preference ?? ""}
-          >
-            <option value="">Any contact method</option>
-            <option value="Phone">Phone</option>
-            <option value="Email">Email</option>
-          </SelectField>
         </div>
 
         <CategoryGuidance category={category} />
 
-        <CategorySpecificFields listing={listing} category={category} />
+        <CategorySpecificFields />
 
         <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-small-regular text-ui-fg-subtle">
-          Review price, location, quantity, availability, photos, and contact
-          preference before saving. Active listings are hidden while edited
-          changes wait for review.
+          Review price, location, quantity, and photos before saving. Active
+          listings are hidden while edited changes wait for review.
         </div>
 
         <SubmitButton data-testid="update-listing-button">
@@ -366,18 +499,14 @@ const SelectField = ({ label, children, ...props }: SelectFieldProps) => (
 )
 
 const categoryGuidance: Record<string, string> = {
-  Produce:
-    "Add variety, harvest season, and production method so buyers can judge freshness and fit.",
-  Livestock:
-    "Add breed, age, sex, and health notes. Buyers need enough information before arranging inspection.",
-  Seeds: "Add variety, pack size, and production or expiry date.",
-  Fertilizer: "Add type, pack size, and expiry or production date.",
-  Equipment:
-    "Add brand, model, year, and condition so buyers can compare equipment quickly.",
-  Tools:
-    "Add brand, model, year, and condition for easier inspection planning.",
-  Services: "Add service area and describe what is included in the service.",
-  Other: "Add any category-specific details buyers need before contacting you.",
+  Produce: "Use the description for any freshness or source notes.",
+  Livestock: "Use the description for animal details and inspection notes.",
+  Seeds: "Use the description for seed details.",
+  Fertilizer: "Use the description for product details.",
+  Equipment: "Use the description for equipment details.",
+  Tools: "Use the description for tool details.",
+  Services: "Use the description for service details.",
+  Other: "Use the description for any extra details buyers need.",
 }
 
 const CategoryGuidance = ({ category }: { category: string }) => (
@@ -387,109 +516,13 @@ const CategoryGuidance = ({ category }: { category: string }) => (
   </div>
 )
 
-const CategorySpecificFields = ({
-  listing,
-  category,
-}: {
-  listing: SellerListing
-  category: string
-}) => {
-  if (category === "Produce") {
-    return (
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input
-          label="Variety"
-          name="variety"
-          defaultValue={listing.variety ?? ""}
-        />
-        <Input
-          label="Harvest date or season"
-          name="harvest_date"
-          defaultValue={listing.harvest_date ?? ""}
-        />
-        <SelectField
-          label="Production method"
-          name="production_method"
-          defaultValue={listing.production_method ?? ""}
-        >
-          <option value="">Not specified</option>
-          <option value="Organic">Organic</option>
-          <option value="Conventional">Conventional</option>
-          <option value="Regenerative">Regenerative</option>
-        </SelectField>
-      </div>
-    )
-  }
-
-  if (category === "Livestock") {
-    return (
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input label="Breed" name="breed" defaultValue={listing.breed ?? ""} />
-        <Input label="Age" name="age" defaultValue={listing.age ?? ""} />
-        <Input label="Sex" name="sex" defaultValue={listing.sex ?? ""} />
-        <Input
-          label="Health or vaccination notes"
-          name="health_notes"
-          defaultValue={listing.health_notes ?? ""}
-        />
-      </div>
-    )
-  }
-
-  if (category === "Equipment" || category === "Tools") {
-    return (
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input label="Brand" name="brand" defaultValue={listing.brand ?? ""} />
-        <Input
-          label="Model"
-          name="equipment_model"
-          defaultValue={listing.equipment_model ?? ""}
-        />
-        <Input label="Year" name="year" defaultValue={listing.year ?? ""} />
-      </div>
-    )
-  }
-
-  if (category === "Seeds" || category === "Fertilizer") {
-    return (
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input
-          label="Variety or type"
-          name="variety"
-          defaultValue={listing.variety ?? ""}
-        />
-        <Input
-          label="Pack size"
-          name="pack_size"
-          defaultValue={listing.pack_size ?? ""}
-        />
-        <Input
-          label="Expiry or production date"
-          name="expiry_date"
-          defaultValue={listing.expiry_date ?? ""}
-        />
-      </div>
-    )
-  }
-
-  if (category === "Services") {
-    return (
-      <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
-        <Input
-          label="Service area"
-          name="service_area"
-          defaultValue={listing.service_area ?? ""}
-        />
-      </div>
-    )
-  }
-
+const CategorySpecificFields = () => {
   return null
 }
 
 const getListingImages = (listing: SellerListing) =>
-  Array.from(new Set([listing.thumbnail, ...(listing.image_urls ?? [])])).filter(
-    Boolean
-  ) as string[]
+  Array.from(
+    new Set([listing.thumbnail, ...(listing.image_urls ?? [])]),
+  ).filter(Boolean) as string[]
 
 export default SellerListingEditor

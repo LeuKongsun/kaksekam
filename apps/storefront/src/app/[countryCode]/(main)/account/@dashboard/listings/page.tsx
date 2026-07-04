@@ -5,8 +5,8 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 export const metadata: Metadata = {
-  title: "Listings",
-  description: "Create and manage your classifieds listings.",
+  title: "Products",
+  description: "Create and manage your marketplace products.",
 }
 
 const PAGE_SIZE = 10

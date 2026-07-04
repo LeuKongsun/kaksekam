@@ -139,6 +139,7 @@ export default async function ProductPage(props: Props) {
               id: customer.id,
               name: customerName || customer.email,
               email: customer.email,
+              phone: customer.phone ?? null,
             }
           : null
       }

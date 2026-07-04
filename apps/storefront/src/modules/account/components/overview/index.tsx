@@ -24,7 +24,7 @@ const Overview = ({ customer, seller, metrics }: OverviewProps) => {
   const sellerCompletion = getSellerProfileCompletion(seller)
   const primaryActions = [
     {
-      title: "Listings",
+      title: "Products",
       href: "/account/listings",
       icon: Package,
     },
@@ -41,7 +41,7 @@ const Overview = ({ customer, seller, metrics }: OverviewProps) => {
   ]
   const stats = [
     {
-      label: "Listings",
+      label: "Products",
       value: metrics.listings,
       detail: `${metrics.activeListings} active, ${metrics.pendingListings} pending`,
       icon: Package,

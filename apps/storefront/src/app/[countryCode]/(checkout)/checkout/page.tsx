@@ -12,5 +12,5 @@ export default async function Checkout({
   params: Promise<{ countryCode: string }>
 }) {
   const { countryCode } = await params
-  redirect(`/${countryCode}/store`)
+  redirect(`/${countryCode}`)
 }

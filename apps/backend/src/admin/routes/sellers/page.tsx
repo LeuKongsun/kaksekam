@@ -15,7 +15,8 @@ import {
   Tooltip,
   toast,
 } from "@medusajs/ui"
-import { ReactNode, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import type { FormEvent, ReactNode, SVGProps } from "react"
 
 type AdminSeller = {
   id: string
@@ -62,6 +63,8 @@ const SellersPage = () => {
   const [verificationFilter, setVerificationFilter] =
     useState<VerificationFilter>("all")
   const [selectedSeller, setSelectedSeller] = useState<AdminSeller | null>(null)
+  const [passwordResetSeller, setPasswordResetSeller] =
+    useState<AdminSeller | null>(null)
 
   const sellerCounts = useMemo(
     () => ({
@@ -166,6 +169,47 @@ const SellersPage = () => {
     }
   }
 
+  const resetSellerPassword = async (seller: AdminSeller, password: string) => {
+    setUpdatingId(seller.id)
+
+    try {
+      const response = await fetch(
+        `/admin/sellers/${seller.id}/reset-password`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ password }),
+        },
+      )
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as {
+          message?: string
+        } | null
+
+        throw new Error(data?.message ?? "Could not reset password")
+      }
+
+      toast.success("Password reset", {
+        description: seller.email ?? seller.display_name,
+      })
+
+      setPasswordResetSeller(null)
+
+      return true
+    } catch (error) {
+      toast.error("Unable to reset password", {
+        description: error instanceof Error ? error.message : undefined,
+      })
+
+      return false
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   useEffect(() => {
     void loadSellers()
   }, [])
@@ -173,12 +217,12 @@ const SellersPage = () => {
   return (
     <div className="flex flex-col gap-y-6">
       <OpsSection
-        title="Marketplace sellers"
+        title="Sellers"
         subtitle={`${sellerCounts.active} active, ${sellerCounts.verified} verified, ${sellerCounts.suspended} suspended.`}
         actions={
           <Tooltip content="Refresh">
             <IconButton
-              aria-label="Refresh marketplace sellers"
+              aria-label="Refresh sellers"
               size="small"
               variant="transparent"
               onClick={() => void loadSellers()}
@@ -267,7 +311,10 @@ const SellersPage = () => {
                     @{seller.handle}
                   </Table.Cell>
                   <Table.Cell className="max-w-[220px] truncate">
-                    {seller.email ?? seller.phone ?? seller.location ?? "No contact"}
+                    {seller.email ??
+                      seller.phone ??
+                      seller.location ??
+                      "No contact"}
                   </Table.Cell>
                   <Table.Cell>
                     <StatusBadge color={statusColor[seller.status]}>
@@ -304,6 +351,7 @@ const SellersPage = () => {
                         seller={seller}
                         isLoading={updatingId === seller.id}
                         onUpdate={(update) => void updateSeller(seller, update)}
+                        onResetPassword={() => setPasswordResetSeller(seller)}
                       />
                     </div>
                   </Table.Cell>
@@ -321,6 +369,16 @@ const SellersPage = () => {
           }
         }}
       />
+      <SellerPasswordResetDialog
+        seller={passwordResetSeller}
+        isLoading={updatingId === passwordResetSeller?.id}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPasswordResetSeller(null)
+          }
+        }}
+        onSubmit={(seller, password) => resetSellerPassword(seller, password)}
+      />
     </div>
   )
 }
@@ -329,12 +387,14 @@ const SellerActions = ({
   seller,
   isLoading,
   onUpdate,
+  onResetPassword,
 }: {
   seller: AdminSeller
   isLoading: boolean
   onUpdate: (
     update: Pick<Partial<AdminSeller>, "status" | "verification_status">,
   ) => void
+  onResetPassword: () => void
 }) => (
   <DropdownMenu>
     <DropdownMenu.Trigger asChild>
@@ -354,6 +414,10 @@ const SellerActions = ({
         onSelect={() => onUpdate({ verification_status: "unverified" })}
       >
         Remove verification
+      </DropdownMenu.Item>
+      <DropdownMenu.Separator />
+      <DropdownMenu.Item disabled={!seller.email} onSelect={onResetPassword}>
+        Reset password
       </DropdownMenu.Item>
       <DropdownMenu.Separator />
       <DropdownMenu.Item
@@ -437,6 +501,119 @@ const SellerDetailsDialog = ({
   </FocusModal>
 )
 
+const SellerPasswordResetDialog = ({
+  seller,
+  isLoading,
+  onOpenChange,
+  onSubmit,
+}: {
+  seller: AdminSeller | null
+  isLoading: boolean
+  onOpenChange: (open: boolean) => void
+  onSubmit: (seller: AdminSeller, password: string) => Promise<boolean>
+}) => {
+  const [password, setPassword] = useState("")
+  const [confirmation, setConfirmation] = useState("")
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!seller) {
+      setPassword("")
+      setConfirmation("")
+      setError(null)
+    }
+  }, [seller])
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (!seller) {
+      return
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.")
+      return
+    }
+
+    if (password !== confirmation) {
+      setError("Passwords do not match.")
+      return
+    }
+
+    setError(null)
+    await onSubmit(seller, password)
+  }
+
+  return (
+    <FocusModal open={Boolean(seller)} onOpenChange={onOpenChange}>
+      <FocusModal.Content className="inset-auto left-1/2 top-1/2 h-auto max-h-[calc(100%-32px)] w-[calc(100%-32px)] max-w-[520px] -translate-x-1/2 -translate-y-1/2">
+        <FocusModal.Header>
+          <FocusModal.Title>Reset password</FocusModal.Title>
+        </FocusModal.Header>
+        <form onSubmit={handleSubmit}>
+          <FocusModal.Body className="px-6 py-5">
+            <div className="flex flex-col gap-y-4">
+              <div>
+                <Text weight="plus">{seller?.display_name ?? "Seller"}</Text>
+                <Text className="mt-1 text-ui-fg-subtle" size="small">
+                  Set a new password for {seller?.email ?? "this seller"}.
+                </Text>
+              </div>
+              <label className="flex flex-col gap-y-2">
+                <Text className="text-ui-fg-subtle" size="small" weight="plus">
+                  New password
+                </Text>
+                <input
+                  autoComplete="new-password"
+                  className="txt-compact-small h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-2.5 text-ui-fg-base outline-none placeholder:text-ui-fg-muted"
+                  minLength={8}
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </label>
+              <label className="flex flex-col gap-y-2">
+                <Text className="text-ui-fg-subtle" size="small" weight="plus">
+                  Confirm password
+                </Text>
+                <input
+                  autoComplete="new-password"
+                  className="txt-compact-small h-8 rounded-md border border-ui-border-base bg-ui-bg-field px-2.5 text-ui-fg-base outline-none placeholder:text-ui-fg-muted"
+                  minLength={8}
+                  type="password"
+                  value={confirmation}
+                  onChange={(event) => setConfirmation(event.target.value)}
+                />
+              </label>
+              {error && (
+                <Text className="text-ui-fg-error" size="small">
+                  {error}
+                </Text>
+              )}
+            </div>
+          </FocusModal.Body>
+          <FocusModal.Footer>
+            <FocusModal.Close asChild>
+              <Button size="small" variant="secondary" type="button">
+                Cancel
+              </Button>
+            </FocusModal.Close>
+            <Button
+              size="small"
+              type="submit"
+              isLoading={isLoading}
+              disabled={!password || !confirmation}
+            >
+              Reset password
+            </Button>
+          </FocusModal.Footer>
+        </form>
+      </FocusModal.Content>
+    </FocusModal>
+  )
+}
+
 const DetailItem = ({
   label,
   children,
@@ -494,8 +671,27 @@ const RefreshIcon = () => (
   </svg>
 )
 
+const SellersIcon = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+    <path
+      d="M7.75 9.25a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.75 17c0-2.75 2.24-5 5-5s5 2.25 5 5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M13.25 9a2.5 2.5 0 1 0 0-5M13.75 12.25c2 .45 3.5 2.3 3.5 4.5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+    />
+  </svg>
+)
+
 export const config = defineRouteConfig({
-  label: "Marketplace sellers",
+  label: "Sellers",
+  icon: SellersIcon,
   rank: 46,
 })
 

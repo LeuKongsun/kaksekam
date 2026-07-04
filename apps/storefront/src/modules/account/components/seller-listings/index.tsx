@@ -1,8 +1,10 @@
 "use client"
 
 import { SellerListing } from "@lib/data/seller-listings"
+import { richTextToPlainText } from "@lib/util/rich-text"
 import { PencilSquare } from "@medusajs/icons"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import RichTextContent from "@modules/common/components/rich-text-content"
 import Eye from "@modules/common/icons/eye"
 import Package from "@modules/common/icons/package"
 import X from "@modules/common/icons/x"
@@ -64,21 +66,7 @@ const detailLabels: [keyof SellerListing, string][] = [
   ["location", "Location"],
   ["quantity", "Quantity"],
   ["unit", "Unit"],
-  ["availability", "Availability"],
   ["condition", "Condition"],
-  ["variety", "Variety"],
-  ["production_method", "Production method"],
-  ["harvest_date", "Harvest date"],
-  ["breed", "Breed"],
-  ["age", "Age"],
-  ["sex", "Sex"],
-  ["health_notes", "Health notes"],
-  ["brand", "Brand"],
-  ["equipment_model", "Model"],
-  ["year", "Year"],
-  ["pack_size", "Pack size"],
-  ["expiry_date", "Expiry date"],
-  ["service_area", "Service area"],
 ]
 
 const formatPrice = (listing: SellerListing) => {
@@ -115,7 +103,7 @@ const SellerListings = ({
         statusFilter === "all" || listing.status === statusFilter
       const searchable = [
         listing.title,
-        listing.description,
+        richTextToPlainText(listing.description),
         listing.category,
         listing.location,
       ]
@@ -157,7 +145,7 @@ const SellerListings = ({
       <div className="rounded-md border border-gray-200 bg-white shadow-sm">
         <div className="flex flex-col gap-4 border-b border-gray-200 p-4 small:flex-row small:items-center small:justify-between">
           <div>
-            <h1 className="text-large-semi text-ui-fg-base">Listings</h1>
+            <h1 className="text-large-semi text-ui-fg-base">Products</h1>
             <p className="mt-1 text-small-regular text-ui-fg-subtle">
               {totalListings} total, {statusCounts.active} active,{" "}
               {statusCounts.pending_review} pending review.
@@ -168,7 +156,7 @@ const SellerListings = ({
             className="inline-flex h-10 items-center justify-center gap-x-2 rounded-md bg-ui-fg-base px-4 text-small-semi text-white transition-colors hover:bg-ui-fg-subtle"
           >
             <Package size={16} />
-            Add listing
+            Add product
           </LocalizedClientLink>
         </div>
 
@@ -197,7 +185,7 @@ const SellerListings = ({
           <input
             value={query}
             onChange={(event) => updateQuery(event.target.value)}
-            placeholder="Search listings"
+            placeholder="Search products"
             className="h-9 w-full rounded-md border border-gray-200 bg-white px-3 text-small-regular text-ui-fg-base outline-none transition-colors placeholder:text-ui-fg-muted focus:border-ui-fg-base small:max-w-[260px]"
           />
         </div>
@@ -209,7 +197,7 @@ const SellerListings = ({
 
         <div className="flex flex-col gap-3 border-t border-gray-200 p-4 text-small-regular text-ui-fg-subtle small:flex-row small:items-center small:justify-between">
           <span>
-            Showing {pageStart}-{pageEnd} of {filteredListings.length} listings.
+            Showing {pageStart}-{pageEnd} of {filteredListings.length} products.
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -255,7 +243,7 @@ const ListingsTable = ({
     <div className="overflow-x-auto">
       <table className="w-full table-fixed border-collapse text-left">
         <thead className="border-b border-gray-200 bg-gray-50">
-          <tr className="text-[11px] font-medium uppercase text-ui-fg-subtle">
+          <tr className="text-xsmall-semi font-medium uppercase text-ui-fg-subtle">
             <th className="w-[30%] px-4 py-3">Listing</th>
             <th className="w-[14%] px-4 py-3">Category</th>
             <th className="w-[12%] px-4 py-3">Price</th>
@@ -276,7 +264,7 @@ const ListingsTable = ({
                     No data
                   </p>
                   <p className="mt-1 text-small-regular text-ui-fg-subtle">
-                    Listings you create will appear here.
+                    Products you create will appear here.
                   </p>
                 </div>
               </td>
@@ -306,6 +294,7 @@ const ListingRow = ({
   const meta = statusMeta[listing.status]
   const canView = listing.status === "active"
   const canEdit = editableStatuses.has(listing.status)
+  const plainDescription = richTextToPlainText(listing.description)
 
   return (
     <tr className="align-middle hover:bg-gray-50/70">
@@ -320,7 +309,7 @@ const ListingRow = ({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center px-2 text-center text-[11px] text-ui-fg-subtle">
+              <div className="flex h-full w-full items-center justify-center px-2 text-center text-xsmall-semi text-ui-fg-subtle">
                 No photo
               </div>
             )}
@@ -330,7 +319,7 @@ const ListingRow = ({
               {listing.title}
             </div>
             <p className="truncate text-small-regular text-ui-fg-subtle">
-              {listing.description || "No description added."}
+              {plainDescription || "No description added."}
             </p>
           </div>
         </div>
@@ -378,7 +367,7 @@ const ListingRow = ({
               href={`/account/listings/${listing.id}/edit`}
               className={iconActionClass}
               title="Edit"
-              aria-label="Edit listing"
+              aria-label="Edit product"
             >
               <PencilSquare />
             </LocalizedClientLink>
@@ -387,7 +376,7 @@ const ListingRow = ({
               type="button"
               className={iconActionClass}
               title="Edit"
-              aria-label="Edit listing"
+              aria-label="Edit product"
               disabled
             >
               <PencilSquare />
@@ -463,18 +452,19 @@ const ListingDetailsModal = ({
           <div className="mt-5 grid gap-4 small:grid-cols-[1fr_220px]">
             <div>
               <h3 className="text-base-semi text-ui-fg-base">Description</h3>
-              <p className="mt-2 whitespace-pre-line text-base-regular text-ui-fg-subtle">
-                {listing.description || "No description added."}
-              </p>
+              <RichTextContent
+                content={listing.description}
+                className="mt-2 whitespace-pre-line text-base-regular text-ui-fg-subtle [&_a]:text-ui-fg-interactive [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+              />
             </div>
             <div className="rounded-md border border-gray-200 p-3">
-              <div className="text-[11px] font-medium uppercase text-ui-fg-muted">
+              <div className="text-xsmall-semi font-medium uppercase text-ui-fg-muted">
                 Price
               </div>
               <div className="mt-1 text-large-semi text-ui-fg-base">
                 {formatPrice(listing)}
               </div>
-              <div className="mt-3 text-[11px] font-medium uppercase text-ui-fg-muted">
+              <div className="mt-3 text-xsmall-semi font-medium uppercase text-ui-fg-muted">
                 Updated
               </div>
               <div className="mt-1 text-small-regular text-ui-fg-subtle">
@@ -496,7 +486,7 @@ const ListingDetailsModal = ({
                   key={detail.label}
                   className="rounded-md border border-gray-200 p-3"
                 >
-                  <div className="text-[11px] font-medium uppercase text-ui-fg-muted">
+                  <div className="text-xsmall-semi font-medium uppercase text-ui-fg-muted">
                     {detail.label}
                   </div>
                   <div className="mt-1 text-small-regular text-ui-fg-base">

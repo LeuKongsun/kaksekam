@@ -20,6 +20,11 @@ module.exports = {
         padding: "padding-top padding-right padding-bottom padding-left",
       },
       colors: {
+        brand: {
+          DEFAULT: "#15803D",
+          hover: "#166534",
+          soft: "#F0FDF4",
+        },
         grey: {
           0: "#FFFFFF",
           5: "#F9FAFB",
@@ -66,8 +71,12 @@ module.exports = {
           "Roboto",
           "Helvetica Neue",
           "Ubuntu",
+          // Khmer glyphs are not covered by the Latin fonts above, so they
+          // fall through to Suwannaphum (loaded via next/font in app/layout).
+          "var(--font-suwannaphum)",
           "sans-serif",
         ],
+        khmer: ["var(--font-suwannaphum)", "serif"],
       },
       keyframes: {
         ring: {

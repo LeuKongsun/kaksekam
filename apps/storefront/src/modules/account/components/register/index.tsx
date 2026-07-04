@@ -21,7 +21,7 @@ const Register = ({ setCurrentView }: Props) => {
       data-testid="register-page"
     >
       <h1 className="text-large-semi uppercase mb-6">
-        Join Farm Marketplace
+        Join Kaksephal
       </h1>
       <p className="text-center text-base-regular text-ui-fg-base mb-4">
         Create an account to save listings, contact farmers, and manage your
@@ -69,7 +69,7 @@ const Register = ({ setCurrentView }: Props) => {
         </div>
         <ErrorMessage error={message} data-testid="register-error" />
         <span className="text-center text-ui-fg-base text-small-regular mt-6">
-          By creating an account, you agree to Farm Marketplace&apos;s{" "}
+          By creating an account, you agree to Kaksephal&apos;s{" "}
           <LocalizedClientLink
             href="/content/privacy-policy"
             className="underline"

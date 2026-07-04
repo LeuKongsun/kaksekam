@@ -16,8 +16,8 @@
     "build": "medusa build",
     "start": "medusa start",
     "dev": "medusa develop",
-    "seed": "medusa exec ./src/migration-scripts/initial-data-seed.ts && medusa exec ./src/migration-scripts/marketplace-demo-seller.ts && medusa exec ./src/migration-scripts/marketplace-demo-listing-status.ts",
-    "seed:marketplace-links": "medusa exec ./src/migration-scripts/marketplace-demo-seller-links.ts && medusa exec ./src/migration-scripts/marketplace-demo-listing-status.ts",
+    "seed": "medusa exec ./src/migration-scripts/initial-data-seed.ts && medusa exec ./src/migration-scripts/marketplace-demo-data.ts && medusa exec ./src/migration-scripts/marketplace-demo-listing-status.ts",
+    "seed:marketplace-links": "medusa exec ./src/migration-scripts/marketplace-demo-data.ts && medusa exec ./src/migration-scripts/marketplace-demo-listing-status.ts",
     "test:integration:http": "TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
     "test:integration:modules": "TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
     "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit"
