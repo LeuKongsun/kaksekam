@@ -1,6 +1,9 @@
 import { retrieveCustomer } from "@lib/data/customer"
-import { listSellerInquiries } from "@lib/data/listing-inquiries"
-import SellerInquiries from "@modules/account/components/seller-inquiries"
+import {
+  listBuyerInquiries,
+  listSellerInquiries,
+} from "@lib/data/listing-inquiries"
+import InboxMessages from "@modules/account/components/inbox-messages"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -16,7 +19,15 @@ export default async function InquiriesPage() {
     notFound()
   }
 
-  const inquiries = await listSellerInquiries()
+  const [sellerInquiries, buyerInquiries] = await Promise.all([
+    listSellerInquiries(),
+    listBuyerInquiries(),
+  ])
 
-  return <SellerInquiries inquiries={inquiries} />
+  return (
+    <InboxMessages
+      sellerInquiries={sellerInquiries}
+      buyerInquiries={buyerInquiries}
+    />
+  )
 }

@@ -40,7 +40,9 @@ const SellerInquiries = ({ inquiries }: SellerInquiriesProps) => {
     <div className="w-full" data-testid="seller-inquiries-page-wrapper">
       <div className="rounded-md border border-gray-200 bg-white shadow-sm">
         <div className="flex flex-col gap-2 border-b border-gray-200 p-4">
-          <h1 className="text-large-semi text-ui-fg-base">Messages</h1>
+          <h1 className="text-large-semi text-ui-fg-base">
+            Received messages
+          </h1>
           <p className="text-small-regular text-ui-fg-subtle">
             {inquiries.length} total, {openCount} open, {newCount} new,{" "}
             {repliedCount} replied.

@@ -138,13 +138,11 @@ const SellerListingActions = ({
         ref={buttonRef}
         type="button"
         className={iconActionClass}
-        title="More"
         aria-label="More listing actions"
         aria-expanded={isOpen}
         onClick={toggleMenu}
       >
         <OptionsIcon />
-        <ActionTooltip>More</ActionTooltip>
       </button>
 
       {isOpen &&
@@ -234,12 +232,6 @@ function OptionsIcon({ size = 16 }: { size?: number }) {
 }
 
 const iconActionClass =
-  "group relative inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-ui-fg-base transition-colors hover:bg-gray-50 hover:text-ui-fg-interactive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-fg-base disabled:pointer-events-none disabled:opacity-40"
-
-const ActionTooltip = ({ children }: { children: ReactNode }) => (
-  <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-ui-fg-base px-2 py-1 text-xsmall-semi font-medium text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-    {children}
-  </span>
-)
+  "inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-ui-fg-base transition-colors hover:bg-gray-50 hover:text-ui-fg-interactive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-fg-base disabled:pointer-events-none disabled:opacity-40"
 
 export default SellerListingActions

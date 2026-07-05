@@ -147,6 +147,23 @@ export async function listSellerInquiries(): Promise<SellerInquiry[]> {
     })
 }
 
+export async function getUnreadMessageCount() {
+  const [sellerInquiries, buyerInquiries] = await Promise.all([
+    listSellerInquiries().catch(() => []),
+    listBuyerInquiries().catch(() => []),
+  ])
+  const sellerUnreadCount = sellerInquiries.filter(
+    (inquiry) => inquiry.status === "new"
+  ).length
+  const buyerUnreadCount = buyerInquiries.filter((inquiry) => {
+    const latestMessage = inquiry.messages[inquiry.messages.length - 1]
+
+    return inquiry.status === "replied" && latestMessage?.sender_type === "seller"
+  }).length
+
+  return sellerUnreadCount + buyerUnreadCount
+}
+
 export async function updateSellerInquiryStatus(
   inquiryId: string,
   status: SellerInquiry["status"]
@@ -159,6 +176,37 @@ export async function updateSellerInquiryStatus(
 
   try {
     await sdk.client.fetch(`/store/seller-inquiries/${inquiryId}`, {
+      method: "PATCH",
+      headers,
+      body: {
+        status,
+      },
+    })
+  } catch (error) {
+    if (isUnauthorizedError(error)) {
+      await handleUnauthorizedInquiry()
+      revalidatePath("/[countryCode]/account/inquiries", "page")
+      return
+    }
+
+    throw error
+  }
+
+  revalidatePath("/[countryCode]/account/inquiries", "page")
+}
+
+export async function updateBuyerInquiryStatus(
+  inquiryId: string,
+  status: "read"
+) {
+  const headers = await getAuthHeaders()
+
+  if (!headers.authorization) {
+    throw new Error("You must be signed in to update messages.")
+  }
+
+  try {
+    await sdk.client.fetch(`/store/buyer-inquiries/${inquiryId}`, {
       method: "PATCH",
       headers,
       body: {

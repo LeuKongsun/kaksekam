@@ -1,9 +1,11 @@
-import React from "react"
+"use client"
 
+import AddAddress from "../address-card/add-address"
 import EditAddress from "../address-card/edit-address-modal"
 import { HttpTypes } from "@medusajs/types"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import MapPin from "@modules/common/icons/map-pin"
+import X from "@modules/common/icons/x"
+import React, { useState } from "react"
 
 type AddressBookProps = {
   customer: HttpTypes.StoreCustomer
@@ -12,18 +14,22 @@ type AddressBookProps = {
 
 const AddressBook: React.FC<AddressBookProps> = ({ customer, region }) => {
   const addresses = customer.addresses ?? []
+  const [isAddingLocation, setIsAddingLocation] = useState(false)
 
   return (
     <div className="w-full">
       <div className="mb-4 flex flex-col gap-3 small:flex-row small:items-center small:justify-between">
-        <h2 className="text-large-semi">Contact records</h2>
-        <LocalizedClientLink
-          href="/account/addresses/new"
-          className="inline-flex h-10 items-center justify-center gap-x-2 rounded-md bg-ui-fg-base px-4 text-small-semi text-white transition-colors hover:bg-ui-fg-subtle"
-        >
-          <MapPin size={16} />
-          Add
-        </LocalizedClientLink>
+        <h2 className="text-large-semi">Locations</h2>
+        {addresses.length === 0 && (
+          <button
+            type="button"
+            onClick={() => setIsAddingLocation(true)}
+            className="inline-flex h-10 items-center justify-center gap-x-2 rounded-md bg-ui-fg-base px-4 text-small-semi text-white transition-colors hover:bg-ui-fg-subtle"
+          >
+            <MapPin size={16} />
+            Add location
+          </button>
+        )}
       </div>
 
       {addresses.length === 0 ? (
@@ -32,117 +38,75 @@ const AddressBook: React.FC<AddressBookProps> = ({ customer, region }) => {
             <MapPin size={18} />
           </div>
           <h3 className="mt-4 text-base-semi text-ui-fg-base">
-            No addresses yet
+            No locations yet
           </h3>
           <p className="mt-2 text-base-regular text-ui-fg-subtle">
-            Add a pickup, delivery, or seller contact address.
+            Add a pickup place, farm location, or contact point.
           </p>
-          <LocalizedClientLink
-            href="/account/addresses/new"
-            className="mt-4 inline-flex items-center gap-x-2 rounded-md bg-ui-fg-base px-4 py-2 text-small-semi text-white transition-colors hover:bg-ui-fg-subtle"
-          >
-            <MapPin size={16} />
-            Add
-          </LocalizedClientLink>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-gray-200 bg-white">
-          <table className="w-full min-w-[760px] text-left">
-            <thead className="border-b border-gray-200 text-small-semi text-ui-fg-base">
-              <tr>
-                <th className="px-4 py-3">Contact</th>
-                <th className="px-4 py-3">Address</th>
-                <th className="px-4 py-3">Phone</th>
-                <th className="px-4 py-3">Defaults</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {addresses.map((address) => (
-                <tr key={address.id} className="align-top">
-                  <td className="px-4 py-4">
-                    <div className="text-base-semi text-ui-fg-base">
-                      {address.first_name} {address.last_name}
+        <div className="grid grid-cols-1 gap-3 small:grid-cols-2">
+          {addresses.map((address) => (
+            <div
+              key={address.id}
+              className="rounded-md border border-gray-200 bg-white p-4"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="text-base-semi text-ui-fg-base">
+                    {address.address_1 || "Saved location"}
+                  </div>
+                  <div className="mt-1 text-small-regular text-ui-fg-subtle">
+                    {[address.city, address.province]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </div>
+                  {address.phone && (
+                    <div className="mt-2 text-small-regular text-ui-fg-base">
+                      {address.phone}
                     </div>
-                    {address.company && (
-                      <div className="mt-1 text-small-regular text-ui-fg-subtle">
-                        {address.company}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-4 text-small-regular text-ui-fg-subtle">
-                    <div>{address.address_1}</div>
-                    {address.address_2 && <div>{address.address_2}</div>}
-                    <div>
-                      {[address.postal_code, address.city]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </div>
-                    <div>
-                      {[address.province, address.country_code?.toUpperCase()]
-                        .filter(Boolean)
-                        .join(", ")}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-small-regular text-ui-fg-subtle">
-                    {address.phone || "Not added"}
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="flex max-w-[180px] flex-wrap gap-2">
-                      {address.is_default_shipping && (
-                        <span className="inline-flex items-center gap-x-1 rounded-md bg-gray-100 px-2 py-1 text-small-regular text-ui-fg-subtle">
-                          <CheckIcon />
-                          Shipping
-                        </span>
-                      )}
-                      {address.is_default_billing && (
-                        <span className="inline-flex items-center gap-x-1 rounded-md bg-gray-100 px-2 py-1 text-small-regular text-ui-fg-subtle">
-                          <CheckIcon />
-                          Billing
-                        </span>
-                      )}
-                      {!address.is_default_shipping &&
-                        !address.is_default_billing && (
-                          <span className="text-small-regular text-ui-fg-subtle">
-                            None
-                          </span>
-                        )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-right">
-                    <EditAddress
-                      region={region}
-                      address={address}
-                      variant="table"
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  )}
+                </div>
+                <EditAddress region={region} address={address} variant="table" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isAddingLocation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
+          <div className="max-h-full w-full max-w-xl overflow-hidden rounded-md bg-white shadow-xl">
+            <div className="flex items-start justify-between gap-4 border-b border-gray-200 p-4">
+              <div>
+                <h3 className="text-large-semi text-ui-fg-base">
+                  Add location
+                </h3>
+                <p className="mt-1 text-small-regular text-ui-fg-subtle">
+                  Save a pickup place, farm location, or contact point.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddingLocation(false)}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-gray-200 text-ui-fg-base transition-colors hover:bg-gray-50"
+                aria-label="Close add location"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="max-h-[75vh] overflow-y-auto">
+              <AddAddress
+                region={region}
+                onCancel={() => setIsAddingLocation(false)}
+                onSuccess={() => setIsAddingLocation(false)}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
   )
 }
-
-const CheckIcon = () => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 20 20"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-  >
-    <path
-      d="M16 6L8.5 13.5L4 9"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
 
 export default AddressBook

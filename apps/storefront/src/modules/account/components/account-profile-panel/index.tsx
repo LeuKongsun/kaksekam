@@ -52,9 +52,9 @@ const AccountProfilePanel = ({
       <section className="rounded-md border border-gray-200 bg-white shadow-sm">
         <div className="flex flex-col gap-4 border-b border-gray-200 p-4 small:flex-row small:items-center small:justify-between">
           <div>
-            <h2 className="text-large-semi text-ui-fg-base">Account profile</h2>
+            <h2 className="text-large-semi text-ui-fg-base">Private contact details</h2>
             <p className="mt-1 text-small-regular text-ui-fg-subtle">
-              Your private account details and billing contact.
+              Your sign-in identity, phone number, and default contact address.
             </p>
           </div>
           <button
@@ -98,10 +98,10 @@ const AccountProfilePanel = ({
             <div className="flex items-start justify-between gap-4 border-b border-gray-200 p-4">
               <div>
                 <h2 className="text-large-semi text-ui-fg-base">
-                  Edit profile
+                  Edit contact details
                 </h2>
                 <p className="mt-1 text-small-regular text-ui-fg-subtle">
-                  Update your account and billing contact details.
+                  Update the private details attached to your account.
                 </p>
               </div>
               <button

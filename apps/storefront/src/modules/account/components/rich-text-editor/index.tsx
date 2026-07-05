@@ -54,7 +54,7 @@ const RichTextEditor = ({
       }),
       Placeholder.configure({
         placeholder:
-          "Describe the product, condition, availability, and pickup details.",
+          "Describe the product, condition, quantity, and pickup details.",
       }),
     ],
     content: sanitizeRichText(defaultValue),

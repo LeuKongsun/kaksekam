@@ -190,7 +190,7 @@ const SellerListings = ({
           />
         </div>
 
-        <ListingsTable
+        <ListingsGrid
           listings={visibleListings}
           onSelectListing={setSelectedListing}
         />
@@ -232,59 +232,39 @@ const SellerListings = ({
   )
 }
 
-const ListingsTable = ({
+const ListingsGrid = ({
   listings,
   onSelectListing,
 }: {
   listings: SellerListing[]
   onSelectListing: (listing: SellerListing) => void
 }) => (
-  <div className="w-full max-w-full overflow-hidden">
-    <div className="overflow-x-auto">
-      <table className="w-full table-fixed border-collapse text-left">
-        <thead className="border-b border-gray-200 bg-gray-50">
-          <tr className="text-xsmall-semi font-medium uppercase text-ui-fg-subtle">
-            <th className="w-[30%] px-4 py-3">Listing</th>
-            <th className="w-[14%] px-4 py-3">Category</th>
-            <th className="w-[12%] px-4 py-3">Price</th>
-            <th className="w-[12%] px-4 py-3">Status</th>
-            <th className="w-[10%] px-4 py-3">Updated</th>
-            <th className="w-[22%] px-4 py-3 text-right">Action</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {listings.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="px-4 py-16">
-                <div className="flex flex-col items-center justify-center text-center text-ui-fg-muted">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-gray-300 bg-ui-bg-subtle">
-                    <Package size={28} />
-                  </div>
-                  <p className="mt-3 text-small-semi text-ui-fg-base">
-                    No data
-                  </p>
-                  <p className="mt-1 text-small-regular text-ui-fg-subtle">
-                    Products you create will appear here.
-                  </p>
-                </div>
-              </td>
-            </tr>
-          ) : (
-            listings.map((listing) => (
-              <ListingRow
-                key={listing.id}
-                listing={listing}
-                onSelectListing={onSelectListing}
-              />
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+  <div className="p-4">
+    {listings.length === 0 ? (
+      <div className="flex min-h-[260px] flex-col items-center justify-center rounded-md border border-dashed border-gray-300 bg-[#fbfbf7] p-6 text-center text-ui-fg-muted">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-ui-fg-base shadow-sm">
+          <Package size={28} />
+        </div>
+        <p className="mt-3 text-small-semi text-ui-fg-base">No products yet</p>
+        <p className="mt-1 max-w-sm text-small-regular text-ui-fg-subtle">
+          Products you create will appear here as simple marketplace cards.
+        </p>
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 gap-4 small:grid-cols-2 large:grid-cols-4">
+        {listings.map((listing) => (
+          <ListingCard
+            key={listing.id}
+            listing={listing}
+            onSelectListing={onSelectListing}
+          />
+        ))}
+      </div>
+    )}
   </div>
 )
 
-const ListingRow = ({
+const ListingCard = ({
   listing,
   onSelectListing,
 }: {
@@ -295,53 +275,66 @@ const ListingRow = ({
   const canView = listing.status === "active"
   const canEdit = editableStatuses.has(listing.status)
   const plainDescription = richTextToPlainText(listing.description)
+  const quantity =
+    listing.quantity && listing.unit
+      ? `${listing.quantity} ${listing.unit}`
+      : listing.quantity
 
   return (
-    <tr className="align-middle hover:bg-gray-50/70">
-      <td className="px-4 py-3 align-middle">
-        <div className="flex min-w-0 gap-3">
-          <div className="h-11 w-11 shrink-0 overflow-hidden rounded-md bg-[#eef4e8]">
-            {listing.thumbnail ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={listing.thumbnail}
-                alt={listing.title}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center px-2 text-center text-xsmall-semi text-ui-fg-subtle">
-                No photo
-              </div>
-            )}
+    <article className="group flex h-full flex-col overflow-hidden rounded-md border border-gray-200 bg-white transition-colors hover:border-gray-400">
+      <div className="relative aspect-[1.5] bg-[#eef4e8]">
+        {listing.thumbnail ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={listing.thumbnail}
+            alt={listing.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-small-semi text-ui-fg-subtle">
+            No photo
           </div>
-          <div className="min-w-0">
-            <div className="truncate text-base-semi text-ui-fg-base">
-              {listing.title}
-            </div>
-            <p className="truncate text-small-regular text-ui-fg-subtle">
-              {plainDescription || "No description added."}
-            </p>
-          </div>
-        </div>
-      </td>
-      <td className="truncate px-4 py-3 text-base-regular text-ui-fg-base">
-        {listing.category || "-"}
-      </td>
-      <td className="truncate px-4 py-3 text-base-semi text-ui-fg-base">
-        {formatPrice(listing)}
-      </td>
-      <td className="px-4 py-3">
+        )}
         <span
-          className={`inline-flex rounded-md border px-2.5 py-1 text-small-semi ${meta.tone}`}
+          className={`absolute left-2.5 top-2.5 inline-flex rounded-full border px-2 py-0.5 text-xsmall-semi shadow-sm ${meta.tone}`}
         >
           {statusLabels[listing.status]}
         </span>
-      </td>
-      <td className="truncate px-4 py-3 text-base-regular text-ui-fg-subtle">
-        {formatDate(listing.updated_at)}
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center justify-end gap-2">
+      </div>
+      <div className="flex min-h-[136px] flex-1 flex-col gap-2 p-2.5 small:p-4">
+        <div>
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="line-clamp-2 text-small-semi font-bold text-brand">
+              {listing.title}
+            </h2>
+            <span className="shrink-0 text-small-semi text-ui-fg-base">
+              {formatPrice(listing)}
+            </span>
+          </div>
+          <p className="mt-1 line-clamp-1 text-xsmall-regular text-ui-fg-subtle">
+            {plainDescription || "No description added."}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {[listing.category, listing.location, quantity, listing.condition]
+            .filter(Boolean)
+            .slice(0, 4)
+            .map((detail) => (
+              <span
+                key={detail}
+                className="rounded-full bg-gray-100 px-2 py-0.5 text-xsmall-regular text-ui-fg-subtle"
+              >
+                {detail}
+              </span>
+            ))}
+        </div>
+
+        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+          <span className="text-xsmall-regular text-ui-fg-muted">
+            Updated {formatDate(listing.updated_at)}
+          </span>
+          <div className="flex items-center justify-end gap-2">
           {canView ? (
             <LocalizedClientLink
               href={`/products/${listing.handle}`}
@@ -386,9 +379,10 @@ const ListingRow = ({
             listing={listing}
             onViewDetails={() => onSelectListing(listing)}
           />
+          </div>
         </div>
-      </td>
-    </tr>
+      </div>
+    </article>
   )
 }
 

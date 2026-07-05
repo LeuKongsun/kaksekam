@@ -3,7 +3,6 @@ import type { ProductSeller } from "@lib/data/products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Eye from "@modules/common/icons/eye"
 import Package from "@modules/common/icons/package"
-import User from "@modules/common/icons/user"
 
 type OverviewProps = {
   customer: HttpTypes.StoreCustomer | null
@@ -156,13 +155,6 @@ const Overview = ({ customer, seller, metrics }: OverviewProps) => {
             </p>
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
-            <LocalizedClientLink
-              href="/account/seller-profile"
-              className="inline-flex items-center gap-x-2 text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
-            >
-              <User size={14} />
-              Profile
-            </LocalizedClientLink>
             <LocalizedClientLink
               href="/account/saved"
               className="inline-flex items-center gap-x-2 text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"

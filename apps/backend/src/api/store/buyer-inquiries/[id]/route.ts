@@ -8,6 +8,39 @@ import MarketplaceModuleService from "../../../../modules/marketplace/service"
 
 type CreateBuyerMessageBody = {
   message?: string
+  status?: "read"
+}
+
+export async function PATCH(
+  req: AuthenticatedMedusaRequest<CreateBuyerMessageBody>,
+  res: MedusaResponse
+) {
+  const inquiryId = req.params.id
+  const customerId = req.auth_context.actor_id
+  const marketplaceService: MarketplaceModuleService =
+    req.scope.resolve(MARKETPLACE_MODULE)
+
+  if (req.body.status !== "read") {
+    res.status(400).json({ message: "Valid inquiry status is required." })
+    return
+  }
+
+  const [inquiry] = await marketplaceService.listListingInquiries({
+    id: inquiryId,
+    customer_id: customerId,
+  })
+
+  if (!inquiry) {
+    res.status(404).json({ message: "Inquiry not found." })
+    return
+  }
+
+  const updatedInquiry = await marketplaceService.updateListingInquiries({
+    id: inquiry.id,
+    status: "read",
+  })
+
+  res.json({ inquiry: updatedInquiry })
 }
 
 export async function POST(
