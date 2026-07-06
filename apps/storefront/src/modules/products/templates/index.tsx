@@ -95,20 +95,26 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
   )
 }
 
-const ProductBreadcrumb = ({
+import { getTranslations } from "@lib/i18n/server"
+
+const ProductBreadcrumb = async ({
   product,
   countryCode,
 }: {
   product: StoreProductWithListing
   countryCode: string
 }) => {
+  const { t } = await getTranslations()
   const crumbs = [
-    { label: "Home", href: `/${countryCode}` },
-    { label: "Listings", href: `/${countryCode}` },
+    { label: t.product.breadcrumbHome, href: `/${countryCode}` },
+    { label: t.product.breadcrumbListings, href: `/${countryCode}` },
     product.listing?.category && {
-      label: product.listing.category,
+      label:
+        t.store.categories[
+          product.listing.category as keyof typeof t.store.categories
+        ] ?? product.listing.category,
       href: `/${countryCode}?category=${encodeURIComponent(
-        product.listing.category,
+        product.listing.category
       )}`,
     },
   ].filter(Boolean) as Array<{ label: string; href: string }>

@@ -1,47 +1,13 @@
 "use client"
 
-import { SellerListing, updateSellerListing } from "@lib/data/seller-listings"
-import { SubmitButton } from "@modules/checkout/components/submit-button"
-import Input from "@modules/common/components/input"
-import RichTextEditor from "@modules/account/components/rich-text-editor"
-import { Photo, PlusMini, XMarkMini } from "@medusajs/icons"
-import { useActionState, useEffect, useMemo, useRef, useState } from "react"
-import type { ChangeEvent, DragEvent, SelectHTMLAttributes } from "react"
-
-type SellerListingEditorProps = {
-  listing: SellerListing
-}
-
-const editableStatuses = new Set<SellerListing["status"]>([
-  "draft",
-  "pending_review",
-  "active",
-  "rejected",
-])
-
-const categoryOptions = [
-  "Produce",
-  "Livestock",
-  "Seeds",
-  "Fertilizer",
-  "Equipment",
-  "Tools",
-  "Services",
-  "Other",
-]
-
-const MAX_PHOTO_UPLOADS = 6
-const MAX_PHOTO_FILE_SIZE = 5 * 1024 * 1024
-const MAX_PHOTO_TOTAL_SIZE = 24 * 1024 * 1024
-const supportedCurrencyCodes = new Set(["khr", "usd"])
-const selectFieldClassName =
-  "h-11 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-3 pb-1 pt-4 text-ui-fg-base hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active focus:outline-none"
-const formatFileSize = (bytes: number) =>
-  `${(bytes / 1024 / 1024).toFixed(bytes >= 1024 * 1024 ? 1 : 0)}MB`
-const createImageId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+import {
+  LISTING_CATEGORIES,
+  LISTING_CONDITIONS,
+} from "@lib/marketplace/listing-fields"
+import {
+  SellerListing,
+  updateSellerListing,
+} from "@lib/data/seller-listings"
 
 type ExistingImageItem = {
   id: string
@@ -54,48 +20,72 @@ type NewImageItem = {
   type: "new"
   file: File
 }
+import { SubmitButton } from "@modules/checkout/components/submit-button"
+import Input from "@modules/common/components/input"
+import RichTextEditor from "@modules/account/components/rich-text-editor"
+import { Photo, PlusMini, XMarkMini } from "@medusajs/icons"
+import {
+  ChangeEvent,
+  DragEvent,
+  SelectHTMLAttributes,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
+import { useTranslation } from "@lib/i18n/context"
+
+type SellerListingEditorProps = {
+  listing: SellerListing
+}
 
 type ImageItem = ExistingImageItem | NewImageItem
 
+const categoryOptions = LISTING_CATEGORIES
+
+const MAX_PHOTO_UPLOADS = 6
+const MAX_PHOTO_FILE_SIZE = 5 * 1024 * 1024
+const MAX_PHOTO_TOTAL_SIZE = 24 * 1024 * 1024
+const selectFieldClassName =
+  "h-11 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-3 pb-1 pt-4 text-ui-fg-base hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active focus:outline-none"
+const formatFileSize = (bytes: number) =>
+  `${(bytes / 1024 / 1024).toFixed(bytes >= 1024 * 1024 ? 1 : 0)}MB`
+const createImageId = () => Math.random().toString(36).substring(2, 9)
+
+const editableStatuses = new Set<SellerListing["status"]>([
+  "draft",
+  "pending_review",
+  "active",
+  "rejected",
+])
+
 const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
-  const existingImages = useMemo(() => getListingImages(listing), [listing])
-  const initialImageItems = useMemo(
-    () =>
-      existingImages.map((url, index) => ({
-        id: `existing-${index}-${url}`,
-        type: "existing" as const,
-        url,
-      })),
-    [existingImages],
-  )
+  const { t } = useTranslation()
+  const canEdit = editableStatuses.has(listing.status)
+  const currencyCode = (listing.price?.currency_code ?? "khr").toLowerCase()
+  const amount = listing.price?.calculated_amount ?? null
   const [category, setCategory] = useState(listing.category ?? "Produce")
-  const [imageItems, setImageItems] = useState<ImageItem[]>(initialImageItems)
+  const [imageItems, setImageItems] = useState<ImageItem[]>(() => {
+    return getListingImages(listing).map((url, index) => ({
+      id: `existing-${index}-${createImageId()}`,
+      type: "existing" as const,
+      url,
+    }))
+  })
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({})
-  const [imageError, setImageError] = useState<string | null>(null)
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null)
+  const [imageError, setImageError] = useState<string | null>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const [state, formAction] = useActionState(
     updateSellerListing.bind(null, listing.id),
     {
       success: false,
       error: null as string | null,
-    },
+    }
   )
-  const canEdit = editableStatuses.has(listing.status)
-  const amount = listing.price?.calculated_amount
-  const listingCurrencyCode = listing.price?.currency_code ?? "khr"
-  const currencyCode = supportedCurrencyCodes.has(listingCurrencyCode)
-    ? listingCurrencyCode
-    : "khr"
 
-  useEffect(() => {
-    setImageItems(initialImageItems)
-  }, [initialImageItems])
-
-  const newImageItems = useMemo(
-    () =>
-      imageItems.filter((item): item is NewImageItem => item.type === "new"),
-    [imageItems],
+  const newImageItems = imageItems.filter(
+    (item): item is NewImageItem => item.type === "new"
   )
 
   useEffect(() => {
@@ -105,7 +95,7 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
 
         return acc
       },
-      {},
+      {}
     )
 
     setImagePreviews(previews)
@@ -132,14 +122,14 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
     }
 
     const oversizedFile = selectedFiles.find(
-      (file) => file.size > MAX_PHOTO_FILE_SIZE,
+      (file) => file.size > MAX_PHOTO_FILE_SIZE
     )
 
     if (oversizedFile) {
       setImageError(
         `${oversizedFile.name} is ${formatFileSize(
-          oversizedFile.size,
-        )}. Please choose photos under ${formatFileSize(MAX_PHOTO_FILE_SIZE)}.`,
+          oversizedFile.size
+        )}. Please choose photos under ${formatFileSize(MAX_PHOTO_FILE_SIZE)}.`
       )
       event.target.value = ""
       return
@@ -148,7 +138,7 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
     setImageItems((currentItems) => {
       const remainingSlots = Math.max(
         0,
-        MAX_PHOTO_UPLOADS - currentItems.length,
+        MAX_PHOTO_UPLOADS - currentItems.length
       )
       const newItems = selectedFiles.slice(0, remainingSlots).map((file) => ({
         id: `new-${createImageId()}`,
@@ -163,10 +153,10 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
       if (totalNewImageSize > MAX_PHOTO_TOTAL_SIZE) {
         setImageError(
           `New photos are ${formatFileSize(
-            totalNewImageSize,
+            totalNewImageSize
           )} total. Please keep uploads under ${formatFileSize(
-            MAX_PHOTO_TOTAL_SIZE,
-          )}.`,
+            MAX_PHOTO_TOTAL_SIZE
+          )}.`
         )
         event.target.value = ""
 
@@ -178,7 +168,7 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
       syncImageInput(
         nextItems
           .filter((item): item is NewImageItem => item.type === "new")
-          .map((item) => item.file),
+          .map((item) => item.file)
       )
 
       return nextItems
@@ -192,7 +182,7 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
       syncImageInput(
         nextItems
           .filter((item): item is NewImageItem => item.type === "new")
-          .map((item) => item.file),
+          .map((item) => item.file)
       )
 
       return nextItems
@@ -219,7 +209,7 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
       syncImageInput(
         nextItems
           .filter((item): item is NewImageItem => item.type === "new")
-          .map((item) => item.file),
+          .map((item) => item.file)
       )
 
       return nextItems
@@ -228,7 +218,7 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
 
   const handleImageDragStart = (
     event: DragEvent<HTMLDivElement>,
-    imageId: string,
+    imageId: string
   ) => {
     setDraggedImageId(imageId)
     event.dataTransfer.effectAllowed = "move"
@@ -237,7 +227,7 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
 
   const handleImageDrop = (
     event: DragEvent<HTMLDivElement>,
-    targetImageId: string,
+    targetImageId: string
   ) => {
     event.preventDefault()
 
@@ -254,7 +244,7 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
   if (!canEdit) {
     return (
       <div className="rounded-md border border-gray-200 bg-white p-5 text-small-regular text-ui-fg-subtle shadow-sm">
-        This listing can no longer be edited.
+        {t.account.cannotEdit}
       </div>
     )
   }
@@ -270,12 +260,12 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
       className="rounded-md border border-gray-200 bg-white p-4"
     >
       <div className="mb-4">
-        <h2 className="text-large-semi">Edit product</h2>
+        <h2 className="text-large-semi">{t.account.editProduct}</h2>
       </div>
 
       {state.success && (
         <div className="mb-4 rounded-md bg-green-50 px-3 py-2 text-small-regular text-green-700">
-          Listing updated and sent for review.
+          {t.account.updateProductSuccess}
         </div>
       )}
       {state.error && (
@@ -296,27 +286,27 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
 
       <div className="grid grid-cols-1 gap-4">
         <Input
-          label="Title"
+          label={t.account.titleLabel}
           name="title"
           defaultValue={listing.title}
           required
         />
 
         <RichTextEditor
-          label="Description"
+          label={t.common.description}
           name="description"
           defaultValue={listing.description}
           required
         />
 
         <FormSection
-          title="Photos"
-          description="Keep current photos and add clear new photos for review."
+          title={t.account.photos}
+          description={t.account.photosEditSubtitle}
         />
 
         <div className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
           <div className="flex items-center justify-between gap-3">
-            <span>Upload photos</span>
+            <span>{t.account.uploadPhotos}</span>
             <span className="text-xsmall-regular text-ui-fg-muted">
               {imageItems.length}/{MAX_PHOTO_UPLOADS}
             </span>
@@ -364,10 +354,10 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
                 )}
                 <span className="absolute bottom-1 left-1 rounded-md bg-white/90 px-1.5 py-0.5 text-xsmall-semi font-medium text-ui-fg-subtle shadow-sm">
                   {index === 0
-                    ? "Cover"
+                    ? t.account.cover
                     : item.type === "existing"
-                      ? "Current"
-                      : "New"}
+                    ? t.account.current
+                    : t.account.new}
                 </span>
                 <button
                   type="button"
@@ -386,20 +376,20 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
                 className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-ui-border-base bg-ui-bg-field text-ui-fg-subtle transition-colors hover:bg-ui-bg-field-hover hover:text-ui-fg-base focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
               >
                 {imageItems.length ? <PlusMini /> : <Photo />}
-                <span className="text-xsmall-regular">Add photo</span>
+                <span className="text-xsmall-regular">{t.account.addPhoto}</span>
               </button>
             )}
           </div>
         </div>
 
         <FormSection
-          title="Marketplace details"
-          description="These fields power buyer filters, saved searches, and listing review."
+          title={t.account.marketplaceDetails}
+          description={t.account.marketplaceDetailsSubtitle}
         />
 
         <div className="grid grid-cols-1 gap-4 small:grid-cols-[1fr_140px]">
           <Input
-            label="Price"
+            label={t.account.price}
             name="price"
             type="number"
             min="1"
@@ -407,7 +397,7 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
             required
           />
           <SelectField
-            label="Currency"
+            label={t.account.currency}
             name="currency_code"
             defaultValue={currencyCode}
           >
@@ -418,52 +408,52 @@ const SellerListingEditor = ({ listing }: SellerListingEditorProps) => {
 
         <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
           <SelectField
-            label="Farming category"
+            label={t.account.farmingCategory}
             name="category"
             value={category}
             onChange={(event) => setCategory(event.target.value)}
           >
-            {categoryOptions.map((category) => (
-              <option key={category} value={category}>
-                {category}
+            {categoryOptions.map((cat) => (
+              <option key={cat} value={cat}>
+                {t.store.categories[cat as keyof typeof t.store.categories] ?? cat}
               </option>
             ))}
           </SelectField>
           <Input
-            label="Farm or pickup location"
+            label={t.account.pickupLocation}
             name="location"
             defaultValue={listing.location ?? ""}
           />
           <Input
-            label="Quantity"
+            label={t.account.quantity}
             name="quantity"
             defaultValue={listing.quantity ?? ""}
           />
-          <Input label="Unit" name="unit" defaultValue={listing.unit ?? ""} />
+          <Input label={t.account.unit} name="unit" defaultValue={listing.unit ?? ""} />
           <SelectField
-            label="Condition"
+            label={t.account.condition}
             name="condition"
             defaultValue={listing.condition ?? ""}
           >
-            <option value="">Not specified</option>
-            <option value="Fresh">Fresh</option>
-            <option value="Organic">Organic</option>
-            <option value="Used">Used</option>
-            <option value="New">New</option>
+            <option value="">{t.account.notSpecified}</option>
+            {LISTING_CONDITIONS.map((cond) => (
+              <option key={cond} value={cond}>
+                {t.store.conditionOptions[cond as keyof typeof t.store.conditionOptions] ?? cond}
+              </option>
+            ))}
           </SelectField>
         </div>
 
-        <CategoryGuidance category={category} />
+        <CategoryGuidance category={category} t={t} />
 
         <CategorySpecificFields />
 
         <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-small-regular text-ui-fg-subtle">
-          Review price, location, quantity, and photos before saving. Active
-          listings are hidden while edited changes wait for review.
+          {t.account.editDraftDetails}
         </div>
 
         <SubmitButton data-testid="update-listing-button">
-          Save changes
+          {t.account.saveChanges}
         </SubmitButton>
       </div>
     </form>
@@ -498,21 +488,12 @@ const SelectField = ({ label, children, ...props }: SelectFieldProps) => (
   </label>
 )
 
-const categoryGuidance: Record<string, string> = {
-  Produce: "Use the description for any freshness or source notes.",
-  Livestock: "Use the description for animal details and inspection notes.",
-  Seeds: "Use the description for seed details.",
-  Fertilizer: "Use the description for product details.",
-  Equipment: "Use the description for equipment details.",
-  Tools: "Use the description for tool details.",
-  Services: "Use the description for service details.",
-  Other: "Use the description for any extra details buyers need.",
-}
-
-const CategoryGuidance = ({ category }: { category: string }) => (
+const CategoryGuidance = ({ category, t }: { category: string; t: any }) => (
   <div className="rounded-md border border-gray-200 bg-white p-4 text-small-regular text-ui-fg-subtle">
-    <span className="font-semibold text-ui-fg-base">{category} details: </span>
-    {categoryGuidance[category] ?? categoryGuidance.Other}
+    <span className="font-semibold text-ui-fg-base">
+      {t.store.categories[category as keyof typeof t.store.categories] ?? category} {t.account.marketplaceDetails}:{" "}
+    </span>
+    {t.account.categoryGuidance[category as keyof typeof t.account.categoryGuidance] ?? t.account.categoryGuidance.Other}
   </div>
 )
 
@@ -522,7 +503,7 @@ const CategorySpecificFields = () => {
 
 const getListingImages = (listing: SellerListing) =>
   Array.from(
-    new Set([listing.thumbnail, ...(listing.image_urls ?? [])]),
+    new Set([listing.thumbnail, ...(listing.image_urls ?? [])])
   ).filter(Boolean) as string[]
 
 export default SellerListingEditor

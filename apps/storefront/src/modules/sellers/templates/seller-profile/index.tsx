@@ -1,15 +1,18 @@
+"use client"
+
 import { SellerProfile } from "@lib/data/sellers"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { richTextToPlainText } from "@lib/util/rich-text"
 import Package from "@modules/common/icons/package"
+import { useTranslation } from "@lib/i18n/context"
 
 type SellerProfileTemplateProps = {
   profile: SellerProfile
 }
 
-const formatPrice = (listing: SellerProfile["listings"][number]) => {
+const formatPrice = (listing: SellerProfile["listings"][number], t: any) => {
   if (listing.price?.calculated_amount == null) {
-    return "Price unavailable"
+    return t.common.priceUnavailable
   }
 
   return `${listing.price.calculated_amount} ${(
@@ -18,14 +21,15 @@ const formatPrice = (listing: SellerProfile["listings"][number]) => {
 }
 
 const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
+  const { t, locale } = useTranslation()
   const { seller, listings } = profile
   const profileImage = seller.avatar_url ?? listings[0]?.thumbnail
   const joinedDate = seller.created_at
-    ? new Intl.DateTimeFormat("en", {
+    ? new Intl.DateTimeFormat(locale, {
         month: "short",
         year: "numeric",
       }).format(new Date(seller.created_at))
-    : "Recently"
+    : t.sellers.recently
 
   return (
     <div className="mx-auto w-full max-w-[1120px] px-4 py-8 small:px-6 min-[1168px]:px-0">
@@ -53,20 +57,19 @@ const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
                   </h1>
                   {seller.verification_status === "verified" && (
                     <span className="inline-flex rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-small-semi text-emerald-800">
-                      Verified
+                      {t.common.verified}
                     </span>
                   )}
                 </div>
                 <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-small-regular text-ui-fg-subtle">
                   {seller.location && <span>{seller.location}</span>}
-                  <span>Joined {joinedDate}</span>
+                  <span>{t.sellers.joined} {joinedDate}</span>
                   <span>
-                    {listings.length} listing{listings.length === 1 ? "" : "s"}
+                    {listings.length} {t.account.productsCount}
                   </span>
                 </div>
               </div>
             </div>
-
           </div>
 
           {(seller.phone || seller.email) && (
@@ -94,8 +97,7 @@ const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
 
           <div className="mt-5 max-w-3xl">
             <p className="whitespace-pre-line text-base-regular text-ui-fg-subtle">
-              {seller.bio ||
-                "This seller has not added a public bio yet. Check their listings below for available products and contact details."}
+              {seller.bio || t.sellers.noPublicBio}
             </p>
           </div>
         </div>
@@ -103,21 +105,21 @@ const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
 
       <section className="mt-8">
         <div className="mb-4 flex flex-col gap-1">
-          <h2 className="text-large-semi text-ui-fg-base">Active listings</h2>
+          <h2 className="text-large-semi text-ui-fg-base">{t.sellers.activeListings}</h2>
           <p className="text-small-regular text-ui-fg-subtle">
-            Products currently published by {seller.display_name}.
+            {t.sellers.publishedBy} {seller.display_name}.
           </p>
         </div>
 
         {listings.length === 0 ? (
           <div className="rounded-md border border-gray-200 bg-white px-4 py-16 shadow-sm">
-            <EmptyState />
+            <EmptyState t={t} />
           </div>
         ) : (
           <ul className="grid grid-cols-1 gap-4 small:grid-cols-2 medium:grid-cols-3">
             {listings.map((listing) => (
               <li key={listing.id}>
-                <ListingCard listing={listing} />
+                <ListingCard listing={listing} t={t} />
               </li>
             ))}
           </ul>
@@ -129,8 +131,10 @@ const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
 
 const ListingCard = ({
   listing,
+  t,
 }: {
   listing: SellerProfile["listings"][number]
+  t: any
 }) => {
   const plainDescription = richTextToPlainText(listing.description)
 
@@ -159,16 +163,16 @@ const ListingCard = ({
             {listing.title}
           </h3>
           <div className="shrink-0 text-small-semi text-ui-fg-base">
-            {formatPrice(listing)}
+            {formatPrice(listing, t)}
           </div>
         </div>
         <p className="mt-1 line-clamp-2 min-h-[40px] text-small-regular text-ui-fg-subtle">
-          {plainDescription || "No description added."}
+          {plainDescription || t.common.noDescription}
         </p>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {listing.category && (
             <span className="rounded-md bg-gray-100 px-2 py-1 text-small-regular text-ui-fg-subtle">
-              {listing.category}
+              {t.store.categories[listing.category as keyof typeof t.store.categories] ?? listing.category}
             </span>
           )}
           {listing.location && (
@@ -210,14 +214,14 @@ const EmailIcon = () => (
   </svg>
 )
 
-const EmptyState = () => (
+const EmptyState = ({ t }: { t: any }) => (
   <div className="flex flex-col items-center justify-center text-center text-ui-fg-muted">
     <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-gray-300 bg-ui-bg-subtle">
       <Package size={28} />
     </div>
-    <p className="mt-3 text-small-semi text-ui-fg-base">No active listings</p>
+    <p className="mt-3 text-small-semi text-ui-fg-base">{t.sellers.noActiveListings}</p>
     <p className="mt-1 text-small-regular text-ui-fg-subtle">
-      This seller has no published listings right now.
+      {t.sellers.noActiveSubtitle}
     </p>
   </div>
 )

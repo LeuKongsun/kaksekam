@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslation } from "@lib/i18n/context"
+
 const ProductTabs = () => {
   return (
     <div className="flex w-full flex-col gap-4">
@@ -9,19 +11,14 @@ const ProductTabs = () => {
 }
 
 const BuyerSafetyTips = () => {
-  const tips = [
-    "Meet the seller in a public or familiar place whenever possible.",
-    "Inspect the product carefully before agreeing to buy or pay.",
-    "Use comments or inquiry to confirm condition, pickup details, and timing.",
-    "Avoid sending money before you are comfortable with the seller and listing.",
-    "Keep a record of messages, agreed price, pickup time, and seller contact details.",
-  ]
+  const { t } = useTranslation()
+  const tips = t.product.safetyTips
 
   return (
     <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-small-regular">
       <div className="flex items-center gap-2 text-amber-800">
         <AlertIcon />
-        <h3 className="text-base-semi">Safety Tips for Buyers</h3>
+        <h3 className="text-base-semi">{t.product.safetyTipsTitle}</h3>
       </div>
       <ol className="mt-4 list-decimal space-y-3 pl-5 text-ui-fg-subtle">
         {tips.map((tip) => (

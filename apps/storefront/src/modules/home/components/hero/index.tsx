@@ -20,7 +20,9 @@ const Hero = ({ countryCode, labels, storeLabels }: HeroProps) => {
       <div className="content-container py-8 small:py-12">
         <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
           <h1 className="text-3xl-semi leading-tight text-ui-fg-base small:text-[44px] small:leading-[52px]">
-            {labels.title}
+            {labels.titleBefore}
+            <span className="text-brand">{labels.titleHighlight}</span>
+            {labels.titleAfter}
           </h1>
           <p className="mt-3 max-w-2xl text-base-regular leading-7 text-ui-fg-subtle">
             {labels.subtitle}

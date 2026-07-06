@@ -9,32 +9,44 @@ type ProductInfoProps = {
 
 type ListingStatus = NonNullable<StoreProductWithListing["listing"]>["status"]
 
-const statusBadges: Record<ListingStatus, { label: string; className: string }> =
-  {
-    active: {
-      label: "Active listing",
-      className: "bg-green-50 text-green-700",
-    },
-    sold: { label: "Sold", className: "bg-sky-50 text-sky-700" },
-    expired: { label: "Expired", className: "bg-gray-100 text-gray-600" },
-    pending_review: {
-      label: "Pending review",
-      className: "bg-amber-50 text-amber-700",
-    },
-    rejected: { label: "Not available", className: "bg-red-50 text-red-700" },
-    draft: { label: "Draft", className: "bg-gray-100 text-gray-600" },
-  }
+import { getTranslations } from "@lib/i18n/server"
 
-const ProductInfo = ({ product }: ProductInfoProps) => {
+const statusClasses: Record<ListingStatus, string> = {
+  active: "bg-green-50 text-green-700",
+  sold: "bg-sky-50 text-sky-700",
+  expired: "bg-gray-100 text-gray-600",
+  pending_review: "bg-amber-50 text-amber-700",
+  rejected: "bg-red-50 text-red-700",
+  draft: "bg-gray-100 text-gray-600",
+}
+
+const ProductInfo = async ({ product }: ProductInfoProps) => {
+  const { t } = await getTranslations()
   const listing = product.listing
-  const statusBadge = statusBadges[listing?.status ?? "active"]
+  const status = listing?.status ?? "active"
+  const statusLabel = t.product.details[status]
+  const statusClassName = statusClasses[status]
   const { cheapestPrice } = getProductPrice({ product })
   const listingDetails = [
-    ["Category", listing?.category],
-    ["Location", listing?.location],
-    ["Condition", listing?.condition],
     [
-      "Quantity",
+      t.product.details.category,
+      listing?.category
+        ? t.store.categories[
+            listing.category as keyof typeof t.store.categories
+          ] ?? listing.category
+        : undefined,
+    ],
+    [t.product.details.location, listing?.location],
+    [
+      t.product.details.condition,
+      listing?.condition
+        ? t.store.conditionOptions[
+            listing.condition as keyof typeof t.store.conditionOptions
+          ] ?? listing.condition
+        : undefined,
+    ],
+    [
+      t.product.details.quantity,
       listing?.quantity && listing.unit
         ? `${listing.quantity} ${listing.unit}`
         : listing?.quantity,
@@ -46,10 +58,10 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
       <div className="flex flex-col gap-y-4">
         <div>
           <span
-            className={`rounded-full px-3 py-1 text-small-semi uppercase ${statusBadge.className}`}
+            className={`rounded-full px-3 py-1 text-small-semi uppercase ${statusClassName}`}
             data-testid="listing-status-badge"
           >
-            {statusBadge.label}
+            {statusLabel}
           </span>
         </div>
         <Heading
@@ -85,7 +97,7 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
               className="text-large-semi text-ui-fg-base"
               data-testid="product-price"
             >
-              Contact seller for price
+              {t.product.details.contactForPrice}
             </span>
           )}
         </div>

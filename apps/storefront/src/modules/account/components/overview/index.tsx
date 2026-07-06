@@ -1,8 +1,11 @@
+"use client"
+
 import { HttpTypes } from "@medusajs/types"
 import type { ProductSeller } from "@lib/data/products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Eye from "@modules/common/icons/eye"
 import Package from "@modules/common/icons/package"
+import { useTranslation } from "@lib/i18n/context"
 
 type OverviewProps = {
   customer: HttpTypes.StoreCustomer | null
@@ -20,50 +23,54 @@ type OverviewProps = {
 }
 
 const Overview = ({ customer, seller, metrics }: OverviewProps) => {
+  const { t, locale } = useTranslation()
   const sellerCompletion = getSellerProfileCompletion(seller)
+  const isKhmer = locale === "km"
+
   const primaryActions = [
     {
-      title: "Products",
+      title: t.account.products,
       href: "/account/listings",
       icon: Package,
     },
     {
-      title: "Messages",
+      title: t.common.messages,
       href: "/account/inquiries",
       icon: MessageIcon,
     },
     {
-      title: "Browse",
+      title: t.common.browse,
       href: "/store",
       icon: Eye,
     },
   ]
+
   const stats = [
     {
-      label: "Products",
+      label: t.account.products,
       value: metrics.listings,
-      detail: `${metrics.activeListings} active, ${metrics.pendingListings} pending`,
+      detail: `${metrics.activeListings} ${t.account.active}, ${metrics.pendingListings} ${t.account.pendingReview}`,
       icon: Package,
     },
     {
-      label: "Inbox",
+      label: isKhmer ? "ប្រអប់សារ" : "Inbox",
       value: metrics.sellerInquiries,
       detail:
         metrics.newSellerInquiries > 0
-          ? `${metrics.newSellerInquiries} new`
-          : "All caught up",
+          ? `${metrics.newSellerInquiries} ${isKhmer ? "ថ្មី" : "new"}`
+          : isKhmer ? "អានរួចរាល់" : "All caught up",
       icon: MessageIcon,
     },
     {
-      label: "Sent",
+      label: isKhmer ? "សារផ្ញើចេញ" : "Sent",
       value: metrics.buyerInquiries,
-      detail: "To sellers",
+      detail: isKhmer ? "ផ្ញើទៅអ្នកលក់" : "To sellers",
       icon: MessageIcon,
     },
     {
-      label: "Saved",
+      label: t.common.saved,
       value: metrics.savedListings + metrics.savedSearches,
-      detail: `${metrics.savedListings} listings, ${metrics.savedSearches} searches`,
+      detail: `${metrics.savedListings} ${isKhmer ? "ទំនិញ" : "listings"}, ${metrics.savedSearches} ${isKhmer ? "ការស្វែងរក" : "searches"}`,
       icon: Eye,
     },
   ]
@@ -78,10 +85,10 @@ const Overview = ({ customer, seller, metrics }: OverviewProps) => {
               data-testid="welcome-message"
               data-value={customer?.first_name}
             >
-              Overview
+              {t.account.overview}
             </h2>
             <p className="mt-1 text-small-regular text-ui-fg-subtle">
-              Hi {customer?.first_name}
+              {t.account.hi} {customer?.first_name}
             </p>
           </div>
           <div className="text-small-regular text-ui-fg-subtle small:text-right">
@@ -92,7 +99,7 @@ const Overview = ({ customer, seller, metrics }: OverviewProps) => {
             >
               {customer?.email}
             </span>
-            Signed in
+            {t.account.signedIn}
           </div>
         </div>
 
@@ -141,7 +148,7 @@ const Overview = ({ customer, seller, metrics }: OverviewProps) => {
         <div className="mt-6 border-t border-gray-200 pt-5">
           <div className="flex flex-col gap-4 small:flex-row small:items-center small:justify-between">
             <div>
-              <h3 className="text-large-semi">Seller profile</h3>
+              <h3 className="text-large-semi">{t.account.sellerProfile}</h3>
             </div>
             <p className="text-small-regular text-ui-fg-subtle">
               <span
@@ -151,7 +158,7 @@ const Overview = ({ customer, seller, metrics }: OverviewProps) => {
               >
                 {sellerCompletion}%
               </span>{" "}
-              complete
+              {t.account.complete}
             </p>
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -160,7 +167,7 @@ const Overview = ({ customer, seller, metrics }: OverviewProps) => {
               className="inline-flex items-center gap-x-2 text-small-semi text-ui-fg-base hover:text-ui-fg-interactive"
             >
               <Eye size={14} />
-              Saved
+              {t.common.saved}
             </LocalizedClientLink>
           </div>
         </div>

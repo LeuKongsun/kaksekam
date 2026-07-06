@@ -22,6 +22,7 @@ import {
   useTransition,
 } from "react"
 import { useFormStatus } from "react-dom"
+import { useTranslation } from "@lib/i18n/context"
 
 type InboxMessagesProps = {
   sellerInquiries: SellerInquiry[]
@@ -61,14 +62,16 @@ const InboxMessages = ({
   buyerInquiries,
 }: InboxMessagesProps) => {
   const router = useRouter()
+  const { t, locale } = useTranslation()
   const [sellerItems, setSellerItems] = useState(sellerInquiries)
   const [buyerItems, setBuyerItems] = useState(buyerInquiries)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [seenIds, setSeenIds] = useState<Set<string>>(() => new Set())
   const [, startTransition] = useTransition()
+
   const conversations = useMemo(
-    () => buildConversations(sellerItems, buyerItems, seenIds),
-    [buyerItems, sellerItems, seenIds]
+    () => buildConversations(sellerItems, buyerItems, seenIds, t),
+    [buyerItems, sellerItems, seenIds, t]
   )
   const activeConversation =
     conversations.find((conversation) => conversation.id === activeId) ??
@@ -132,15 +135,15 @@ const InboxMessages = ({
       data-testid="inbox-messages-page-wrapper"
     >
       <div className="flex flex-col gap-1 border-b border-gray-200 px-4 py-4 small:px-5">
-        <h1 className="text-large-semi text-ui-fg-base">Messages</h1>
+        <h1 className="text-large-semi text-ui-fg-base">{t.messages.title}</h1>
         <p className="text-small-regular text-ui-fg-subtle">
-          {conversations.length} conversations
-          {unreadCount > 0 ? `, ${unreadCount} waiting for reply` : ""}
+          {conversations.length} {t.messages.conversations}
+          {unreadCount > 0 ? `, ${unreadCount} ${t.messages.waitingReply}` : ""}
         </p>
       </div>
 
       {conversations.length === 0 ? (
-        <EmptyInbox />
+        <EmptyInbox t={t} />
       ) : (
         <div className="grid min-h-[620px] grid-cols-1 medium:grid-cols-[360px_minmax(0,1fr)]">
           <div className="border-b border-gray-200 medium:border-b-0 medium:border-r">
@@ -185,7 +188,7 @@ const InboxMessages = ({
                               : "text-ui-fg-muted"
                           }`}
                         >
-                          {formatShortDate(conversation.latestAt)}
+                          {formatShortDate(conversation.latestAt, locale)}
                         </p>
                         {conversation.isUnread && (
                           <span className="mt-1 inline-flex h-2 w-2 rounded-full bg-[#c94f2d]" />
@@ -199,7 +202,7 @@ const InboxMessages = ({
                           : "text-small-regular text-ui-fg-subtle"
                       }`}
                     >
-                      {formatPreview(conversation)}
+                      {formatPreview(conversation, t)}
                     </p>
                   </div>
                 </button>
@@ -208,7 +211,7 @@ const InboxMessages = ({
           </div>
 
           {activeConversation && (
-            <ConversationPane conversation={activeConversation} />
+            <ConversationPane conversation={activeConversation} t={t} locale={locale} />
           )}
         </div>
       )}
@@ -218,8 +221,12 @@ const InboxMessages = ({
 
 const ConversationPane = ({
   conversation,
+  t,
+  locale,
 }: {
   conversation: InboxConversation
+  t: any
+  locale: string
 }) => {
   const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
@@ -254,7 +261,7 @@ const ConversationPane = ({
       </div>
 
       <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto bg-[#f6f4ef] px-4 py-4">
-        <DateDivider date={formatDate(conversation.inquiry.created_at)} />
+        <DateDivider date={formatDate(conversation.inquiry.created_at, locale)} />
 
         {messages.length > 0 ? (
           messages.map((message, index) => {
@@ -273,7 +280,7 @@ const ConversationPane = ({
             return (
               <div key={message.id} className="space-y-2.5">
                 {shouldShowDate && (
-                  <DateDivider date={formatDate(message.created_at)} />
+                  <DateDivider date={formatDate(message.created_at, locale)} />
                 )}
                 <div
                   className={
@@ -295,7 +302,7 @@ const ConversationPane = ({
                         isOwnMessage ? "text-white/60" : "text-ui-fg-muted"
                       }`}
                     >
-                      {formatTime(message.created_at)}
+                      {formatTime(message.created_at, locale)}
                     </p>
                   </div>
                 </div>
@@ -304,7 +311,7 @@ const ConversationPane = ({
           })
         ) : (
           <p className="rounded-full bg-white/70 px-3 py-2 text-center text-xsmall-semi text-ui-fg-muted">
-            No messages yet.
+            {t.messages.noMessagesYet}
           </p>
         )}
       </div>
@@ -316,7 +323,7 @@ const ConversationPane = ({
         className="flex items-center gap-2 border-t border-gray-200 bg-white p-3"
       >
         <label htmlFor={`reply-${conversation.id}`} className="sr-only">
-          Write a message
+          {t.messages.writeMessage}
         </label>
         <div className="flex h-11 flex-1 items-center rounded-full border border-gray-200 bg-ui-bg-subtle px-3">
           <input
@@ -325,11 +332,11 @@ const ConversationPane = ({
             required
             autoComplete="off"
             className="h-full w-full border-0 bg-transparent px-1 text-small-regular text-ui-fg-base outline-none placeholder:text-ui-fg-muted"
-            placeholder="Write a message..."
+            placeholder={t.messages.writeMessage}
             type="text"
           />
         </div>
-        <SendButton />
+        <SendButton t={t} />
       </form>
     </div>
   )
@@ -338,7 +345,8 @@ const ConversationPane = ({
 const buildConversations = (
   sellerInquiries: SellerInquiry[],
   buyerInquiries: BuyerInquiry[],
-  seenIds: Set<string>
+  seenIds: Set<string>,
+  t: any
 ): InboxConversation[] => {
   const received = sellerInquiries.map((inquiry): InboxConversation => {
     const latestMessage = getLatestMessage(inquiry)
@@ -349,7 +357,7 @@ const buildConversations = (
       inquiry,
       participantName: inquiry.buyer_name,
       participantDetail: inquiry.buyer_email,
-      productTitle: inquiry.product?.title ?? "Listing unavailable",
+      productTitle: inquiry.product?.title ?? t.messages.listingUnavailable,
       productHandle: inquiry.product?.handle,
       thumbnail: inquiry.product?.thumbnail,
       latestMessage,
@@ -365,10 +373,10 @@ const buildConversations = (
       id: conversationId,
       direction: "sent",
       inquiry,
-      participantName: inquiry.product?.seller?.display_name ?? "Seller",
+      participantName: inquiry.product?.seller?.display_name ?? t.messages.seller,
       participantDetail:
-        inquiry.product?.seller?.handle ?? "Message sent to seller",
-      productTitle: inquiry.product?.title ?? "Listing unavailable",
+        inquiry.product?.seller?.handle ?? t.messages.sentToSeller,
+      productTitle: inquiry.product?.title ?? t.messages.listingUnavailable,
       productHandle: inquiry.product?.handle,
       thumbnail: inquiry.product?.thumbnail,
       latestMessage,
@@ -421,19 +429,19 @@ const DateDivider = ({ date }: { date: string }) => (
   </div>
 )
 
-const EmptyInbox = () => (
+const EmptyInbox = ({ t }: { t: any }) => (
   <div className="flex min-h-[420px] flex-col items-center justify-center px-4 text-center">
     <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-gray-300 bg-ui-bg-subtle text-ui-fg-muted">
       <Package size={28} />
     </div>
-    <p className="mt-3 text-base-semi text-ui-fg-base">No messages yet</p>
+    <p className="mt-3 text-base-semi text-ui-fg-base">{t.messages.noMessages}</p>
     <p className="mt-1 max-w-sm text-small-regular text-ui-fg-subtle">
-      Buyer and seller conversations will appear here in one inbox.
+      {t.messages.buyerSellerConversations}
     </p>
   </div>
 )
 
-const SendButton = () => {
+const SendButton = ({ t }: { t: any }) => {
   const { pending } = useFormStatus()
 
   return (
@@ -441,8 +449,8 @@ const SendButton = () => {
       type="submit"
       disabled={pending}
       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ui-fg-base text-white shadow-sm transition-colors hover:bg-ui-fg-base/90 disabled:cursor-not-allowed disabled:opacity-60"
-      aria-label="Send message"
-      title="Send"
+      aria-label={t.messages.send}
+      title={t.messages.send}
       data-testid="reply-inquiry-button"
     >
       <SendIcon />
@@ -470,8 +478,8 @@ const SendIcon = () => (
 const getLatestMessage = (inquiry: SellerInquiry | BuyerInquiry) =>
   inquiry.messages[inquiry.messages.length - 1] ?? null
 
-const formatPreview = (conversation: InboxConversation) => {
-  const body = conversation.latestMessage?.body ?? "No messages yet."
+const formatPreview = (conversation: InboxConversation, t: any) => {
+  const body = conversation.latestMessage?.body ?? t.messages.noMessagesYet
 
   if (!conversation.latestMessage) {
     return body
@@ -482,24 +490,24 @@ const formatPreview = (conversation: InboxConversation) => {
       ? conversation.latestMessage.sender_type === "seller"
       : conversation.latestMessage.sender_type === "buyer"
 
-  return isOwnMessage ? `You: ${body}` : body
+  return isOwnMessage ? `${t.messages.you}: ${body}` : body
 }
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("en", {
+const formatDate = (value: string, locale = "en") =>
+  new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
   }).format(new Date(value))
 
-const formatShortDate = (value: string) =>
-  new Intl.DateTimeFormat("en", {
+const formatShortDate = (value: string, locale = "en") =>
+  new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "short",
   }).format(new Date(value))
 
-const formatTime = (value: string) =>
-  new Intl.DateTimeFormat("en", {
+const formatTime = (value: string, locale = "en") =>
+  new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value))

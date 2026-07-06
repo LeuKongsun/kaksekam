@@ -31,15 +31,18 @@ type AccountNavProps = {
   messageCount: number
 }
 
+import { useTranslation } from "@lib/i18n/context"
+
 const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
   const router = useRouter()
   const pathname = usePathname()
   const { countryCode } = useParams() as { countryCode: string }
+  const { t } = useTranslation()
   const displayName =
     seller?.display_name ||
     [customer?.first_name, customer?.last_name].filter(Boolean).join(" ") ||
     customer?.email ||
-    "Your profile"
+    t.account.profileInitials
   const billingAddress = customer?.addresses?.find(
     (address) => address.is_default_billing
   )
@@ -62,13 +65,13 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
   const currentAvatarUrl = seller?.avatar_url ?? null
   const tabs = [
     {
-      label: "Products",
+      label: t.account.products,
       href: "/account/listings",
       isActive: pathname.includes("/account/listings"),
       icon: Package,
     },
     {
-      label: "Messages",
+      label: t.common.messages,
       href: "/account/inquiries",
       isActive:
         pathname.includes("/account/inquiries") ||
@@ -77,7 +80,7 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
       count: liveMessageCount,
     },
     {
-      label: "Saved",
+      label: t.common.saved,
       href: "/account/saved",
       isActive: pathname.includes("/account/saved"),
       icon: Eye,
@@ -174,7 +177,7 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
                 </h1>
                 {seller?.verification_status === "verified" && (
                   <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xsmall-semi text-emerald-700">
-                    Verified
+                    {t.common.verified}
                   </span>
                 )}
               </div>
@@ -208,14 +211,14 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
               type="button"
               onClick={() => setIsEditingProfile(true)}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-ui-fg-base transition-colors hover:border-ui-fg-base hover:bg-gray-50"
-              aria-label="Edit profile"
+              aria-label={t.account.editProfileTitle}
             >
               <PencilSquare />
             </button>
             <LocalizedClientLink
               href="/account/inquiries"
               className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-ui-fg-base transition-colors hover:border-ui-fg-base hover:bg-gray-50"
-              aria-label="Messages"
+              aria-label={t.common.messages}
             >
               <MessageIcon />
               {liveMessageCount > 0 && (
@@ -228,7 +231,7 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
               type="button"
               onClick={handleLogout}
               className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-ui-fg-subtle transition-colors hover:border-ui-fg-base hover:text-ui-fg-base"
-              aria-label="Log out"
+              aria-label={t.account.logout}
               data-testid="logout-button"
             >
               <ArrowRightOnRectangle />
@@ -277,10 +280,10 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
             <div className="flex items-start justify-between gap-4 border-b border-gray-200 p-4">
               <div>
                 <h2 className="text-large-semi text-ui-fg-base">
-                  Edit profile
+                  {t.account.editProfileTitle}
                 </h2>
                 <p className="mt-1 text-small-regular text-ui-fg-subtle">
-                  Update the public details buyers see on your products.
+                  {t.account.editProfileSubtitle}
                 </p>
               </div>
               <button
@@ -323,10 +326,10 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
                 </div>
                 <div className="min-w-0">
                   <div className="text-base-semi text-ui-fg-base">
-                    Photo or logo
+                    {t.account.photoLogo}
                   </div>
                   <p className="mt-1 text-small-regular text-ui-fg-subtle">
-                    Upload a square photo or logo buyers can recognize.
+                    {t.account.photoLogoSubtitle}
                   </p>
                   <input
                     ref={avatarInputRef}
@@ -343,7 +346,7 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
                       className="inline-flex h-9 items-center gap-2 rounded-md border border-gray-300 px-3 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
                     >
                       <Photo />
-                      Upload picture
+                      {t.account.uploadPicture}
                     </button>
                     {avatarFile && (
                       <button
@@ -352,7 +355,7 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
                         className="inline-flex h-9 items-center gap-2 rounded-md border border-gray-300 px-3 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
                       >
                         <XMarkMini />
-                        Remove
+                        {t.account.remove}
                       </button>
                     )}
                   </div>
@@ -361,13 +364,13 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
 
               <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
                 <Input
-                  label="Farm or business name"
+                  label={t.account.farmName}
                   name="display_name"
                   defaultValue={displayName}
                   required
                 />
                 <Input
-                  label="Handle"
+                  label={t.account.handle}
                   name="handle"
                   defaultValue={
                     seller?.handle ??
@@ -380,30 +383,30 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
                   required
                 />
                 <Input
-                  label="Email"
+                  label={t.account.emailLabel}
                   name="email"
                   type="email"
                   defaultValue={seller?.email ?? customer?.email ?? ""}
                 />
                 <Input
-                  label="Phone"
+                  label={t.account.phoneLabel}
                   name="phone"
                   defaultValue={seller?.phone ?? customer?.phone ?? ""}
                 />
                 <Input
-                  label="Location"
+                  label={t.account.pickupLocation}
                   name="location"
                   defaultValue={seller?.location ?? location ?? ""}
                 />
               </div>
 
               <label className="mt-4 flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
-                <span>Bio</span>
+                <span>{t.account.bio}</span>
                 <textarea
                   name="bio"
                   rows={5}
                   defaultValue={seller?.bio ?? ""}
-                  placeholder="Tell buyers what you grow, supply, where you operate, and when you usually respond."
+                  placeholder={t.account.bioPlaceholder}
                   className="w-full rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
                 />
               </label>
@@ -415,10 +418,10 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
                 onClick={() => setIsEditingProfile(false)}
                 className="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 px-4 text-small-semi text-ui-fg-base transition-colors hover:border-ui-fg-base"
               >
-                Cancel
+                {t.common.cancel}
               </button>
               <SubmitButton data-testid="save-profile-button">
-                Save profile
+                {t.account.saveProfile}
               </SubmitButton>
             </div>
           </form>

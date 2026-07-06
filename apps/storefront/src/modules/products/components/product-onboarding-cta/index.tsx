@@ -1,5 +1,6 @@
 import { Button, Container, Text } from "@modules/common/components/ui"
 import { cookies as nextCookies } from "next/headers"
+import { getTranslations } from "@lib/i18n/server"
 
 async function ProductOnboardingCta() {
   const cookies = await nextCookies()
@@ -10,6 +11,7 @@ async function ProductOnboardingCta() {
     return null
   }
 
+  const { t } = await getTranslations()
   const backendUrl =
     process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "http://localhost:9000"
 
@@ -17,13 +19,13 @@ async function ProductOnboardingCta() {
     <Container className="max-w-4xl h-full bg-ui-bg-subtle w-full p-8">
       <div className="flex flex-col gap-y-4 center">
         <Text className="text-ui-fg-base text-xl">
-          Your demo listing was successfully created! 🎉
+          {t.product.onboardingCreated}
         </Text>
         <Text className="text-ui-fg-subtle text-small-regular">
-          You can now continue setting up marketplace moderation in the admin.
+          {t.product.onboardingSetup}
         </Text>
         <a href={`${backendUrl}/app/marketplace`}>
-          <Button className="w-full">Continue setup in admin</Button>
+          <Button className="w-full">{t.product.onboardingBtn}</Button>
         </a>
       </div>
     </Container>

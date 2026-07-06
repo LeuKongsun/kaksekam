@@ -20,7 +20,7 @@ export default async function Footer() {
           <div className="max-w-lg">
             <LocalizedClientLink
               href="/"
-              className="txt-compact-xlarge-plus text-brand transition-colors hover:text-brand-hover"
+              className="txt-compact-xlarge-plus font-bold text-brand transition-colors hover:text-brand-hover"
             >
               {t.common.brand}
             </LocalizedClientLink>

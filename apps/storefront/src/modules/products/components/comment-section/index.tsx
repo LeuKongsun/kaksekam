@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslation } from "@lib/i18n/context"
 import { Button } from "@modules/common/components/ui"
 import { FormEvent, useEffect, useMemo, useState } from "react"
 
@@ -34,6 +35,7 @@ const CommentSection = ({
   countryCode,
   customer,
 }: CommentSectionProps) => {
+  const { t } = useTranslation()
   const [comments, setComments] = useState<ProductComment[]>([])
   const [body, setBody] = useState("")
   const [status, setStatus] = useState<string | null>(null)
@@ -51,17 +53,17 @@ const CommentSection = ({
         )
       }
     } catch {
-      setStatus("Comments are available, but saved drafts could not load.")
+      setStatus(t.product.commentsDraftsError)
     }
-  }, [storageKey])
+  }, [storageKey, t])
 
   useEffect(() => {
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(comments))
     } catch {
-      setStatus("Your comment was added, but could not be saved locally.")
+      setStatus(t.product.commentSaveError)
     }
-  }, [comments, storageKey])
+  }, [comments, storageKey, t])
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -70,12 +72,12 @@ const CommentSection = ({
     const trimmedBody = body.trim()
 
     if (!customer) {
-      setStatus("Sign in before posting a comment.")
+      setStatus(t.product.signInPrompt)
       return
     }
 
     if (!trimmedBody) {
-      setStatus("Add a comment before posting.")
+      setStatus(t.product.emptyCommentError)
       return
     }
 
@@ -84,13 +86,13 @@ const CommentSection = ({
       customerId: customer.id,
       author: customer.name,
       body: trimmedBody,
-      createdAt: "Just now",
+      createdAt: t.product.justNow,
       helpful: 0,
     }
 
     setComments((currentComments) => [nextComment, ...currentComments])
     setBody("")
-    setStatus("Comment posted.")
+    setStatus(t.product.commentPosted)
   }
 
   const markHelpful = (commentId: string) => {
@@ -115,18 +117,18 @@ const CommentSection = ({
             id="product-comments-heading"
             className="text-xl-semi text-ui-fg-base"
           >
-            Comments on {productTitle}
+            {t.product.commentsTitle} {productTitle}
           </h2>
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-small-regular text-ui-fg-subtle">
           <span>
-            <span className="text-ui-fg-base">{comments.length}</span> comments
+            <span className="text-ui-fg-base">{comments.length}</span> {t.product.commentsCount}
           </span>
           <span>
             <span className="text-ui-fg-base">
               {comments.reduce((total, comment) => total + comment.helpful, 0)}
             </span>{" "}
-            helpful
+            {t.product.helpful}
           </span>
         </div>
       </div>
@@ -139,14 +141,14 @@ const CommentSection = ({
           >
             <label className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
               <span>
-                Comment <span className="text-rose-500">*</span>
+                {t.product.commentLabel} <span className="text-rose-500">*</span>
               </span>
               <textarea
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 rows={1}
                 className="w-full resize-none rounded-md border border-ui-border-base bg-ui-bg-field px-4 py-3 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
-                placeholder="Share a question or field note about this listing."
+                placeholder={t.product.commentPlaceholder}
               />
             </label>
             <div className="mt-3 flex flex-col gap-3 small:flex-row small:items-center small:justify-between">
@@ -154,27 +156,27 @@ const CommentSection = ({
                 <p className="text-small-regular text-ui-fg-subtle">{status}</p>
               ) : (
                 <p className="text-small-regular text-ui-fg-muted">
-                  Saved in this browser.
+                  {t.product.savedInBrowser}
                 </p>
               )}
               <Button type="submit" size="small" className="small:w-auto">
-                Comment
+                {t.product.commentLabel}
               </Button>
             </div>
           </form>
         ) : (
           <div className="rounded-md border border-ui-border-base bg-white p-4">
             <h3 className="text-base-semi text-ui-fg-base">
-              Sign in to comment
+              {t.product.signInToComment}
             </h3>
             <p className="mt-1 text-small-regular text-ui-fg-subtle">
-              Comments are linked to marketplace accounts.
+              {t.product.commentsLinked}
             </p>
             <a
               href={`/${countryCode}/account`}
               className="mt-4 inline-flex h-8 items-center justify-center rounded-md bg-black px-3 text-small-regular font-medium text-white transition-colors hover:bg-gray-800"
             >
-              Sign in
+              {t.product.signInBtn}
             </a>
           </div>
         )}
@@ -201,7 +203,7 @@ const CommentSection = ({
                     className="inline-flex h-8 items-center justify-center rounded-md border border-ui-border-base px-3 text-small-regular text-ui-fg-subtle transition-colors hover:bg-ui-bg-subtle hover:text-ui-fg-base"
                     aria-label={`Mark ${comment.author}'s comment as helpful`}
                   >
-                    Helpful ({comment.helpful})
+                    {t.product.commentHelpfulBtn} ({comment.helpful})
                   </button>
                 </div>
                 <p className="mt-3 text-base-regular leading-7 text-ui-fg-base">
@@ -211,7 +213,7 @@ const CommentSection = ({
             ))
           ) : (
             <div className="rounded-md border border-dashed border-ui-border-base bg-white p-4 text-small-regular text-ui-fg-subtle">
-              No comments yet. Be the first account to add a note.
+              {t.product.noComments}
             </div>
           )}
         </div>

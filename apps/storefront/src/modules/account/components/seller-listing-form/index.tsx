@@ -17,6 +17,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { useTranslation } from "@lib/i18n/context"
 
 const categoryOptions = LISTING_CATEGORIES
 
@@ -29,6 +30,7 @@ const formatFileSize = (bytes: number) =>
   `${(bytes / 1024 / 1024).toFixed(bytes >= 1024 * 1024 ? 1 : 0)}MB`
 
 const SellerListingForm = () => {
+  const { t } = useTranslation()
   const [category, setCategory] = useState("Produce")
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
@@ -125,12 +127,12 @@ const SellerListingForm = () => {
       className="rounded-md border border-gray-200 bg-white p-4"
     >
       <div className="mb-4">
-        <h2 className="text-large-semi">New product</h2>
+        <h2 className="text-large-semi">{t.account.addProduct}</h2>
       </div>
 
       {state.success && (
         <div className="mb-4 rounded-md bg-green-50 px-3 py-2 text-small-regular text-green-700">
-          Listing submitted for review.
+          {t.account.createProductSuccess}
         </div>
       )}
       {state.error && (
@@ -140,18 +142,18 @@ const SellerListingForm = () => {
       )}
 
       <div className="grid grid-cols-1 gap-4">
-        <Input label="Title" name="title" required />
+        <Input label={t.account.titleLabel} name="title" required />
 
-        <RichTextEditor label="Description" name="description" required />
+        <RichTextEditor label={t.common.description} name="description" required />
 
         <FormSection
-          title="Photos"
-          description="Upload clear photos. Products with real photos are easier to approve and trust."
+          title={t.account.photos}
+          description={t.account.photosSubtitle}
         />
 
         <div className="flex flex-col gap-y-2 text-small-regular text-ui-fg-subtle">
           <div className="flex items-center justify-between gap-3">
-            <span>Upload photos</span>
+            <span>{t.account.uploadPhotos}</span>
             <span className="text-xsmall-regular text-ui-fg-muted">
               {imageFiles.length}/{MAX_PHOTO_UPLOADS}
             </span>
@@ -198,20 +200,20 @@ const SellerListingForm = () => {
                 className="flex h-24 w-24 shrink-0 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-ui-border-base bg-ui-bg-field text-ui-fg-subtle transition-colors hover:bg-ui-bg-field-hover hover:text-ui-fg-base focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
               >
                 {imageFiles.length ? <PlusMini /> : <Photo />}
-                <span className="text-xsmall-regular">Add photo</span>
+                <span className="text-xsmall-regular">{t.account.addPhoto}</span>
               </button>
             )}
           </div>
         </div>
 
         <FormSection
-          title="Marketplace details"
-          description="These fields power buyer filters, saved searches, and listing review."
+          title={t.account.marketplaceDetails}
+          description={t.account.marketplaceDetailsSubtitle}
         />
 
         <div className="grid grid-cols-1 gap-4 small:grid-cols-[1fr_140px]">
-          <Input label="Price" name="price" type="number" min="1" required />
-          <SelectField label="Currency" name="currency_code" defaultValue="khr">
+          <Input label={t.account.price} name="price" type="number" min="1" required />
+          <SelectField label={t.account.currency} name="currency_code" defaultValue="khr">
             <option value="khr">KHR</option>
             <option value="usd">USD</option>
           </SelectField>
@@ -219,41 +221,40 @@ const SellerListingForm = () => {
 
         <div className="grid grid-cols-1 gap-4 small:grid-cols-2">
           <SelectField
-            label="Farming category"
+            label={t.account.farmingCategory}
             name="category"
             value={category}
             onChange={(event) => setCategory(event.target.value)}
           >
-            {categoryOptions.map((category) => (
-              <option key={category} value={category}>
-                {category}
+            {categoryOptions.map((cat) => (
+              <option key={cat} value={cat}>
+                {t.store.categories[cat as keyof typeof t.store.categories] ?? cat}
               </option>
             ))}
           </SelectField>
-          <Input label="Farm or pickup location" name="location" />
-          <Input label="Quantity" name="quantity" />
-          <Input label="Unit" name="unit" />
-          <SelectField label="Condition" name="condition" defaultValue="">
-            <option value="">Not specified</option>
-            {LISTING_CONDITIONS.map((condition) => (
-              <option key={condition} value={condition}>
-                {condition}
+          <Input label={t.account.pickupLocation} name="location" />
+          <Input label={t.account.quantity} name="quantity" />
+          <Input label={t.account.unit} name="unit" />
+          <SelectField label={t.account.condition} name="condition" defaultValue="">
+            <option value="">{t.account.notSpecified}</option>
+            {LISTING_CONDITIONS.map((cond) => (
+              <option key={cond} value={cond}>
+                {t.store.conditionOptions[cond as keyof typeof t.store.conditionOptions] ?? cond}
               </option>
             ))}
           </SelectField>
         </div>
 
-        <CategoryGuidance category={category} />
+        <CategoryGuidance category={category} t={t} />
 
         <CategorySpecificFields />
 
         <div className="rounded-md border border-gray-200 bg-gray-50 p-4 text-small-regular text-ui-fg-subtle">
-          Before submitting, check that price, location, quantity, and photos
-          are clear. Admins review listings before they appear to buyers.
+          {t.account.draftDetails}
         </div>
 
         <SubmitButton data-testid="create-listing-button">
-          Submit for review
+          {t.account.submitReview}
         </SubmitButton>
       </div>
     </form>
@@ -288,21 +289,12 @@ const SelectField = ({ label, children, ...props }: SelectFieldProps) => (
   </label>
 )
 
-const categoryGuidance: Record<string, string> = {
-  Produce: "Use the description for any freshness or source notes.",
-  Livestock: "Use the description for animal details and inspection notes.",
-  Seeds: "Use the description for seed details.",
-  Fertilizer: "Use the description for product details.",
-  Equipment: "Use the description for equipment details.",
-  Tools: "Use the description for tool details.",
-  Services: "Use the description for service details.",
-  Other: "Use the description for any extra details buyers need.",
-}
-
-const CategoryGuidance = ({ category }: { category: string }) => (
+const CategoryGuidance = ({ category, t }: { category: string; t: any }) => (
   <div className="rounded-md border border-gray-200 bg-white p-4 text-small-regular text-ui-fg-subtle">
-    <span className="font-semibold text-ui-fg-base">{category} details: </span>
-    {categoryGuidance[category] ?? categoryGuidance.Other}
+    <span className="font-semibold text-ui-fg-base">
+      {t.store.categories[category as keyof typeof t.store.categories] ?? category} {t.account.marketplaceDetails}:{" "}
+    </span>
+    {t.account.categoryGuidance[category as keyof typeof t.account.categoryGuidance] ?? t.account.categoryGuidance.Other}
   </div>
 )
 

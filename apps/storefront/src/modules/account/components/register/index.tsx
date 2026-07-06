@@ -7,13 +7,18 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { signup } from "@lib/data/customer"
+import { useTranslation } from "@lib/i18n/context"
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
 }
 
 const Register = ({ setCurrentView }: Props) => {
-  const [message, formAction] = useActionState(signup as (state: string | null, formData: FormData) => Promise<string | null>, null as string | null)
+  const [message, formAction] = useActionState(
+    signup as (state: string | null, formData: FormData) => Promise<string | null>,
+    null as string | null
+  )
+  const { t } = useTranslation()
 
   return (
     <div
@@ -21,30 +26,29 @@ const Register = ({ setCurrentView }: Props) => {
       data-testid="register-page"
     >
       <h1 className="text-large-semi uppercase mb-6">
-        Join Kaksephal
+        {t.account.joinBrand}
       </h1>
       <p className="text-center text-base-regular text-ui-fg-base mb-4">
-        Create an account to save listings, contact farmers, and manage your
-        own marketplace posts.
+        {t.account.registerSubtitle}
       </p>
       <form className="w-full flex flex-col" action={formAction}>
         <div className="flex flex-col w-full gap-y-2">
           <Input
-            label="First name"
+            label={t.account.firstName}
             name="first_name"
             required
             autoComplete="given-name"
             data-testid="first-name-input"
           />
           <Input
-            label="Last name"
+            label={t.account.lastName}
             name="last_name"
             required
             autoComplete="family-name"
             data-testid="last-name-input"
           />
           <Input
-            label="Email"
+            label={t.account.emailLabel}
             name="email"
             required
             type="email"
@@ -52,14 +56,14 @@ const Register = ({ setCurrentView }: Props) => {
             data-testid="email-input"
           />
           <Input
-            label="Phone"
+            label={t.account.phoneLabel}
             name="phone"
             type="tel"
             autoComplete="tel"
             data-testid="phone-input"
           />
           <Input
-            label="Password"
+            label={t.account.passwordLabel}
             name="password"
             required
             type="password"
@@ -69,33 +73,33 @@ const Register = ({ setCurrentView }: Props) => {
         </div>
         <ErrorMessage error={message} data-testid="register-error" />
         <span className="text-center text-ui-fg-base text-small-regular mt-6">
-          By creating an account, you agree to Kaksephal&apos;s{" "}
+          {t.account.policyAgreement}{" "}
           <LocalizedClientLink
             href="/content/privacy-policy"
             className="underline"
           >
-            Privacy Policy
+            {t.account.privacyPolicy}
           </LocalizedClientLink>{" "}
-          and{" "}
+          {t.common.and}{" "}
           <LocalizedClientLink
             href="/content/terms-of-use"
             className="underline"
           >
-            Terms of Use
+            {t.account.termsOfUse}
           </LocalizedClientLink>
           .
         </span>
         <SubmitButton className="w-full mt-6" data-testid="register-button">
-          Join
+          {t.account.joinUs}
         </SubmitButton>
       </form>
       <span className="text-center text-ui-fg-base text-small-regular mt-6">
-        Already a member?{" "}
+        {t.account.alreadyMember}{" "}
         <button
           onClick={() => setCurrentView(LOGIN_VIEW.SIGN_IN)}
           className="underline"
         >
-          Sign in
+          {t.common.signIn}
         </button>
         .
       </span>

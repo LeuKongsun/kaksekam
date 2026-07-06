@@ -37,8 +37,11 @@ const optionsAsKeymap = (
   )
 }
 
+import { useTranslation } from "@lib/i18n/context"
+
 export default function ProductActions({
   product,
+  region,
   seller,
   disabled,
   productId,
@@ -47,6 +50,7 @@ export default function ProductActions({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { t } = useTranslation()
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isInquiryOpen, setIsInquiryOpen] = useState(false)
@@ -118,17 +122,17 @@ export default function ProductActions({
         <div>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="text-base-semi">Contact farmer</div>
+              <div className="text-base-semi">{t.product.contactFarmer}</div>
               <p className="mt-1 text-small-regular text-ui-fg-subtle">
-                Ask a question or arrange details with the seller.
+                {t.product.arrangeDetails}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setIsInquiryOpen(true)}
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-ui-fg-base shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
-              aria-label="Send inquiry"
-              title="Send inquiry"
+              aria-label={t.product.contactFarmer}
+              title={t.product.contactFarmer}
               data-testid="open-inquiry-modal-button"
             >
               <MessageIcon />
@@ -183,7 +187,7 @@ export default function ProductActions({
                   <span className="truncate">{seller.display_name}</span>
                   {seller.verification_status === "verified" && (
                     <span className="shrink-0 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-xsmall-semi uppercase text-green-700">
-                      Verified
+                      {t.common.verified}
                     </span>
                   )}
                 </LocalizedClientLink>
@@ -231,16 +235,14 @@ export default function ProductActions({
           data-testid="contact-seller-link"
         >
           {!isValidVariant
-            ? "Select listing option"
+            ? t.product.selectOption
             : contactHref
-              ? "Contact seller"
-              : "Seller contact unavailable"}
+              ? t.product.contactSeller
+              : t.product.contactUnavailable}
         </a>
 
         <div className="rounded-md border border-ui-border-base p-4 text-small-regular text-ui-fg-subtle">
-          Use comments or inquiry to ask questions, negotiate details, and
-          arrange inspection, pickup, or delivery. This platform does not
-          process checkout or payment.
+          {t.product.disclaimer}
         </div>
       </div>
       <Modal
@@ -249,7 +251,7 @@ export default function ProductActions({
         size="medium"
         data-testid="listing-inquiry-modal"
       >
-        <Modal.Title>Send inquiry</Modal.Title>
+        <Modal.Title>{t.product.contactSeller}</Modal.Title>
         <div className="pt-4">
           <ListingInquiryForm productId={productId} customer={customer} />
         </div>
