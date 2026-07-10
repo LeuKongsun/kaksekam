@@ -536,7 +536,7 @@ export const translations = {
         "ប្រាប់អ្នកទិញអំពីអ្វីដែលអ្នកដាំដុះ ផ្គត់ផ្គង់ ទីតាំងប្រតិបត្តិការ និងពេលវេលាដែលអ្នកឆ្លើយតបជាធម្មតា។",
       saveProfile: "រក្សាទុកព័ត៌មានផ្ទាល់ខ្លួន",
       products: "ផលិតផល",
-      addProduct: "បន្ថែមផលិតផល",
+      addProduct: "ដាក់លក់",
       backToProducts: "ត្រឡប់ទៅផលិតផលវិញ",
       editProduct: "កែសម្រួលផលិតផល",
       createProductSubtitle:

@@ -134,7 +134,7 @@ const InboxMessages = ({
       className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-sm"
       data-testid="inbox-messages-page-wrapper"
     >
-      <div className="flex flex-col gap-1 border-b border-gray-200 px-4 py-4 small:px-5">
+      <div className="flex flex-col gap-1 border-b border-gray-200 px-4 py-3 small:px-5">
         <h1 className="text-large-semi text-ui-fg-base">{t.messages.title}</h1>
         <p className="text-small-regular text-ui-fg-subtle">
           {conversations.length} {t.messages.conversations}
@@ -145,15 +145,15 @@ const InboxMessages = ({
       {conversations.length === 0 ? (
         <EmptyInbox t={t} />
       ) : (
-        <div className="grid min-h-[620px] grid-cols-1 medium:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="border-b border-gray-200 medium:border-b-0 medium:border-r">
-            <div className="max-h-[620px] overflow-y-auto">
+        <div className="grid grid-cols-1 medium:h-[540px] medium:max-h-[calc(100vh-18rem)] medium:grid-cols-[340px_minmax(0,1fr)]">
+          <div className="border-b border-gray-200 medium:min-h-0 medium:border-b-0 medium:border-r">
+            <div className="max-h-[260px] overflow-y-auto medium:h-full medium:max-h-none">
               {conversations.map((conversation) => (
                 <button
                   key={conversation.id}
                   type="button"
                   onClick={() => openConversation(conversation)}
-                  className={`flex w-full gap-3 border-b border-gray-100 px-4 py-3 text-left transition-colors hover:bg-gray-50 ${
+                  className={`flex w-full gap-3 border-b border-gray-100 px-4 py-2.5 text-left transition-colors hover:bg-gray-50 ${
                     activeConversation?.id === conversation.id
                       ? "bg-[#f5f7f2]"
                       : "bg-white"
@@ -244,8 +244,8 @@ const ConversationPane = ({
   }
 
   return (
-    <div className="flex min-h-0 flex-col">
-      <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-3">
+    <div className="flex min-h-0 flex-col medium:h-full">
+      <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-2.5">
         <ListingThumb
           thumbnail={conversation.thumbnail}
           title={conversation.productTitle}
@@ -260,7 +260,7 @@ const ConversationPane = ({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto bg-[#f6f4ef] px-4 py-4">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-[#f6f4ef] px-4 py-3">
         <DateDivider date={formatDate(conversation.inquiry.created_at, locale)} />
 
         {messages.length > 0 ? (
@@ -278,7 +278,7 @@ const ConversationPane = ({
               )
 
             return (
-              <div key={message.id} className="space-y-2.5">
+              <div key={message.id} className="space-y-2">
                 {shouldShowDate && (
                   <DateDivider date={formatDate(message.created_at, locale)} />
                 )}
@@ -320,12 +320,12 @@ const ConversationPane = ({
         key={conversation.id}
         ref={formRef}
         action={handleReply}
-        className="flex items-center gap-2 border-t border-gray-200 bg-white p-3"
+        className="flex items-center gap-2 border-t border-gray-200 bg-white p-2.5"
       >
         <label htmlFor={`reply-${conversation.id}`} className="sr-only">
           {t.messages.writeMessage}
         </label>
-        <div className="flex h-11 flex-1 items-center rounded-full border border-gray-200 bg-ui-bg-subtle px-3">
+        <div className="flex h-10 flex-1 items-center rounded-full border border-gray-200 bg-ui-bg-subtle px-3">
           <input
             id={`reply-${conversation.id}`}
             name="reply_message"
@@ -448,7 +448,7 @@ const SendButton = ({ t }: { t: any }) => {
     <button
       type="submit"
       disabled={pending}
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ui-fg-base text-white shadow-sm transition-colors hover:bg-ui-fg-base/90 disabled:cursor-not-allowed disabled:opacity-60"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ui-fg-base text-white shadow-sm transition-colors hover:bg-ui-fg-base/90 disabled:cursor-not-allowed disabled:opacity-60"
       aria-label={t.messages.send}
       title={t.messages.send}
       data-testid="reply-inquiry-button"
