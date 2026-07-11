@@ -3,6 +3,7 @@ import { Metadata } from "next"
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { getTranslations } from "@lib/i18n/server"
+import { LISTING_CATEGORIES } from "@lib/marketplace/listing-fields"
 import Hero from "@modules/home/components/hero"
 import ProductPreview from "@modules/products/components/product-preview"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -14,6 +15,9 @@ export const metadata: Metadata = {
 }
 
 const HOME_LISTINGS_LIMIT = 4
+const FILTERED_LISTINGS_LIMIT = 100
+const HOME_CATEGORY_LIMIT = 6
+const HOME_CATEGORY_SHELVES = LISTING_CATEGORIES.slice(0, HOME_CATEGORY_LIMIT)
 
 type Params = {
   params: Promise<{ countryCode: string }>
@@ -70,6 +74,7 @@ export default async function Home(props: Params) {
               countryCode={params.countryCode}
               emptyTitle={t.store.noListingsTitle}
               emptyDescription={t.store.noListingsDescription}
+              limit={FILTERED_LISTINGS_LIMIT}
             />
           </div>
         ) : (
@@ -78,26 +83,21 @@ export default async function Home(props: Params) {
               title={t.home.latestListings}
               countryCode={params.countryCode}
             />
-            <ListingShelf
-              title={t.store.conditionOptions.Fresh}
-              condition="Fresh"
-              countryCode={params.countryCode}
-            />
-            <ListingShelf
-              title={t.store.conditionOptions.Organic}
-              condition="Organic"
-              countryCode={params.countryCode}
-            />
-            <ListingShelf
-              title={t.home.newConditionListings}
-              condition="New"
-              countryCode={params.countryCode}
-            />
-            <ListingShelf
-              title={t.store.conditionOptions.Used}
-              condition="Used"
-              countryCode={params.countryCode}
-            />
+            {HOME_CATEGORY_SHELVES.map((category) => {
+              const categoryLabel =
+                t.store.categories[
+                  category as keyof typeof t.store.categories
+                ] ?? category
+
+              return (
+                <ListingShelf
+                  key={category}
+                  title={categoryLabel}
+                  category={category}
+                  countryCode={params.countryCode}
+                />
+              )
+            })}
           </div>
         )}
       </div>
@@ -121,6 +121,7 @@ const ListingShelf = async ({
   countryCode,
   emptyTitle,
   emptyDescription,
+  limit = HOME_LISTINGS_LIMIT,
 }: {
   title: string
   category?: string
@@ -131,6 +132,7 @@ const ListingShelf = async ({
   countryCode: string
   emptyTitle?: string
   emptyDescription?: string
+  limit?: number
 }) => {
   const region = await getRegion(countryCode)
 
@@ -142,7 +144,7 @@ const ListingShelf = async ({
     response: { products },
   } = await listProductsWithSort({
     page: 1,
-    queryParams: { limit: HOME_LISTINGS_LIMIT },
+    queryParams: { limit },
     sortBy,
     listingCategory: category,
     listingLocation: location,
