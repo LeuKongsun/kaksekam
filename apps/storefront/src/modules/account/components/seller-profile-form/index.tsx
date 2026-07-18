@@ -81,7 +81,7 @@ const SellerProfileForm = ({ customer, seller }: SellerProfileFormProps) => {
               Public seller details
             </h2>
             <p className="mt-1 text-small-regular text-ui-fg-subtle">
-              The farm or business information buyers see on your products.
+              The farm or business information buyers see on your listings.
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -155,7 +155,7 @@ const SellerProfileForm = ({ customer, seller }: SellerProfileFormProps) => {
         <div>
           <h2 className="text-large-semi text-ui-fg-base">Public seller details</h2>
           <p className="mt-1 text-small-regular text-ui-fg-subtle">
-            The farm or business information buyers see on your products.
+            The farm or business information buyers see on your listings.
           </p>
         </div>
               <button
