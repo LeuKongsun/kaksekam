@@ -27,7 +27,7 @@ type CommentSectionProps = {
 }
 
 const makeStorageKey = (productId: string) =>
-  `medusa-storefront:product-comments:${productId}`
+  `kaksekam:product-comments:${productId}`
 
 const CommentSection = ({
   productId,

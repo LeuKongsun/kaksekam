@@ -1,4 +1,4 @@
-type MedusaError = {
+type ApiError = {
   response?: {
     data: { message?: string } | string
     status: number
@@ -9,8 +9,8 @@ type MedusaError = {
   config?: { url: string; baseURL: string }
 }
 
-export default function medusaError(error: unknown): never {
-  const err = error as MedusaError
+export default function apiError(error: unknown): never {
+  const err = error as ApiError
   if (err.response) {
     const u = new URL(err.config?.url ?? "", err.config?.baseURL ?? "")
     console.error("Resource:", u.toString())

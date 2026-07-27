@@ -1,7 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
-import medusaError from "@lib/util/medusa-error"
+import apiError from "@lib/util/api-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -111,7 +111,7 @@ export async function updateCart(data: HttpTypes.StoreUpdateCart) {
 
       return cart
     })
-    .catch(medusaError)
+    .catch(apiError)
 }
 
 export async function addToCart({
@@ -154,7 +154,7 @@ export async function addToCart({
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
     })
-    .catch(medusaError)
+    .catch(apiError)
 }
 
 export async function updateLineItem({
@@ -187,7 +187,7 @@ export async function updateLineItem({
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
     })
-    .catch(medusaError)
+    .catch(apiError)
 }
 
 export async function deleteLineItem(lineId: string) {
@@ -214,7 +214,7 @@ export async function deleteLineItem(lineId: string) {
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
     })
-    .catch(medusaError)
+    .catch(apiError)
 }
 
 export async function setShippingMethod({
@@ -234,7 +234,7 @@ export async function setShippingMethod({
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
     })
-    .catch(medusaError)
+    .catch(apiError)
 }
 
 export async function initiatePaymentSession(
@@ -252,7 +252,7 @@ export async function initiatePaymentSession(
       revalidateTag(cartCacheTag)
       return resp
     })
-    .catch(medusaError)
+    .catch(apiError)
 }
 
 export async function applyPromotions(codes: string[]) {
@@ -275,7 +275,7 @@ export async function applyPromotions(codes: string[]) {
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
     })
-    .catch(medusaError)
+    .catch(apiError)
 }
 
 export async function applyGiftCard(code: string) {
@@ -409,7 +409,7 @@ export async function placeOrder(cartId?: string) {
       revalidateTag(cartCacheTag)
       return cartRes
     })
-    .catch(medusaError)
+    .catch(apiError)
 
   if (cartRes?.type === "order") {
     const countryCode =

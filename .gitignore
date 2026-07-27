@@ -43,7 +43,7 @@ yarn-error.log*
 **/.env.test.local
 **/.env.production.local
 
-# Local Medusa data
+# Local Kaksekam data
 **/uploads/
 **/medusa-db.sql
 

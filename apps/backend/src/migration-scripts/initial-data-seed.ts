@@ -40,7 +40,7 @@ export default async function initial_data_seed({
       salesChannelsData: [
         {
           name: "Default Sales Channel",
-          description: "Created by Medusa",
+          description: "Created by Kaksekam",
         },
       ],
     },
@@ -291,6 +291,6 @@ export default async function initial_data_seed({
   logger.info("Finished seeding stock location data.");
 
   logger.info(
-    "Skipping default Medusa product seed. Marketplace demo data is seeded separately."
+    "Skipping the default Kaksekam product seed. Marketplace demo data is seeded separately."
   );
 }

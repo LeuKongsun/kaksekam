@@ -1,7 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
-import medusaError from "@lib/util/medusa-error"
+import apiError from "@lib/util/api-error"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { HttpTypes } from "@medusajs/types"
 
@@ -26,7 +26,7 @@ export const retrieveOrder = async (id: string) => {
       cache: "force-cache",
     })
     .then(({ order }) => order)
-    .catch((err) => medusaError(err))
+    .catch((err) => apiError(err))
 }
 
 export const listOrders = async (
@@ -57,7 +57,7 @@ export const listOrders = async (
       cache: "force-cache",
     })
     .then(({ orders }) => orders)
-    .catch((err) => medusaError(err))
+    .catch((err) => apiError(err))
 }
 
 export const createTransferRequest = async (

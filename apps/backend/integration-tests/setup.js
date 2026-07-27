@@ -1,1 +1,1 @@
-// Jest setup hook required by the Medusa starter config.
+// Jest setup hook required by the Kaksekam backend config.

@@ -1,30 +1,30 @@
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: medusa-store-postgres
+    container_name: kaksekam-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: medusa
-      POSTGRES_PASSWORD: medusa
-      POSTGRES_DB: medusa-store
+      POSTGRES_USER: kaksekam
+      POSTGRES_PASSWORD: kaksekam
+      POSTGRES_DB: kaksekam
     ports:
       - "5432:5432"
     volumes:
-      - medusa_postgres_data:/var/lib/postgresql/data
+      - kaksekam_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U medusa -d medusa-store"]
+      test: ["CMD-SHELL", "pg_isready -U kaksekam -d kaksekam"]
       interval: 5s
       timeout: 5s
       retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: medusa-store-redis
+    container_name: kaksekam-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
-      - medusa_redis_data:/data
+      - kaksekam_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -32,5 +32,5 @@ services:
       retries: 10
 
 volumes:
-  medusa_postgres_data:
-  medusa_redis_data:
+  kaksekam_postgres_data:
+  kaksekam_redis_data:

@@ -58,7 +58,7 @@ type UploadedFile = {
 const MAX_UPLOAD_FILES = 6
 const SESSION_EXPIRED_MESSAGE = "Your session expired. Please sign in again."
 const BACKEND_UNAVAILABLE_MESSAGE =
-  "Could not reach the marketplace backend. Make sure Medusa is running on localhost:9000."
+  "Could not reach the marketplace backend. Make sure Kaksekam is running on localhost:9000."
 const isUnauthorizedError = (error: unknown) =>
   String(error).toLowerCase().includes("unauthorized")
 const isFetchError = (error: unknown) =>

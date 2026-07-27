@@ -32,7 +32,7 @@ async function getRegionMap(cacheId: string) {
 
   if (!BACKEND_URL || !PUBLISHABLE_API_KEY) {
     console.warn(
-      "Middleware.ts: Missing Medusa backend URL or publishable key. Falling back to default region."
+      "Middleware.ts: Missing Kaksekam backend URL or publishable key. Falling back to default region."
     )
 
     return getFallbackRegionMap()
@@ -43,7 +43,7 @@ async function getRegionMap(cacheId: string) {
     regionMapUpdated < Date.now() - 3600 * 1000
   ) {
     try {
-      // Fetch regions from Medusa. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
+      // Fetch regions from the Kaksekam backend. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
       const response = await fetch(`${BACKEND_URL}/store/regions`, {
         method: "GET",
         headers: {
@@ -90,7 +90,7 @@ async function getRegionMap(cacheId: string) {
 }
 
 /**
- * Fetches regions from Medusa and sets the region cookie.
+ * Fetches regions from the Kaksekam backend and sets the region cookie.
  * @param request
  * @param response
  */
@@ -133,7 +133,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const cacheIdCookie = request.cookies.get("_medusa_cache_id")
+  const cacheIdCookie = request.cookies.get("_kaksekam_cache_id")
   const cacheId = cacheIdCookie?.value || crypto.randomUUID()
 
   const regionMap = await getRegionMap(cacheId)
@@ -147,7 +147,7 @@ export async function middleware(request: NextRequest) {
   if (urlHasCountry) {
     if (!cacheIdCookie) {
       const response = NextResponse.next()
-      response.cookies.set("_medusa_cache_id", cacheId, {
+      response.cookies.set("_kaksekam_cache_id", cacheId, {
         maxAge: 60 * 60 * 24,
       })
       return response

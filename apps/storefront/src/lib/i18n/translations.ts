@@ -20,7 +20,7 @@ export const normalizeLocale = (locale?: string | null): SupportedLocale => {
 export const translations = {
   en: {
     common: {
-      brand: "Kaksephal",
+      brand: "Kaksekam",
       browse: "Browse",
       sell: "Sell",
       account: "Account",
@@ -193,13 +193,13 @@ export const translations = {
       passwordLabel: "Password",
       notMember: "Not a member?",
       joinUs: "Join us",
-      joinBrand: "Join Kaksephal",
+      joinBrand: "Join Kaksekam",
       registerSubtitle:
         "Create an account to save listings, contact farmers, and manage your own marketplace posts.",
       firstName: "First name",
       lastName: "Last name",
       phoneLabel: "Phone",
-      policyAgreement: "By creating an account, you agree to Kaksephal's",
+      policyAgreement: "By creating an account, you agree to Kaksekam's",
       privacyPolicy: "Privacy Policy",
       termsOfUse: "Terms of Use",
       joinBtn: "Join",
@@ -337,7 +337,7 @@ export const translations = {
   },
   km: {
     common: {
-      brand: "កសិផល",
+      brand: "Kaksekam",
       browse: "រកមើល",
       sell: "លក់",
       account: "គណនី",
@@ -510,7 +510,7 @@ export const translations = {
       passwordLabel: "លេខសម្ងាត់",
       notMember: "មិនទាន់ជាសមាជិកមែនទេ?",
       joinUs: "ចុះឈ្មោះ",
-      joinBrand: "ចូលរួមជាមួយ កសិផល",
+      joinBrand: "ចូលរួមជាមួយ Kaksekam",
       registerSubtitle:
         "បង្កើតគណនីដើម្បីរក្សាទុកបញ្ជីទំនិញ ទាក់ទងកសិករ និងគ្រប់គ្រងការដាក់លក់ទំនិញផ្ទាល់ខ្លួន។",
       firstName: "នាមខ្លួន",

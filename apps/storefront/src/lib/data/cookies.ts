@@ -6,7 +6,7 @@ export const getAuthHeaders = async (): Promise<
 > => {
   try {
     const cookies = await nextCookies()
-    const token = cookies.get("_medusa_jwt")?.value
+    const token = cookies.get("_kaksekam_jwt")?.value
 
     if (!token) {
       return {}
@@ -21,7 +21,7 @@ export const getAuthHeaders = async (): Promise<
 export const getCacheTag = async (tag: string): Promise<string> => {
   try {
     const cookies = await nextCookies()
-    const cacheId = cookies.get("_medusa_cache_id")?.value
+    const cacheId = cookies.get("_kaksekam_cache_id")?.value
 
     if (!cacheId) {
       return ""
@@ -51,7 +51,7 @@ export const getCacheOptions = async (
 
 export const setAuthToken = async (token: string) => {
   const cookies = await nextCookies()
-  cookies.set("_medusa_jwt", token, {
+  cookies.set("_kaksekam_jwt", token, {
     maxAge: 60 * 60 * 24 * 7,
     httpOnly: true,
     sameSite: "strict",
@@ -62,10 +62,10 @@ export const setAuthToken = async (token: string) => {
 
 export const removeAuthToken = async () => {
   const cookies = await nextCookies()
-  cookies.set("_medusa_jwt", "", {
+  cookies.set("_kaksekam_jwt", "", {
     maxAge: -1,
   })
-  cookies.set("_medusa_jwt", "", {
+  cookies.set("_kaksekam_jwt", "", {
     maxAge: -1,
     path: "/",
   })
@@ -73,12 +73,12 @@ export const removeAuthToken = async () => {
 
 export const getCartId = async () => {
   const cookies = await nextCookies()
-  return cookies.get("_medusa_cart_id")?.value
+  return cookies.get("_kaksekam_cart_id")?.value
 }
 
 export const setCartId = async (cartId: string) => {
   const cookies = await nextCookies()
-  cookies.set("_medusa_cart_id", cartId, {
+  cookies.set("_kaksekam_cart_id", cartId, {
     maxAge: 60 * 60 * 24 * 7,
     httpOnly: true,
     sameSite: "strict",
@@ -88,7 +88,7 @@ export const setCartId = async (cartId: string) => {
 
 export const removeCartId = async () => {
   const cookies = await nextCookies()
-  cookies.set("_medusa_cart_id", "", {
+  cookies.set("_kaksekam_cart_id", "", {
     maxAge: -1,
   })
 }

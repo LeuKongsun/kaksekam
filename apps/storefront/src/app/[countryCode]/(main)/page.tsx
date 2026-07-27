@@ -9,7 +9,7 @@ import ProductPreview from "@modules/products/components/product-preview"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 export const metadata: Metadata = {
-  title: "Kaksephal",
+  title: "Kaksekam",
   description:
     "Find farming products near you. Browse produce, livestock, seeds, tools, and equipment from local farmers and contact sellers directly.",
 }

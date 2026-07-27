@@ -5,7 +5,7 @@ import { getTranslations } from "@lib/i18n/server"
 async function ProductOnboardingCta() {
   const cookies = await nextCookies()
 
-  const isOnboarding = cookies.get("_medusa_onboarding")?.value === "true"
+  const isOnboarding = cookies.get("_kaksekam_onboarding")?.value === "true"
 
   if (!isOnboarding) {
     return null

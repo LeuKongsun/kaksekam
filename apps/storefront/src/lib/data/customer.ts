@@ -1,7 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
-import medusaError from "@lib/util/medusa-error"
+import apiError from "@lib/util/api-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -51,7 +51,7 @@ export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
   const updateRes = await sdk.store.customer
     .update(body, {}, headers)
     .then(({ customer }) => customer)
-    .catch(medusaError)
+    .catch(apiError)
 
   const cacheTag = await getCacheTag("customers")
   revalidateTag(cacheTag)
