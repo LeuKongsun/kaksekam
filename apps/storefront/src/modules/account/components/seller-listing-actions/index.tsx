@@ -2,6 +2,8 @@
 
 import {
   markSellerListingSold,
+  refreshSellerListing,
+  republishSellerListing,
   SellerListing,
   withdrawSellerListing,
 } from "@lib/data/seller-listings"
@@ -34,10 +36,16 @@ const SellerListingActions = ({
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 })
   const [withdrawError, setWithdrawError] = useState<string | null>(null)
   const [soldError, setSoldError] = useState<string | null>(null)
+  const [refreshError, setRefreshError] = useState<string | null>(null)
+  const [republishError, setRepublishError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [isMarkingSold, startSoldTransition] = useTransition()
+  const [isRefreshing, startRefreshTransition] = useTransition()
+  const [isRepublishing, startRepublishTransition] = useTransition()
   const canWithdraw = withdrawableStatuses.has(listing.status)
   const canMarkSold = listing.status === "active"
+  const canRefresh = listing.status === "active"
+  const canRepublish = listing.status === "expired"
 
   const updateMenuPosition = () => {
     const buttonRect = buttonRef.current?.getBoundingClientRect()
@@ -132,6 +140,32 @@ const SellerListingActions = ({
     })
   }
 
+  const refresh = () => {
+    setRefreshError(null)
+    startRefreshTransition(async () => {
+      const result = await refreshSellerListing(listing.id)
+      if (!result.success) {
+        setRefreshError(result.error)
+        return
+      }
+      router.refresh()
+      setIsOpen(false)
+    })
+  }
+
+  const republish = () => {
+    setRepublishError(null)
+    startRepublishTransition(async () => {
+      const result = await republishSellerListing(listing.id)
+      if (!result.success) {
+        setRepublishError(result.error)
+        return
+      }
+      router.refresh()
+      setIsOpen(false)
+    })
+  }
+
   return (
     <div className="relative">
       <button
@@ -149,7 +183,7 @@ const SellerListingActions = ({
         createPortal(
           <div
             ref={menuRef}
-            className="fixed z-[100] w-44 origin-top-right overflow-hidden rounded-md border border-gray-200 bg-white py-1 text-left opacity-100 shadow-lg ring-1 ring-black/5 transition duration-150 ease-out"
+            className="fixed z-[100] w-48 origin-top-right overflow-hidden rounded-md border border-gray-200 bg-white py-1 text-left opacity-100 shadow-lg ring-1 ring-black/5 transition duration-150 ease-out"
             style={{
               top: menuPosition.top,
               right: menuPosition.right,
@@ -169,6 +203,18 @@ const SellerListingActions = ({
               icon={isPending ? <Spinner size={16} /> : <Trash />}
             />
             <MenuButton
+              label="Refresh for 30 days"
+              disabled={!canRefresh || isRefreshing}
+              onClick={refresh}
+              icon={isRefreshing ? <Spinner size={16} /> : <RefreshIcon />}
+            />
+            <MenuButton
+              label="Republish for review"
+              disabled={!canRepublish || isRepublishing}
+              onClick={republish}
+              icon={isRepublishing ? <Spinner size={16} /> : <RefreshIcon />}
+            />
+            <MenuButton
               label="Mark sold"
               disabled={!canMarkSold || isMarkingSold}
               onClick={markSold}
@@ -176,9 +222,9 @@ const SellerListingActions = ({
                 isMarkingSold ? <Spinner size={16} /> : <CheckCircleSolid />
               }
             />
-            {(withdrawError || soldError) && (
+            {(withdrawError || soldError || refreshError || republishError) && (
               <div className="border-t border-gray-200 px-3 py-2 text-small-regular text-rose-600">
-                {withdrawError || soldError}
+                {withdrawError || soldError || refreshError || republishError}
               </div>
             )}
           </div>,
@@ -230,6 +276,13 @@ function OptionsIcon({ size = 16 }: { size?: number }) {
     </svg>
   )
 }
+
+const RefreshIcon = () => (
+  <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true">
+    <path d="M15.5 7.5A6 6 0 1 0 16 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M12.5 7.5h3v-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
 
 const iconActionClass =
   "inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 bg-white text-ui-fg-base transition-colors hover:bg-gray-50 hover:text-ui-fg-interactive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-fg-base disabled:pointer-events-none disabled:opacity-40"

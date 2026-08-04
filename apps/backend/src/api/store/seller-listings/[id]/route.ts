@@ -19,9 +19,15 @@ type UpdateSellerListingBody = {
   currency_code?: string
   category?: string
   location?: string
+  district?: string
   quantity?: string
   unit?: string
+  minimum_order?: string
   condition?: string
+  availability?: string
+  production_method?: string
+  contact_preference?: "telegram" | "messenger" | "phone"
+  negotiable?: boolean | string
 }
 
 type OwnedListingProduct = {
@@ -52,6 +58,7 @@ const EDITABLE_STATUSES = new Set([
   "pending_review",
   "active",
   "rejected",
+  "expired",
 ])
 const WITHDRAWABLE_STATUSES = new Set([
   "draft",
@@ -203,9 +210,21 @@ export async function PATCH(
     reviewer_id: null,
     category: cleanOptionalText(body.category),
     location: cleanOptionalText(body.location),
+    district: cleanOptionalText(body.district),
     quantity: cleanOptionalText(body.quantity),
     unit: cleanOptionalText(body.unit),
+    minimum_order: cleanOptionalText(body.minimum_order),
     condition: cleanOptionalText(body.condition),
+    availability: cleanOptionalText(body.availability),
+    production_method: cleanOptionalText(body.production_method),
+    contact_preference: cleanOptionalText(body.contact_preference) as
+      | "telegram"
+      | "messenger"
+      | "phone"
+      | null,
+    negotiable: body.negotiable === true || body.negotiable === "true",
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    refreshed_at: new Date(),
   })
 
   res.json({ listing })

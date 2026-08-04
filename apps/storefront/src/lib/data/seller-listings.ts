@@ -25,9 +25,17 @@ export type SellerListing = {
   reviewer_id: string | null
   category: string | null
   location: string | null
+  district: string | null
   quantity: string | null
   unit: string | null
+  minimum_order: string | null
   condition: string | null
+  availability: string | null
+  production_method: string | null
+  contact_preference: "telegram" | "messenger" | "phone" | null
+  negotiable: boolean
+  expires_at: string | null
+  refreshed_at: string | null
   created_at: string
   updated_at: string
   seller: {
@@ -36,6 +44,9 @@ export type SellerListing = {
     handle: string
     email: string | null
     phone: string | null
+    telegram: string | null
+    facebook_url: string | null
+    preferred_contact: "telegram" | "messenger" | "phone" | null
     location: string | null
     bio: string | null
     verification_status: "unverified" | "verified"
@@ -185,9 +196,15 @@ export async function createSellerListing(
         currency_code: formData.get("currency_code") || "khr",
         category: formData.get("category"),
         location: formData.get("location"),
+        district: formData.get("district"),
         quantity: formData.get("quantity"),
         unit: formData.get("unit"),
+        minimum_order: formData.get("minimum_order"),
         condition: formData.get("condition"),
+        availability: formData.get("availability"),
+        production_method: formData.get("production_method"),
+        contact_preference: formData.get("contact_preference"),
+        negotiable: formData.get("negotiable") === "true",
       },
     })
 
@@ -234,9 +251,15 @@ export async function updateSellerListing(
         currency_code: formData.get("currency_code") || "khr",
         category: formData.get("category"),
         location: formData.get("location"),
+        district: formData.get("district"),
         quantity: formData.get("quantity"),
         unit: formData.get("unit"),
+        minimum_order: formData.get("minimum_order"),
         condition: formData.get("condition"),
+        availability: formData.get("availability"),
+        production_method: formData.get("production_method"),
+        contact_preference: formData.get("contact_preference"),
+        negotiable: formData.get("negotiable") === "true",
       },
     })
 
@@ -313,6 +336,68 @@ export async function markSellerListingSold(
     }
     if (isFetchError(error)) {
       return { success: false, error: BACKEND_UNAVAILABLE_MESSAGE }
+    }
+
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function refreshSellerListing(
+  listingId: string,
+): Promise<SellerListingState> {
+  const headers = await getAuthHeaders()
+
+  if (!headers.authorization) {
+    return { success: false, error: "Sign in to manage listings." }
+  }
+
+  try {
+    await sdk.client.fetch(`/store/seller-listings/${listingId}/status`, {
+      method: "PATCH",
+      headers,
+      body: {
+        action: "refresh",
+      },
+    })
+
+    revalidatePath("/[countryCode]/account/listings", "page")
+    revalidatePath("/[countryCode]/store", "page")
+
+    return { success: true, error: null }
+  } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return handleUnauthorizedAction()
+    }
+
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function republishSellerListing(
+  listingId: string,
+): Promise<SellerListingState> {
+  const headers = await getAuthHeaders()
+
+  if (!headers.authorization) {
+    return { success: false, error: "Sign in to manage listings." }
+  }
+
+  try {
+    await sdk.client.fetch(`/store/seller-listings/${listingId}/status`, {
+      method: "PATCH",
+      headers,
+      body: {
+        action: "republish",
+      },
+    })
+
+    revalidatePath("/[countryCode]/account/listings", "page")
+    revalidatePath("/[countryCode]/store", "page")
+
+    return { success: true, error: null }
+  } catch (error) {
+    if (isUnauthorizedError(error)) {
+      return handleUnauthorizedAction()
     }
 
     return { success: false, error: String(error) }

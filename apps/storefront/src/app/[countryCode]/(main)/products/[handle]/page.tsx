@@ -5,6 +5,8 @@ import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
 import { HttpTypes } from "@medusajs/types"
+import { richTextToPlainText } from "@lib/util/rich-text"
+import { getBaseURL } from "@lib/util/env"
 
 type Props = {
   params: Promise<{ countryCode: string; handle: string }>
@@ -88,13 +90,54 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
+  const listing = product.listing
+  const price = product.variants?.[0]?.calculated_price
+  const priceText =
+    price?.calculated_amount != null
+      ? `${price.calculated_amount} ${price.currency_code?.toUpperCase() ?? ""}`
+      : "Contact for price"
+  const locationText = [listing?.district, listing?.location]
+    .filter(Boolean)
+    .join(", ")
+  const description = [
+    richTextToPlainText(product.description).slice(0, 120),
+    priceText,
+    locationText,
+  ]
+    .filter(Boolean)
+    .join(" · ")
+  const title = `${product.title} – ${priceText} | Kaksekam`
+  const baseUrl = getBaseURL().replace(/\/$/, "")
+  const listingUrl = `${baseUrl}/${params.countryCode}/products/${product.handle}`
+  const toAbsoluteUrl = (url?: string | null) => {
+    if (!url) {
+      return undefined
+    }
+    if (/^https?:\/\//i.test(url)) {
+      return url
+    }
+    return `${baseUrl}${url.startsWith("/") ? url : `/${url}`}`
+  }
+  const imageUrl = toAbsoluteUrl(product.thumbnail)
+
   return {
-    title: `${product.title} | Marketplace Platform`,
-    description: `${product.title}`,
+    title,
+    description,
+    alternates: {
+      canonical: listingUrl,
+    },
     openGraph: {
-      title: `${product.title} | Marketplace Platform`,
-      description: `${product.title}`,
-      images: product.thumbnail ? [product.thumbnail] : [],
+      title,
+      description,
+      type: "website",
+      url: listingUrl,
+      images: imageUrl ? [{ url: imageUrl }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: imageUrl ? [imageUrl] : [],
     },
   }
 }

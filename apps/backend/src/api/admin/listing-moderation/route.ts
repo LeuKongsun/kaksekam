@@ -18,9 +18,15 @@ type ModerationProduct = {
     reviewer_id: string | null
     category: string | null
     location: string | null
+    district: string | null
     quantity: string | null
     unit: string | null
+    minimum_order: string | null
     condition: string | null
+    availability: string | null
+    production_method: string | null
+    negotiable: boolean
+    expires_at: string | null
     created_at: string
     updated_at: string
   } | null
@@ -29,6 +35,8 @@ type ModerationProduct = {
     display_name: string
     email: string | null
     phone: string | null
+    telegram: string | null
+    facebook_url: string | null
     location: string | null
     verification_status: string
   } | null
@@ -84,15 +92,23 @@ async function listModerationProducts(query: any) {
         "listing.reviewer_id",
         "listing.category",
         "listing.location",
+        "listing.district",
         "listing.quantity",
         "listing.unit",
+        "listing.minimum_order",
         "listing.condition",
+        "listing.availability",
+        "listing.production_method",
+        "listing.negotiable",
+        "listing.expires_at",
         "listing.created_at",
         "listing.updated_at",
         "seller.id",
         "seller.display_name",
         "seller.email",
         "seller.phone",
+        "seller.telegram",
+        "seller.facebook_url",
         "seller.location",
         "seller.verification_status",
         "variants.prices.amount",
@@ -186,9 +202,15 @@ export async function GET(_req: MedusaRequest, res: MedusaResponse) {
         : null,
       category: product.listing!.category,
       location: product.listing!.location,
+      district: product.listing!.district,
       quantity: product.listing!.quantity,
       unit: product.listing!.unit,
+      minimum_order: product.listing!.minimum_order,
       condition: product.listing!.condition,
+      availability: product.listing!.availability,
+      production_method: product.listing!.production_method,
+      negotiable: product.listing!.negotiable,
+      expires_at: product.listing!.expires_at,
       created_at: product.listing!.created_at,
       updated_at: product.listing!.updated_at,
       seller: product.seller ?? null,

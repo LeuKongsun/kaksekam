@@ -24,6 +24,9 @@ type AdminSeller = {
   handle: string
   email: string | null
   phone: string | null
+  telegram: string | null
+  facebook_url: string | null
+  preferred_contact: "telegram" | "messenger" | "phone" | null
   location: string | null
   bio: string | null
   status: "active" | "suspended"
@@ -102,6 +105,8 @@ const SellersPage = () => {
         seller.handle,
         seller.email,
         seller.phone,
+        seller.telegram,
+        seller.facebook_url,
         seller.location,
         seller.bio,
       ]
@@ -311,8 +316,11 @@ const SellersPage = () => {
                     @{seller.handle}
                   </Table.Cell>
                   <Table.Cell className="max-w-[220px] truncate">
-                    {seller.email ??
-                      seller.phone ??
+                    {seller.telegram
+                      ? `@${seller.telegram}`
+                      : seller.facebook_url ??
+                        seller.phone ??
+                        seller.email ??
                       seller.location ??
                       "No contact"}
                   </Table.Cell>
@@ -458,6 +466,12 @@ const SellerDetailsDialog = ({
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <DetailItem label="Email">{seller.email ?? "None"}</DetailItem>
               <DetailItem label="Phone">{seller.phone ?? "None"}</DetailItem>
+              <DetailItem label="Telegram">
+                {seller.telegram ? `@${seller.telegram}` : "None"}
+              </DetailItem>
+              <DetailItem label="Facebook / Messenger">
+                {seller.facebook_url ?? "None"}
+              </DetailItem>
               <DetailItem label="Location">
                 {seller.location ?? "None"}
               </DetailItem>

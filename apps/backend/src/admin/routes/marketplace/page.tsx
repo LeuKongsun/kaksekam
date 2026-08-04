@@ -40,15 +40,23 @@ type MarketplaceListing = {
   } | null
   category: string | null
   location: string | null
+  district: string | null
   quantity: string | null
   unit: string | null
+  minimum_order: string | null
   condition: string | null
+  availability: string | null
+  production_method: string | null
+  negotiable: boolean
+  expires_at: string | null
   created_at: string
   seller: {
     id: string
     display_name: string
     email: string | null
     phone: string | null
+    telegram: string | null
+    facebook_url: string | null
     location: string | null
     verification_status: "unverified" | "verified"
   } | null
@@ -60,6 +68,23 @@ type MarketplaceListing = {
 
 type ListingsResponse = {
   listings: MarketplaceListing[]
+}
+
+type MarketplaceMetrics = {
+  contacts: {
+    total: number
+    telegram: number
+    messenger: number
+    phone: number
+    last_14_days: number
+    active_listing_contact_rate: number | null
+  }
+  sellers: {
+    repeat: number
+  }
+  reports: {
+    new: number
+  }
 }
 
 type StatusFilter = "all" | MarketplaceListing["status"]
@@ -122,6 +147,7 @@ const listingDetailRows = (listing: MarketplaceListing): [string, string][] =>
   ([
     ["Category", listing.category],
     ["Location", listing.location],
+    ["District", listing.district],
     [
       "Quantity",
       listing.quantity && listing.unit
@@ -129,6 +155,10 @@ const listingDetailRows = (listing: MarketplaceListing): [string, string][] =>
         : listing.quantity,
     ],
     ["Condition", listing.condition],
+    ["Minimum order", listing.minimum_order],
+    ["Availability", listing.availability],
+    ["Production method", listing.production_method],
+    ["Price negotiable", listing.negotiable ? "Yes" : null],
   ] as [string, string | null][]).filter(
     (row): row is [string, string] => Boolean(row[1]),
   )
@@ -145,6 +175,7 @@ const listingImages = (listing: MarketplaceListing) => {
 const MarketplacePage = () => {
   const [listings, setListings] = useState<MarketplaceListing[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [metrics, setMetrics] = useState<MarketplaceMetrics | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
@@ -233,7 +264,10 @@ const MarketplacePage = () => {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/admin/listing-moderation")
+      const [response, metricsResponse] = await Promise.all([
+        fetch("/admin/listing-moderation"),
+        fetch("/admin/marketplace"),
+      ])
 
       if (!response.ok) {
         throw new Error("Could not load marketplace listings")
@@ -241,6 +275,12 @@ const MarketplacePage = () => {
 
       const data = (await response.json()) as ListingsResponse
       setListings(data.listings)
+      if (metricsResponse.ok) {
+        const metricsData = (await metricsResponse.json()) as {
+          metrics: MarketplaceMetrics
+        }
+        setMetrics(metricsData.metrics)
+      }
       setModerationNotes(
         data.listings.reduce<Record<string, string>>((acc, listing) => {
           acc[listing.id] = listing.moderation_note ?? ""
@@ -330,6 +370,32 @@ const MarketplacePage = () => {
           </Tooltip>
         }
       >
+        {metrics && (
+          <div className="grid grid-cols-2 gap-px border-b border-ui-border-base bg-ui-border-base md:grid-cols-4 lg:grid-cols-8">
+            {[
+              ["Contact clicks", metrics.contacts.total],
+              ["Last 14 days", metrics.contacts.last_14_days],
+              ["Telegram", metrics.contacts.telegram],
+              ["Messenger", metrics.contacts.messenger],
+              ["Phone", metrics.contacts.phone],
+              [
+                "Active contacted",
+                metrics.contacts.active_listing_contact_rate === null
+                  ? "—"
+                  : `${metrics.contacts.active_listing_contact_rate}%`,
+              ],
+              ["Repeat sellers", metrics.sellers.repeat],
+              ["New reports", metrics.reports.new],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-ui-bg-base px-6 py-4">
+                <Text size="large" weight="plus">{value}</Text>
+                <Text className="mt-1 text-ui-fg-subtle" size="xsmall">
+                  {label}
+                </Text>
+              </div>
+            ))}
+          </div>
+        )}
         <FilterPanel>
           <div className="flex flex-col gap-2 px-6 py-3 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col gap-2 md:flex-row md:items-center">
@@ -615,10 +681,13 @@ const ListingDetailsDialog = ({
                 {listing.seller?.display_name ?? "Unknown seller"}
               </DetailItem>
               <DetailItem label="Seller contact">
-                {listing.seller?.email ??
-                  listing.seller?.phone ??
-                  listing.seller?.location ??
-                  "No contact"}
+                {listing.seller?.telegram
+                  ? `Telegram @${listing.seller.telegram}`
+                  : listing.seller?.facebook_url ??
+                    listing.seller?.phone ??
+                    listing.seller?.email ??
+                    listing.seller?.location ??
+                    "No contact"}
               </DetailItem>
               <DetailItem label="Price">
                 <span className="text-ui-fg-error">

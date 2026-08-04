@@ -15,9 +15,18 @@ export const LISTING_LOCATIONS = [
   "Phnom Penh",
   "Battambang",
   "Kampong Cham",
+  "Kampong Chhnang",
   "Kampong Speu",
+  "Kampong Thom",
   "Kandal",
   "Kampot",
+  "Koh Kong",
+  "Oddar Meanchey",
+  "Pailin",
+  "Preah Sihanouk",
+  "Preah Vihear",
+  "Ratanakiri",
+  "Stung Treng",
   "Takeo",
   "Siem Reap",
   "Tboung Khmum",
@@ -46,4 +55,8 @@ export const LISTING_PRODUCTION_METHODS = [
   "Regenerative",
 ] as const
 
-export const LISTING_CONTACT_PREFERENCES = ["Phone", "Email"] as const
+export const LISTING_CONTACT_PREFERENCES = [
+  "telegram",
+  "messenger",
+  "phone",
+] as const

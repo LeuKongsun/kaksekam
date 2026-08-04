@@ -1,29 +1,25 @@
 "use client"
 
-import type { ProductSeller } from "@lib/data/products"
+import { trackContactClick, type ContactChannel } from "@lib/data/contact-events"
+import type {
+  ProductSeller,
+  StoreProductWithListing,
+} from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Divider from "@modules/common/components/divider"
-import Modal from "@modules/common/components/modal"
-import ListingInquiryForm from "@modules/products/components/listing-inquiry-form"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
+import ListingReportButton from "@modules/products/components/listing-report-button"
 import { isEqual } from "lodash"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 
 type ProductActionsProps = {
-  product: HttpTypes.StoreProduct
+  product: StoreProductWithListing
   region: HttpTypes.StoreRegion
   seller?: ProductSeller | null
   disabled?: boolean
-  productId: string
-  customer?: {
-    id: string
-    name: string
-    email: string
-    phone: string | null
-  } | null
 }
 
 const optionsAsKeymap = (
@@ -44,8 +40,6 @@ export default function ProductActions({
   region,
   seller,
   disabled,
-  productId,
-  customer,
 }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -53,8 +47,6 @@ export default function ProductActions({
   const { t } = useTranslation()
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
-  const [isInquiryOpen, setIsInquiryOpen] = useState(false)
-
   // If there is only 1 variant, preselect the options
   useEffect(() => {
     if (product.variants?.length === 1) {
@@ -107,18 +99,57 @@ export default function ProductActions({
     router.replace(pathname + "?" + params.toString())
   }, [selectedVariant, isValidVariant])
 
-  const contactSubject = encodeURIComponent(`Listing inquiry: ${product.title}`)
   const sellerPhoneHref = seller?.phone
     ? `tel:${seller.phone.replace(/[^\d+]/g, "")}`
     : undefined
-  const contactHref = seller?.email
-    ? `mailto:${seller.email}?subject=${contactSubject}`
-    : sellerPhoneHref
-  const canContact = !disabled && isValidVariant && !!contactHref
+  const telegramHref = seller?.telegram
+    ? `https://t.me/${seller.telegram.replace(/^@/, "")}`
+    : undefined
+  const messengerHref = seller?.facebook_url ?? undefined
+  const contactOptions = [
+    telegramHref
+      ? {
+          channel: "telegram" as const,
+          href: telegramHref,
+          label: t.product.telegram,
+          icon: <TelegramIcon />,
+        }
+      : null,
+    messengerHref
+      ? {
+          channel: "messenger" as const,
+          href: messengerHref,
+          label: t.product.messenger,
+          icon: <MessengerIcon />,
+        }
+      : null,
+    sellerPhoneHref
+      ? {
+          channel: "phone" as const,
+          href: sellerPhoneHref,
+          label: t.product.call,
+          icon: <PhoneIcon />,
+        }
+      : null,
+  ].filter(Boolean) as {
+    channel: ContactChannel
+    href: string
+    label: string
+    icon: React.ReactNode
+  }[]
+  const preferredChannel =
+    product.listing?.contact_preference ?? seller?.preferred_contact
+  const sortedContactOptions = [...contactOptions].sort((left, right) =>
+    left.channel === preferredChannel
+      ? -1
+      : right.channel === preferredChannel
+        ? 1
+        : 0
+  )
+  const canContact = !disabled && Boolean(product.listing?.id)
   const sellerImage = seller?.avatar_url ?? product.thumbnail
   return (
-    <>
-      <div className="flex flex-col gap-y-4 rounded-md border border-gray-200 bg-white p-4">
+    <div className="flex flex-col gap-y-4 rounded-md border border-gray-200 bg-white p-4">
         <div>
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -127,16 +158,6 @@ export default function ProductActions({
                 {t.product.arrangeDetails}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsInquiryOpen(true)}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white text-ui-fg-base shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
-              aria-label={t.product.contactFarmer}
-              title={t.product.contactFarmer}
-              data-testid="open-inquiry-modal-button"
-            >
-              <MessageIcon />
-            </button>
           </div>
         </div>
         <div>
@@ -191,11 +212,32 @@ export default function ProductActions({
                     </span>
                   )}
                 </LocalizedClientLink>
+                {seller.verification_status === "verified" && (
+                  <p className="mt-1 text-xsmall-regular text-ui-fg-muted">
+                    {t.product.verifiedHelp}
+                  </p>
+                )}
                 {seller.location && (
                   <div className="mt-1 truncate text-ui-fg-subtle">
                     {seller.location}
                   </div>
                 )}
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xsmall-regular text-ui-fg-muted">
+                  {seller.active_listing_count != null && (
+                    <span>
+                      {seller.active_listing_count} {t.product.activeListings}
+                    </span>
+                  )}
+                  {seller.created_at && (
+                    <span>
+                      {t.product.memberSince}{" "}
+                      {new Intl.DateTimeFormat(undefined, {
+                        month: "short",
+                        year: "numeric",
+                      }).format(new Date(seller.created_at))}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             {seller.bio && (
@@ -203,15 +245,28 @@ export default function ProductActions({
                 {seller.bio}
               </p>
             )}
-            {(seller.email || seller.phone) && (
+            {(seller.telegram || seller.facebook_url || seller.phone) && (
               <div className="mt-3 flex flex-col gap-2 text-ui-fg-subtle">
-                {seller.email && (
+                {seller.telegram && (
                   <a
-                    href={`mailto:${seller.email}?subject=${contactSubject}`}
+                    href={telegramHref}
                     className="inline-flex min-w-0 items-center gap-2 hover:text-ui-fg-base"
+                    rel="noreferrer"
+                    target="_blank"
                   >
-                    <EmailIcon />
-                    <span className="truncate">{seller.email}</span>
+                    <TelegramIcon />
+                    <span className="truncate">@{seller.telegram}</span>
+                  </a>
+                )}
+                {seller.facebook_url && (
+                  <a
+                    href={messengerHref}
+                    className="inline-flex min-w-0 items-center gap-2 hover:text-ui-fg-base"
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <MessengerIcon />
+                    <span className="truncate">{t.product.messenger}</span>
                   </a>
                 )}
                 {seller.phone && (
@@ -228,63 +283,67 @@ export default function ProductActions({
           </div>
         )}
 
-        <a
-          href={canContact ? contactHref : undefined}
-          aria-disabled={!canContact}
-          className="inline-flex h-10 w-full items-center justify-center rounded-md bg-black px-4 font-medium text-white transition-colors hover:bg-gray-800 aria-disabled:pointer-events-none aria-disabled:opacity-50"
-          data-testid="contact-seller-link"
-        >
-          {!isValidVariant
-            ? t.product.selectOption
-            : contactHref
-              ? t.product.contactSeller
-              : t.product.contactUnavailable}
-        </a>
+        {sortedContactOptions.length ? (
+          <div className="grid grid-cols-1 gap-2 small:grid-cols-2">
+            {sortedContactOptions.map((option, index) => (
+              <a
+                key={option.channel}
+                href={canContact ? option.href : undefined}
+                aria-disabled={!canContact}
+                className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-md px-4 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 aria-disabled:pointer-events-none aria-disabled:opacity-50 ${
+                  index === 0
+                    ? "bg-[#273b2e] text-white hover:bg-[#1d2d23]"
+                    : "border border-gray-300 bg-white text-ui-fg-base hover:bg-gray-50"
+                }`}
+                data-testid={`contact-seller-${option.channel}`}
+                rel={option.channel === "phone" ? undefined : "noreferrer"}
+                target={option.channel === "phone" ? undefined : "_blank"}
+                onClick={() => {
+                  if (product.listing?.id) {
+                    void trackContactClick(product.listing.id, option.channel)
+                  }
+                }}
+              >
+                {option.icon}
+                {option.label}
+                {option.channel === preferredChannel && (
+                  <span className="text-xsmall-regular opacity-75">
+                    {t.product.preferred}
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-md bg-gray-100 px-4 py-3 text-center text-small-regular text-ui-fg-subtle">
+            {t.product.contactUnavailable}
+          </div>
+        )}
 
         <div className="rounded-md border border-ui-border-base p-4 text-small-regular text-ui-fg-subtle">
           {t.product.disclaimer}
         </div>
+        {product.listing?.id && (
+          <ListingReportButton listingId={product.listing.id} />
+        )}
       </div>
-      <Modal
-        isOpen={isInquiryOpen}
-        close={() => setIsInquiryOpen(false)}
-        size="medium"
-        data-testid="listing-inquiry-modal"
-      >
-        <Modal.Title>{t.product.contactSeller}</Modal.Title>
-        <div className="pt-4">
-          <ListingInquiryForm productId={productId} customer={customer} />
-        </div>
-      </Modal>
-    </>
   )
 }
 
-const MessageIcon = () => (
+const TelegramIcon = () => (
   <svg
-    width="17"
-    height="17"
+    width="18"
+    height="18"
     viewBox="0 0 20 20"
     fill="none"
     aria-hidden="true"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <path
-      d="M4.5 5.5h11v7h-7L5 15.5v-3h-.5v-7Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M6.75 7.75h6.5M6.75 10.25h4.5"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
+    <path d="m17 3-3 14-4-4-2.5 2v-3.5L14 6 6 11 2 9.5 17 3Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
   </svg>
 )
 
-const EmailIcon = () => (
+const MessengerIcon = () => (
   <svg
     width="15"
     height="15"
@@ -294,19 +353,8 @@ const EmailIcon = () => (
     className="shrink-0"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <path
-      d="M3.5 5.5h13v9h-13v-9Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinejoin="round"
-    />
-    <path
-      d="m4 6 6 5 6-5"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    <path d="M3 9.5C3 5.9 6 3 10 3s7 2.9 7 6.5S14 16 10 16c-.7 0-1.4-.1-2-.3L4.5 17v-3A6.2 6.2 0 0 1 3 9.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <path d="m6.5 11 2.3-2.5 2.2 1.7 2.5-2.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
 

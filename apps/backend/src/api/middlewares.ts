@@ -11,6 +11,10 @@ export default defineMiddlewares({
       middlewares: [authenticate("customer", "bearer")],
     },
     {
+      matcher: "/store/seller-contact-metrics*",
+      middlewares: [authenticate("customer", "bearer")],
+    },
+    {
       matcher: "/store/saved-listings*",
       middlewares: [authenticate("customer", "bearer")],
     },
@@ -41,6 +45,10 @@ export default defineMiddlewares({
     },
     {
       matcher: "/admin/listing-moderation*",
+      middlewares: [authenticate("user", ["bearer", "session"])],
+    },
+    {
+      matcher: "/admin/listing-reports*",
       middlewares: [authenticate("user", ["bearer", "session"])],
     },
     {

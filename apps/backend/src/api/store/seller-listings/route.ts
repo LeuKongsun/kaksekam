@@ -20,9 +20,15 @@ type CreateSellerListingBody = {
   currency_code?: string
   category?: string
   location?: string
+  district?: string
   quantity?: string
   unit?: string
+  minimum_order?: string
   condition?: string
+  availability?: string
+  production_method?: string
+  contact_preference?: "telegram" | "messenger" | "phone"
+  negotiable?: boolean | string
 }
 
 type ProductWithMarketplace = {
@@ -41,6 +47,9 @@ type ProductWithMarketplace = {
     handle: string
     email: string | null
     phone: string | null
+    telegram: string | null
+    facebook_url: string | null
+    preferred_contact: "telegram" | "messenger" | "phone" | null
     location: string | null
     bio: string | null
     avatar_url: string | null
@@ -54,9 +63,17 @@ type ProductWithMarketplace = {
     reviewer_id: string | null
     category: string | null
     location: string | null
+    district: string | null
     quantity: string | null
     unit: string | null
+    minimum_order: string | null
     condition: string | null
+    availability: string | null
+    production_method: string | null
+    contact_preference: string | null
+    negotiable: boolean
+    expires_at: string | null
+    refreshed_at: string | null
     created_at: string
     updated_at: string
   } | null
@@ -155,6 +172,9 @@ async function listProductsForCustomer(
         "seller.handle",
         "seller.email",
         "seller.phone",
+        "seller.telegram",
+        "seller.facebook_url",
+        "seller.preferred_contact",
         "seller.location",
         "seller.bio",
         "seller.avatar_url",
@@ -166,9 +186,17 @@ async function listProductsForCustomer(
         "listing.reviewer_id",
         "listing.category",
         "listing.location",
+        "listing.district",
         "listing.quantity",
         "listing.unit",
+        "listing.minimum_order",
         "listing.condition",
+        "listing.availability",
+        "listing.production_method",
+        "listing.contact_preference",
+        "listing.negotiable",
+        "listing.expires_at",
+        "listing.refreshed_at",
         "listing.created_at",
         "listing.updated_at",
         "variants.id",
@@ -254,9 +282,17 @@ export async function GET(
       reviewer_id: product.listing!.reviewer_id,
       category: product.listing!.category,
       location: product.listing!.location,
+      district: product.listing!.district,
       quantity: product.listing!.quantity,
       unit: product.listing!.unit,
+      minimum_order: product.listing!.minimum_order,
       condition: product.listing!.condition,
+      availability: product.listing!.availability,
+      production_method: product.listing!.production_method,
+      contact_preference: product.listing!.contact_preference,
+      negotiable: product.listing!.negotiable,
+      expires_at: product.listing!.expires_at,
+      refreshed_at: product.listing!.refreshed_at,
       created_at: product.listing!.created_at,
       updated_at: product.listing!.updated_at,
       seller: product.seller ?? null,
@@ -275,6 +311,7 @@ export async function POST(
   const images = parseImageUrls(body.image_urls)
   const price = Math.max(0, Number(body.price ?? 0))
   const currencyCode = (body.currency_code || "eur").toLowerCase()
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
   if (!title || !description || !Number.isFinite(price) || price <= 0) {
     res.status(400).json({
@@ -343,9 +380,21 @@ export async function POST(
     status: "pending_review",
     category: cleanOptionalText(body.category),
     location: cleanOptionalText(body.location),
+    district: cleanOptionalText(body.district),
     quantity: cleanOptionalText(body.quantity),
     unit: cleanOptionalText(body.unit),
+    minimum_order: cleanOptionalText(body.minimum_order),
     condition: cleanOptionalText(body.condition),
+    availability: cleanOptionalText(body.availability),
+    production_method: cleanOptionalText(body.production_method),
+    contact_preference: cleanOptionalText(body.contact_preference) as
+      | "telegram"
+      | "messenger"
+      | "phone"
+      | null,
+    negotiable: body.negotiable === true || body.negotiable === "true",
+    expires_at: expiresAt,
+    refreshed_at: new Date(),
   })
 
   await link.create({
@@ -381,9 +430,17 @@ export async function POST(
       reviewer_id: listing.reviewer_id,
       category: listing.category,
       location: listing.location,
+      district: listing.district,
       quantity: listing.quantity,
       unit: listing.unit,
+      minimum_order: listing.minimum_order,
       condition: listing.condition,
+      availability: listing.availability,
+      production_method: listing.production_method,
+      contact_preference: listing.contact_preference,
+      negotiable: listing.negotiable,
+      expires_at: listing.expires_at,
+      refreshed_at: listing.refreshed_at,
     },
   })
 }

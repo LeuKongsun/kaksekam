@@ -141,18 +141,28 @@ describe("store seller listing route", () => {
         ],
       },
     })
-    expect(marketplaceService.updateListings).toHaveBeenCalledWith({
-      id: "listing_123",
-      status: "pending_review",
-      moderation_note: null,
-      reviewed_at: null,
-      reviewer_id: null,
-      category: "Produce",
-      location: "Takeo",
-      quantity: null,
-      unit: null,
-      condition: null,
-    })
+    expect(marketplaceService.updateListings).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "listing_123",
+        status: "pending_review",
+        moderation_note: null,
+        reviewed_at: null,
+        reviewer_id: null,
+        category: "Produce",
+        location: "Takeo",
+        district: null,
+        quantity: null,
+        unit: null,
+        minimum_order: null,
+        condition: null,
+        availability: null,
+        production_method: null,
+        contact_preference: null,
+        negotiable: false,
+        expires_at: expect.any(Date),
+        refreshed_at: expect.any(Date),
+      })
+    )
     expect(res.json).toHaveBeenCalledWith({
       listing: {
         id: "listing_123",

@@ -5,6 +5,7 @@ import { getRegion } from "@lib/data/regions"
 import { getTranslations } from "@lib/i18n/server"
 import { LISTING_CATEGORIES } from "@lib/marketplace/listing-fields"
 import Hero from "@modules/home/components/hero"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductPreview from "@modules/products/components/product-preview"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
@@ -82,6 +83,8 @@ export default async function Home(props: Params) {
             <ListingShelf
               title={t.home.latestListings}
               countryCode={params.countryCode}
+              actionLabel={t.home.browseAll}
+              actionHref="/store"
             />
             {HOME_CATEGORY_SHELVES.map((category) => {
               const categoryLabel =
@@ -122,6 +125,8 @@ const ListingShelf = async ({
   emptyTitle,
   emptyDescription,
   limit = HOME_LISTINGS_LIMIT,
+  actionLabel,
+  actionHref,
 }: {
   title: string
   category?: string
@@ -133,6 +138,8 @@ const ListingShelf = async ({
   emptyTitle?: string
   emptyDescription?: string
   limit?: number
+  actionLabel?: string
+  actionHref?: string
 }) => {
   const region = await getRegion(countryCode)
 
@@ -174,6 +181,14 @@ const ListingShelf = async ({
     <section className="border-b border-gray-200 pb-8 last:border-b-0 last:pb-0 small:pb-10">
       <div className="mb-4 flex items-center justify-between gap-4">
         <h2 className="text-xl-semi text-ui-fg-base">{title}</h2>
+        {actionLabel && actionHref && (
+          <LocalizedClientLink
+            href={actionHref}
+            className="shrink-0 text-small-semi text-ui-fg-interactive transition-colors hover:text-ui-fg-base focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-fg-interactive"
+          >
+            {actionLabel}
+          </LocalizedClientLink>
+        )}
       </div>
       <ul className="grid w-full grid-cols-2 gap-x-3 gap-y-5 small:gap-x-5 small:gap-y-7 medium:grid-cols-4">
         {products.map((product) => (

@@ -23,6 +23,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       "seller.handle",
       "seller.email",
       "seller.phone",
+      "seller.telegram",
+      "seller.facebook_url",
+      "seller.preferred_contact",
       "seller.location",
       "seller.bio",
       "seller.avatar_url",
@@ -50,10 +53,24 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const inquiries = await marketplaceService.listListingInquiries({
     seller_id: activeSeller.id,
   })
+  
+  const { data: sellersData } = await query.graph({
+    entity: "seller",
+    fields: ["id", "products.listing.status"],
+    filters: {
+      id: activeSeller.id,
+    },
+  })
+
+  const sellerProducts = sellersData[0]?.products || []
+  const activeListingCount = sellerProducts.filter(
+    (p: any) => p.listing?.status === "active"
+  ).length
 
   res.json({
     seller: {
       ...activeSeller,
+      active_listing_count: activeListingCount,
       trust_stats: getSellerTrustStats(activeSeller, inquiries),
     },
   })

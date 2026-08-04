@@ -1,7 +1,6 @@
 "use client"
 
 import { signout } from "@lib/data/customer"
-import { getUnreadMessageCount } from "@lib/data/listing-inquiries"
 import type { ProductSeller } from "@lib/data/products"
 import { updateAccountSellerProfile } from "@lib/data/seller-profile"
 import {
@@ -33,7 +32,11 @@ type AccountNavProps = {
 
 import { useTranslation } from "@lib/i18n/context"
 
-const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
+const AccountNav = ({
+  customer,
+  seller,
+  messageCount: _messageCount,
+}: AccountNavProps) => {
   const router = useRouter()
   const pathname = usePathname()
   const { countryCode } = useParams() as { countryCode: string }
@@ -53,7 +56,6 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const [liveMessageCount, setLiveMessageCount] = useState(messageCount)
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const [profileState, profileAction] = useActionState(
     updateAccountSellerProfile,
@@ -69,15 +71,6 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
       href: "/account/listings",
       isActive: pathname.includes("/account/listings"),
       icon: Package,
-    },
-    {
-      label: t.common.messages,
-      href: "/account/inquiries",
-      isActive:
-        pathname.includes("/account/inquiries") ||
-        pathname.includes("/account/buyer-inquiries"),
-      icon: MessageIcon,
-      count: liveMessageCount,
     },
     {
       label: t.common.saved,
@@ -97,35 +90,6 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
       router.refresh()
     }
   }, [profileState.success, router])
-
-  useEffect(() => {
-    setLiveMessageCount(messageCount)
-  }, [messageCount])
-
-  useEffect(() => {
-    let isMounted = true
-
-    const pollMessageCount = async () => {
-      if (document.visibilityState === "hidden") {
-        return
-      }
-
-      const nextCount = await getUnreadMessageCount()
-
-      if (isMounted) {
-        setLiveMessageCount(nextCount)
-      }
-    }
-
-    const interval = window.setInterval(() => {
-      pollMessageCount().catch(() => {})
-    }, 10000)
-
-    return () => {
-      isMounted = false
-      window.clearInterval(interval)
-    }
-  }, [])
 
   useEffect(() => {
     if (!avatarFile) {
@@ -215,18 +179,6 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
             >
               <PencilSquare />
             </button>
-            <LocalizedClientLink
-              href="/account/inquiries"
-              className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-ui-fg-base transition-colors hover:border-ui-fg-base hover:bg-gray-50"
-              aria-label={t.common.messages}
-            >
-              <MessageIcon />
-              {liveMessageCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#c94f2d] px-1 text-[10px] font-semibold leading-none text-white">
-                  {liveMessageCount > 9 ? "9+" : liveMessageCount}
-                </span>
-              )}
-            </LocalizedClientLink>
             <button
               type="button"
               onClick={handleLogout}
@@ -260,11 +212,6 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
               >
                 <Icon size={17} />
                 <span className="truncate">{tab.label}</span>
-                {tab.count ? (
-                  <span className="ml-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#c94f2d] px-1 text-[10px] font-semibold leading-none text-white">
-                    {tab.count > 9 ? "9+" : tab.count}
-                  </span>
-                ) : null}
               </LocalizedClientLink>
             )
           })}
@@ -394,6 +341,32 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
                   defaultValue={seller?.phone ?? customer?.phone ?? ""}
                 />
                 <Input
+                  label={t.account.telegramLabel}
+                  name="telegram"
+                  defaultValue={seller?.telegram ?? ""}
+                />
+                <Input
+                  label={t.account.facebookLabel}
+                  name="facebook_url"
+                  type="url"
+                  defaultValue={seller?.facebook_url ?? ""}
+                />
+                <label className="relative flex w-full text-small-regular text-ui-fg-subtle">
+                  <select
+                    name="preferred_contact"
+                    defaultValue={seller?.preferred_contact ?? ""}
+                    className="h-11 w-full rounded-md border border-ui-border-base bg-ui-bg-field px-3 pb-1 pt-4 text-ui-fg-base outline-none hover:bg-ui-bg-field-hover focus:shadow-borders-interactive-with-active"
+                  >
+                    <option value="">{t.account.notSpecified}</option>
+                    <option value="telegram">{t.account.contactTelegram}</option>
+                    <option value="messenger">{t.account.contactMessenger}</option>
+                    <option value="phone">{t.account.contactPhone}</option>
+                  </select>
+                  <span className="pointer-events-none absolute left-3 top-1 text-xsmall-regular">
+                    {t.account.preferredContact}
+                  </span>
+                </label>
+                <Input
                   label={t.account.pickupLocation}
                   name="location"
                   defaultValue={seller?.location ?? location ?? ""}
@@ -428,26 +401,6 @@ const AccountNav = ({ customer, seller, messageCount }: AccountNavProps) => {
         </div>
       )}
     </section>
-  )
-}
-
-function MessageIcon({ size = 18 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 20 20"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M4.25 5.25C4.25 4.55964 4.80964 4 5.5 4H14.5C15.1904 4 15.75 4.55964 15.75 5.25V11.25C15.75 11.9404 15.1904 12.5 14.5 12.5H9L5.75 15.25V12.5H5.5C4.80964 12.5 4.25 11.9404 4.25 11.25V5.25Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-    </svg>
   )
 }
 

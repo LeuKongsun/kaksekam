@@ -72,8 +72,40 @@ const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
             </div>
           </div>
 
-          {(seller.phone || seller.email) && (
+          {(seller.telegram || seller.facebook_url || seller.phone) && (
             <div className="mt-5 flex flex-col gap-2 text-small-regular text-ui-fg-base">
+              {seller.telegram && (
+                <a
+                  href={`https://t.me/${seller.telegram.replace(/^@/, "")}`}
+                  className="inline-flex items-center gap-2 hover:text-ui-fg-interactive"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <TelegramIcon />
+                  @{seller.telegram.replace(/^@/, "")}
+                  {seller.preferred_contact === "telegram" && (
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xsmall-semi text-emerald-800">
+                      {t.product.preferred}
+                    </span>
+                  )}
+                </a>
+              )}
+              {seller.facebook_url && (
+                <a
+                  href={seller.facebook_url}
+                  className="inline-flex items-center gap-2 hover:text-ui-fg-interactive"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  <MessengerIcon />
+                  {t.product.messenger}
+                  {seller.preferred_contact === "messenger" && (
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xsmall-semi text-emerald-800">
+                      {t.product.preferred}
+                    </span>
+                  )}
+                </a>
+              )}
               {seller.phone && (
                 <a
                   href={`tel:${seller.phone.replace(/[^\d+]/g, "")}`}
@@ -81,15 +113,11 @@ const SellerProfileTemplate = ({ profile }: SellerProfileTemplateProps) => {
                 >
                   <PhoneIcon />
                   {seller.phone}
-                </a>
-              )}
-              {seller.email && (
-                <a
-                  href={`mailto:${seller.email}`}
-                  className="inline-flex items-center gap-2 break-all hover:text-ui-fg-interactive"
-                >
-                  <EmailIcon />
-                  {seller.email}
+                  {seller.preferred_contact === "phone" && (
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xsmall-semi text-emerald-800">
+                      {t.product.preferred}
+                    </span>
+                  )}
                 </a>
               )}
             </div>
@@ -197,18 +225,30 @@ const PhoneIcon = () => (
   </svg>
 )
 
-const EmailIcon = () => (
+const TelegramIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
     <path
-      d="M3 4.75C3 4.06 3.56 3.5 4.25 3.5h7.5c.69 0 1.25.56 1.25 1.25v6.5c0 .69-.56 1.25-1.25 1.25h-7.5C3.56 12.5 3 11.94 3 11.25v-6.5Z"
+      d="m13.5 2.5-2.4 11.2-3.2-3.2-2 1.6V9.3L11.2 4.8 4.8 8.8 1.6 7.6 13.5 2.5Z"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+const MessengerIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path
+      d="M2.5 7.6C2.5 4.7 4.9 2.4 8 2.4s5.5 2.3 5.5 5.2S11.1 12.8 8 12.8c-.6 0-1.1-.1-1.6-.2L3.7 13.6v-2.4A5 5 0 0 1 2.5 7.6Z"
       stroke="currentColor"
       strokeWidth="1.4"
       strokeLinejoin="round"
     />
     <path
-      d="m3.4 5 4.6 3.5L12.6 5"
+      d="m5.2 8.8 1.8-2 1.8 1.4 2-2.2"
       stroke="currentColor"
       strokeWidth="1.4"
+      strokeLinecap="round"
       strokeLinejoin="round"
     />
   </svg>

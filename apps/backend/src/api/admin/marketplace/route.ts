@@ -103,13 +103,23 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const marketplaceService: MarketplaceModuleService =
     req.scope.resolve(MARKETPLACE_MODULE)
-  const [products, sellers, inquiries, savedListings, savedSearches] =
+  const [
+    products,
+    sellers,
+    inquiries,
+    savedListings,
+    savedSearches,
+    contactEvents,
+    listingReports,
+  ] =
     await Promise.all([
       listMarketplaceProducts(query),
       marketplaceService.listSellers({}),
       marketplaceService.listListingInquiries({}),
       marketplaceService.listSavedListings({}),
       marketplaceService.listSavedSearches({}),
+      marketplaceService.listContactEvents({}),
+      marketplaceService.listListingReports({}),
     ])
   const listingStatusCounts = getListingStatusCounts(products)
   const newInquiryCount = inquiries.filter(
@@ -118,6 +128,22 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const repliedInquiryCount = inquiries.filter(
     (inquiry) => inquiry.status === "replied",
   ).length
+  const contactedListingIds = new Set(
+    contactEvents.map((event) => event.listing_id)
+  )
+  const activeListingIds = products
+    .filter((product) => product.listing?.status === "active")
+    .map((product) => product.listing!.id)
+  const listingsBySeller = products.reduce<Record<string, number>>(
+    (counts, product) => {
+      if (product.seller?.id) {
+        counts[product.seller.id] = (counts[product.seller.id] ?? 0) + 1
+      }
+      return counts
+    },
+    {}
+  )
+  const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000
 
   res.json({
     metrics: {
@@ -137,6 +163,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         verified: sellers.filter(
           (seller) => seller.verification_status === "verified",
         ).length,
+        repeat: Object.values(listingsBySeller).filter((count) => count > 1)
+          .length,
       },
       inquiries: {
         total: inquiries.length,
@@ -151,10 +179,40 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         listings: savedListings.length,
         searches: savedSearches.length,
       },
+      contacts: {
+        total: contactEvents.length,
+        telegram: contactEvents.filter((event) => event.channel === "telegram")
+          .length,
+        messenger: contactEvents.filter(
+          (event) => event.channel === "messenger"
+        ).length,
+        phone: contactEvents.filter((event) => event.channel === "phone").length,
+        listings_contacted: new Set(
+          contactEvents.map((event) => event.listing_id)
+        ).size,
+        last_14_days: contactEvents.filter(
+          (event) => new Date(event.created_at).getTime() >= fourteenDaysAgo
+        ).length,
+        active_listing_contact_rate:
+          activeListingIds.length === 0
+            ? null
+            : Math.round(
+                (activeListingIds.filter((id) => contactedListingIds.has(id))
+                  .length /
+                  activeListingIds.length) *
+                  100
+              ),
+      },
+      reports: {
+        total: listingReports.length,
+        new: listingReports.filter((report) => report.status === "new").length,
+      },
     },
     attention: {
       pending_listings: listingStatusCounts.pending_review ?? 0,
       new_inquiries: newInquiryCount,
+      new_reports: listingReports.filter((report) => report.status === "new")
+        .length,
       unverified_sellers: sellers.filter(
         (seller) => seller.verification_status !== "verified",
       ).length,

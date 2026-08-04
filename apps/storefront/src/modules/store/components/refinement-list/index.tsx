@@ -146,7 +146,7 @@ const RefinementList = ({
           event.preventDefault()
           pushFilters()
         }}
-        className="overflow-hidden rounded-full border border-gray-200 bg-white shadow-[0_8px_28px_rgba(15,23,42,0.08)]"
+        className="overflow-hidden rounded-[8px] border border-gray-200 bg-white shadow-[0_8px_28px_rgba(15,23,42,0.08)]"
       >
         <div className="flex flex-col small:flex-row small:items-stretch">
           <div className="grid flex-1 divide-y divide-gray-200 small:grid-cols-1 small:divide-y-0">

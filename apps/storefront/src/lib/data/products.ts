@@ -15,12 +15,16 @@ export type ProductSeller = {
   handle: string
   email: string | null
   phone: string | null
+  telegram: string | null
+  facebook_url: string | null
+  preferred_contact: "telegram" | "messenger" | "phone" | null
   location: string | null
   bio: string | null
   avatar_url: string | null
   status: "active" | "suspended"
   verification_status?: "unverified" | "verified"
   created_at?: string
+  active_listing_count?: number
   trust_stats?: {
     profile_completeness: number
     inquiry_count: number
@@ -35,9 +39,17 @@ export type StoreProductWithListing = HttpTypes.StoreProduct & {
     status: "draft" | "pending_review" | "active" | "sold" | "rejected" | "expired"
     category: string | null
     location: string | null
+    district: string | null
     quantity: string | null
     unit: string | null
+    minimum_order: string | null
     condition: string | null
+    availability: string | null
+    production_method: string | null
+    contact_preference: "telegram" | "messenger" | "phone" | null
+    negotiable: boolean
+    expires_at: string | null
+    refreshed_at: string | null
   } | null
 }
 
@@ -119,9 +131,17 @@ export const listProducts = async ({
     "+listing.status",
     "+listing.category",
     "+listing.location",
+    "+listing.district",
     "+listing.quantity",
     "+listing.unit",
+    "+listing.minimum_order",
     "+listing.condition",
+    "+listing.availability",
+    "+listing.production_method",
+    "+listing.contact_preference",
+    "+listing.negotiable",
+    "+listing.expires_at",
+    "+listing.refreshed_at",
     queryParams?.fields,
   ]
     .filter(Boolean)
@@ -147,7 +167,10 @@ export const listProducts = async ({
     .then(({ products, count }) => {
       const activeProducts = products.filter(
         (product) =>
-          product.listing?.status === "active" && product.listing.category
+          product.listing?.status === "active" &&
+          product.listing.category &&
+          (!product.listing.expires_at ||
+            new Date(product.listing.expires_at).getTime() > Date.now())
       )
       const matchedMockProducts = findMockProducts(queryParams)
       const visibleProducts = [...activeProducts, ...matchedMockProducts]

@@ -37,6 +37,7 @@ const ProductInfo = async ({ product }: ProductInfoProps) => {
         : undefined,
     ],
     [t.product.details.location, listing?.location],
+    [t.product.details.district, listing?.district],
     [
       t.product.details.condition,
       listing?.condition
@@ -44,6 +45,19 @@ const ProductInfo = async ({ product }: ProductInfoProps) => {
             listing.condition as keyof typeof t.store.conditionOptions
           ] ?? listing.condition
         : undefined,
+    ],
+    [t.product.details.minimumOrder, listing?.minimum_order],
+    [t.product.details.availability, listing?.availability],
+    [t.product.details.productionMethod, listing?.production_method],
+    [
+      t.product.details.preferredContact,
+      listing?.contact_preference === "telegram"
+        ? t.product.telegram
+        : listing?.contact_preference === "messenger"
+          ? t.product.messenger
+          : listing?.contact_preference === "phone"
+            ? t.product.call
+            : undefined,
     ],
     [
       t.product.details.quantity,
@@ -86,6 +100,11 @@ const ProductInfo = async ({ product }: ProductInfoProps) => {
               >
                 {cheapestPrice.calculated_price}
               </span>
+              {listing?.negotiable && (
+                <span className="rounded-full bg-amber-50 px-2 py-1 text-xsmall-semi text-amber-800">
+                  {t.product.details.negotiable}
+                </span>
+              )}
               {listing?.quantity && listing.unit && (
                 <span className="text-base-regular text-ui-fg-subtle">
                   {listing.quantity} {listing.unit}

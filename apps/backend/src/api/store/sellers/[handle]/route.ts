@@ -20,6 +20,9 @@ type SellerProduct = {
     handle: string
     email: string | null
     phone: string | null
+    telegram: string | null
+    facebook_url: string | null
+    preferred_contact: "telegram" | "messenger" | "phone" | null
     location: string | null
     bio: string | null
     avatar_url: string | null
@@ -32,9 +35,15 @@ type SellerProduct = {
     status: string
     category: string | null
     location: string | null
+    district: string | null
     quantity: string | null
     unit: string | null
+    minimum_order: string | null
     condition: string | null
+    availability: string | null
+    production_method: string | null
+    negotiable: boolean
+    expires_at: string | null
   } | null
   variants?: {
     prices?: {
@@ -78,6 +87,9 @@ async function listActiveProductsForSeller(query: any, handle: string) {
         "seller.handle",
         "seller.email",
         "seller.phone",
+        "seller.telegram",
+        "seller.facebook_url",
+        "seller.preferred_contact",
         "seller.location",
         "seller.bio",
         "seller.avatar_url",
@@ -88,9 +100,15 @@ async function listActiveProductsForSeller(query: any, handle: string) {
         "listing.status",
         "listing.category",
         "listing.location",
+        "listing.district",
         "listing.quantity",
         "listing.unit",
+        "listing.minimum_order",
         "listing.condition",
+        "listing.availability",
+        "listing.production_method",
+        "listing.negotiable",
+        "listing.expires_at",
         "variants.prices.amount",
         "variants.prices.currency_code",
       ],
@@ -105,7 +123,9 @@ async function listActiveProductsForSeller(query: any, handle: string) {
         (product) =>
           product.seller?.handle === handle &&
           product.seller.status === "active" &&
-          product.listing?.status === "active"
+          product.listing?.status === "active" &&
+          (!product.listing.expires_at ||
+            new Date(product.listing.expires_at).getTime() > Date.now())
       )
     )
 
@@ -152,9 +172,15 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       images: product.images ?? [],
       category: product.listing!.category,
       location: product.listing!.location,
+      district: product.listing!.district,
       quantity: product.listing!.quantity,
       unit: product.listing!.unit,
+      minimum_order: product.listing!.minimum_order,
       condition: product.listing!.condition,
+      availability: product.listing!.availability,
+      production_method: product.listing!.production_method,
+      negotiable: product.listing!.negotiable,
+      expires_at: product.listing!.expires_at,
       price: getListingPrice(product),
     })),
   })

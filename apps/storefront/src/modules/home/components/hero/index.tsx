@@ -31,9 +31,19 @@ const Hero = ({ countryCode, labels, storeLabels }: HeroProps) => {
           </p>
 
           <form
-            action={`/${countryCode}`}
+            action={`/${countryCode}/store`}
             className="mt-7 w-full overflow-hidden rounded-[8px] border border-gray-200 bg-white shadow-[0_8px_28px_rgba(15,23,42,0.10)]"
           >
+            <label className="flex items-center gap-3 border-b border-gray-200 px-4 py-3 text-left">
+              <SearchIcon />
+              <span className="sr-only">{storeLabels.searchListings}</span>
+              <input
+                type="search"
+                name="q"
+                placeholder={storeLabels.searchPlaceholder}
+                className="h-8 min-w-0 flex-1 bg-transparent text-base-regular text-ui-fg-base outline-none placeholder:text-ui-fg-muted"
+              />
+            </label>
             <div className="grid divide-y divide-gray-200 text-left small:grid-cols-[1fr_1fr_1fr_1fr_auto] small:divide-x small:divide-y-0">
               <label className="px-4 py-3">
                 <span className="block text-xsmall-semi text-ui-fg-base">
@@ -123,6 +133,20 @@ const Hero = ({ countryCode, labels, storeLabels }: HeroProps) => {
     </section>
   )
 }
+
+const SearchIcon = () => (
+  <svg
+    viewBox="0 0 20 20"
+    width="18"
+    height="18"
+    fill="none"
+    aria-hidden="true"
+    className="shrink-0 text-ui-fg-muted"
+  >
+    <circle cx="8.75" cy="8.75" r="5.25" stroke="currentColor" strokeWidth="1.5" />
+    <path d="m12.5 12.5 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+)
 
 const categoryThemes: Record<
   ListingCategory,

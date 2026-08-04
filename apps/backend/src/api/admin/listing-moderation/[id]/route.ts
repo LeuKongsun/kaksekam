@@ -24,6 +24,11 @@ const PAGE_SIZE = 100
 
 type ListingProduct = {
   id: string
+  seller?: {
+    phone: string | null
+    telegram: string | null
+    facebook_url: string | null
+  } | null
   listing?: {
     id: string
   } | null
@@ -37,7 +42,13 @@ async function findProductForListing(query: any, listingId: string) {
   while (hasMoreProducts) {
     const { data, metadata } = await query.graph({
       entity: "product",
-      fields: ["id", "listing.id"],
+      fields: [
+        "id",
+        "listing.id",
+        "seller.phone",
+        "seller.telegram",
+        "seller.facebook_url",
+      ],
       pagination: {
         skip,
         take: PAGE_SIZE,
@@ -86,6 +97,19 @@ export async function POST(
     return
   }
 
+  if (
+    nextStatus === "active" &&
+    !product.seller?.phone &&
+    !product.seller?.telegram &&
+    !product.seller?.facebook_url
+  ) {
+    res.status(409).json({
+      message:
+        "Add a seller phone, Telegram username, or Messenger link before approval.",
+    })
+    return
+  }
+
   const listing = await marketplaceService.updateListings({
     id: listingId,
     status: nextStatus,
@@ -93,6 +117,11 @@ export async function POST(
       nextStatus === "rejected" ? req.body.moderation_note?.trim() || null : null,
     reviewed_at: new Date(),
     reviewer_id: req.auth_context?.actor_id ?? null,
+    expires_at:
+      nextStatus === "active"
+        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        : undefined,
+    refreshed_at: nextStatus === "active" ? new Date() : undefined,
   })
 
   await updateProductsWorkflow(req.scope).run({

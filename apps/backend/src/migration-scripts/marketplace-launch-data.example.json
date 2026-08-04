@@ -1,0 +1,99 @@
+{
+  "sellers": [
+    {
+      "display_name": "Battambang Fresh Produce Co-op",
+      "handle": "battambang-fresh-coop",
+      "phone": "+855 12 000 001",
+      "telegram": "battambang_fresh_example",
+      "preferred_contact": "telegram",
+      "location": "Battambang",
+      "bio": "Family cooperative supplying leafy greens and seasonal fruit to traders and restaurants. Replace all fields with verified partner details before launch."
+    },
+    {
+      "display_name": "Kandal Rice and Veg Farm",
+      "handle": "kandal-rice-veg",
+      "phone": "+855 12 000 002",
+      "facebook_url": "https://m.me/replace-with-real-page",
+      "preferred_contact": "messenger",
+      "location": "Kandal",
+      "bio": "Daily pickup near the national road. Replace with real farm bio and Messenger link."
+    },
+    {
+      "display_name": "Kampong Cham Mango Growers",
+      "handle": "kampong-cham-mango",
+      "phone": "+855 12 000 003",
+      "telegram": "kampongcham_mango_example",
+      "preferred_contact": "phone",
+      "location": "Kampong Cham",
+      "bio": "Seasonal mango and longan growers. Prefer phone first; Telegram available for follow-up."
+    }
+  ],
+  "listings": [
+    {
+      "seller_handle": "battambang-fresh-coop",
+      "title": "Fresh morning glory (water spinach)",
+      "handle": "battambang-morning-glory",
+      "description": "Harvested same morning. Cleaned and bundled for restaurant and market buyers. Pickup in Battambang city.",
+      "image_urls": [
+        "https://replace-with-reviewed-image.example/morning-glory.jpg"
+      ],
+      "price": 2500,
+      "currency_code": "khr",
+      "category": "Produce",
+      "province": "Battambang",
+      "district": "Battambang",
+      "quantity": "200",
+      "unit": "kg",
+      "minimum_order": "20 kg",
+      "condition": "Fresh",
+      "availability": "Ready now",
+      "production_method": "Conventional",
+      "negotiable": true,
+      "contact_preference": "telegram"
+    },
+    {
+      "seller_handle": "kandal-rice-veg",
+      "title": "Local jasmine rice (50kg bags)",
+      "handle": "kandal-jasmine-rice-50kg",
+      "description": "Milled jasmine rice packed in 50kg bags. Suitable for shops and canteens. Arrange pickup or short-distance delivery.",
+      "image_urls": [
+        "https://replace-with-reviewed-image.example/jasmine-rice.jpg"
+      ],
+      "price": 115000,
+      "currency_code": "khr",
+      "category": "Produce",
+      "province": "Kandal",
+      "district": "Kien Svay",
+      "quantity": "40",
+      "unit": "bag",
+      "minimum_order": "2 bags",
+      "condition": "New",
+      "availability": "This week",
+      "production_method": "Conventional",
+      "negotiable": true,
+      "contact_preference": "messenger"
+    },
+    {
+      "seller_handle": "kampong-cham-mango",
+      "title": "Keo Romeat mango (seasonal)",
+      "handle": "kampong-cham-keo-romeat-mango",
+      "description": "Sweet Keo Romeat mango ready for wholesale buyers. Sorted by size. Call to confirm harvest day and pickup.",
+      "image_urls": [
+        "https://replace-with-reviewed-image.example/keo-romeat.jpg"
+      ],
+      "price": 4500,
+      "currency_code": "khr",
+      "category": "Produce",
+      "province": "Kampong Cham",
+      "district": "Prey Chhor",
+      "quantity": "500",
+      "unit": "kg",
+      "minimum_order": "50 kg",
+      "condition": "Fresh",
+      "availability": "Ready now",
+      "production_method": "Conventional",
+      "negotiable": true,
+      "contact_preference": "phone"
+    }
+  ]
+}

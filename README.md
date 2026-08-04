@@ -15,6 +15,8 @@ A production-ready monorepo for the Kaksekam agriculture marketplace. It support
 - Marketplace listing flows
 - Seller dashboard and listing editor
 - Moderation routes for listing review
+- Telegram, Messenger, and phone contact with privacy-safe click metrics
+- Thirty-day listing freshness, buyer reports, and seller verification
 - Saved listings
 - Multi-region support with automatic country detection
 - Customer account areas for buyers and sellers
@@ -107,6 +109,46 @@ You can also run the following command from the root to start both backend and s
 ```bash
 pnpm dev
 ```
+
+### Import verified launch partners
+
+Copy `apps/backend/src/migration-scripts/marketplace-launch-data.example.json`
+outside the repository or to a private ignored file, replace every example value
+with reviewed seller and listing data, then run:
+
+```bash
+cd apps/backend
+MARKETPLACE_LAUNCH_DATA_PATH=/absolute/path/to/launch-data.json pnpm seed:launch
+```
+
+The importer validates that each seller has a working phone, Telegram username,
+or Messenger link. Imported sellers remain unverified and listings remain
+pending review until an admin checks them. Re-running the importer skips listing
+handles that already exist.
+
+### Cambodia V1 launch checklist
+
+Before inviting public buyers:
+
+1. Run marketplace migrations so seller social fields, contact events, reports, and expiry columns exist.
+2. Seed 20–30 credible producers and 50–100 current produce/food listings via `pnpm seed:launch`.
+3. Verify each seller has Telegram, Messenger, or phone, then approve listings in admin.
+4. Confirm listing links render useful Facebook/Telegram previews (`NEXT_PUBLIC_BASE_URL` must be public HTTPS).
+5. Start operationally in 1–2 supply areas; keep assisted onboarding by phone/Telegram.
+
+### V1 success checks
+
+Track weekly in admin marketplace metrics:
+
+- Active listings and expired/stale listings
+- Contact clicks by channel (Telegram, Messenger, phone)
+- Active listing contact rate over 14 days
+- Repeat sellers (sellers with more than one listing)
+
+Learning thresholds for the first cohort:
+
+- At least 30% of active listings receive a contact click within 14 days
+- At least 40% of onboarded sellers publish again
 
 ## Configuration
 

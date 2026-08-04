@@ -8,7 +8,6 @@ import ProductActions from "@modules/products/components/product-actions"
 export default async function ProductActionsWrapper({
   id,
   region,
-  customer,
 }: {
   id: string
   region: HttpTypes.StoreRegion
@@ -35,10 +34,8 @@ export default async function ProductActionsWrapper({
   return (
     <ProductActions
       product={product}
-      productId={product.id}
       region={region}
       seller={seller}
-      customer={customer}
     />
   )
 }

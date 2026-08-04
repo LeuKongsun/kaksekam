@@ -1,5 +1,6 @@
 import { listSellerListings } from "@lib/data/seller-listings"
 import { retrieveCustomer } from "@lib/data/customer"
+import { retrieveSellerContactMetrics } from "@lib/data/contact-metrics"
 import SellerListings from "@modules/account/components/seller-listings"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
@@ -23,7 +24,10 @@ export default async function ListingsPage(props: {
     notFound()
   }
 
-  const listings = await listSellerListings().catch(() => [])
+  const [listings, contactMetrics] = await Promise.all([
+    listSellerListings().catch(() => []),
+    retrieveSellerContactMetrics(),
+  ])
   const statusCounts = listings.reduce(
     (counts, listing) => ({
       ...counts,
@@ -47,6 +51,7 @@ export default async function ListingsPage(props: {
       listings={listings}
       totalListings={listings.length}
       statusCounts={statusCounts}
+      contactMetrics={contactMetrics}
       page={page}
       pageSize={PAGE_SIZE}
     />

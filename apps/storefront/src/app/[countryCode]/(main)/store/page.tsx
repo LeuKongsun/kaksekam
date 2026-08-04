@@ -1,4 +1,12 @@
-import { redirect } from "next/navigation"
+import { Metadata } from "next"
+
+import StoreTemplate from "@modules/store/templates"
+import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+
+export const metadata: Metadata = {
+  title: "Browse listings",
+  description: "Browse farming listings from local farmers and suppliers.",
+}
 
 type Params = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -10,24 +18,19 @@ type Params = {
 export default async function StorePage(props: Params) {
   const params = await props.params
   const searchParams = await props.searchParams
-  const nextParams = new URLSearchParams()
 
-  Object.entries(searchParams).forEach(([key, value]) => {
-    if (Array.isArray(value)) {
-      value.forEach((item) => {
-        if (item) {
-          nextParams.append(key, item)
-        }
-      })
-      return
-    }
-
-    if (value) {
-      nextParams.set(key, value)
-    }
-  })
-
-  const query = nextParams.toString()
-
-  redirect(`/${params.countryCode}${query ? `?${query}` : ""}`)
+  return (
+    <StoreTemplate
+      sortBy={getParam(searchParams.sortBy) as SortOptions | undefined}
+      page={getParam(searchParams.page)}
+      category={getParam(searchParams.category)}
+      location={getParam(searchParams.location)}
+      condition={getParam(searchParams.condition)}
+      q={getParam(searchParams.q)}
+      countryCode={params.countryCode}
+    />
+  )
 }
+
+const getParam = (value: string | string[] | undefined) =>
+  Array.isArray(value) ? value[0] : value

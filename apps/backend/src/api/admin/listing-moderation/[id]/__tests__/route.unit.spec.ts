@@ -40,7 +40,13 @@ describe("admin listing moderation route", () => {
   it("stamps review audit metadata when approving a listing", async () => {
     const query = {
       graph: jest.fn().mockResolvedValue({
-        data: [{ id: "prod_123", listing: { id: "listing_123" } }],
+        data: [
+          {
+            id: "prod_123",
+            listing: { id: "listing_123" },
+            seller: { phone: "+855 12 345 678" },
+          },
+        ],
         metadata: { count: 1 },
       }),
     }
@@ -80,6 +86,8 @@ describe("admin listing moderation route", () => {
       moderation_note: null,
       reviewed_at: now,
       reviewer_id: "user_123",
+      expires_at: new Date("2026-07-02T10:15:00.000Z"),
+      refreshed_at: now,
     })
     expect(mockedUpdateProductsWorkflow).toHaveBeenCalledWith(req.scope)
     expect(runUpdateProductsWorkflow).toHaveBeenCalledWith({
@@ -148,6 +156,8 @@ describe("admin listing moderation route", () => {
       moderation_note: "Needs clearer photos",
       reviewed_at: now,
       reviewer_id: null,
+      expires_at: undefined,
+      refreshed_at: undefined,
     })
     expect(runUpdateProductsWorkflow).toHaveBeenCalledWith({
       input: {

@@ -13,6 +13,7 @@ import MarketplaceModuleService from "../../../../../modules/marketplace/service
 
 type UpdateSellerListingStatusBody = {
   status?: "sold"
+  action?: "refresh" | "republish"
 }
 
 type OwnedListingProduct = {
@@ -79,8 +80,13 @@ export async function PATCH(
   const listingId = req.params.id
   const customerId = req.auth_context.actor_id
   const nextStatus = req.body.status
+  const action = req.body.action
 
-  if (nextStatus !== "sold") {
+  if (
+    nextStatus !== "sold" &&
+    action !== "refresh" &&
+    action !== "republish"
+  ) {
     res.status(400).json({ message: "Valid listing status is required." })
     return
   }
@@ -95,8 +101,39 @@ export async function PATCH(
     return
   }
 
+  if (action === "republish") {
+    if (product.listing.status !== "expired") {
+      res.status(409).json({
+        message: "Only expired listings can be republished.",
+      })
+      return
+    }
+
+    const listing = await marketplaceService.updateListings({
+      id: product.listing.id,
+      status: "pending_review",
+      moderation_note: null,
+      reviewed_at: null,
+      reviewer_id: null,
+      refreshed_at: new Date(),
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    })
+    res.json({ listing })
+    return
+  }
+
   if (product.listing.status !== "active") {
-    res.status(409).json({ message: "Only active listings can be marked sold." })
+    res.status(409).json({ message: "Only active listings can be updated." })
+    return
+  }
+
+  if (action === "refresh") {
+    const listing = await marketplaceService.updateListings({
+      id: product.listing.id,
+      refreshed_at: new Date(),
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    })
+    res.json({ listing })
     return
   }
 
