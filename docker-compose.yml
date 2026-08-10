@@ -1,4 +1,29 @@
 services:
+  backend:
+    image: kongsun/kaksekam-backend:latest
+    platform: linux/amd64
+    container_name: kaksekam-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 9000
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      COOKIE_SECRET: ${COOKIE_SECRET:?COOKIE_SECRET is required}
+      STORE_CORS: ${STORE_CORS:?STORE_CORS is required}
+      ADMIN_CORS: ${ADMIN_CORS:?ADMIN_CORS is required}
+      AUTH_CORS: ${AUTH_CORS:?AUTH_CORS is required}
+      DISABLE_MEDUSA_ADMIN: "true"
+    ports:
+      - "${BACKEND_PORT:-9000}:9000"
+
   postgres:
     image: postgres:15-alpine
     container_name: kaksekam-postgres

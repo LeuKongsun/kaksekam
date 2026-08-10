@@ -73,6 +73,29 @@ check against `/health`. It does not embed an `.env` file or the Medusa Admin.
 Run migrations as a separate release step before switching traffic to the new
 image. Do not run migrations independently in every replica during startup.
 
+### Docker Compose on the app server
+
+The root `docker-compose.yml` runs
+`kongsun/kaksekam-backend:latest` as a Linux AMD64 API container alongside the
+bundled PostgreSQL and Redis services. On the app server, copy the example
+environment file and replace all example values:
+
+```bash
+cp .env.compose.example .env
+docker compose pull backend
+docker compose up -d
+```
+
+Compose refuses to start the backend when its database URL, authentication
+secrets, or CORS origins are missing. The deployment `.env` file must remain
+uncommitted. If the production environment uses managed PostgreSQL or Redis,
+set `DATABASE_URL` and `REDIS_URL` to those services and use a deployment-specific
+Compose override that omits the bundled database or cache.
+
+The API image does not run database migrations automatically. Run the Medusa
+migration command as a controlled release step before updating the backend
+container, especially when more than one API replica may be running.
+
 ## Storefront on Vercel
 
 Create a Vercel project with `apps/storefront` as its root directory. It uses
