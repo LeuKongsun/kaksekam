@@ -14,6 +14,8 @@ async function ProductOnboardingCta() {
   const { t } = await getTranslations()
   const backendUrl =
     process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "http://localhost:9000"
+  const adminUrl =
+    process.env.NEXT_PUBLIC_MEDUSA_ADMIN_URL ?? `${backendUrl}/app`
 
   return (
     <Container className="max-w-4xl h-full bg-ui-bg-subtle w-full p-8">
@@ -24,7 +26,7 @@ async function ProductOnboardingCta() {
         <Text className="text-ui-fg-subtle text-small-regular">
           {t.product.onboardingSetup}
         </Text>
-        <a href={`${backendUrl}/app/marketplace`}>
+        <a href={`${adminUrl.replace(/\/$/, "")}/marketplace`}>
           <Button className="w-full">{t.product.onboardingBtn}</Button>
         </a>
       </div>
