@@ -29,14 +29,6 @@ COPY apps/backend apps/backend
 
 RUN pnpm --filter @kaksekam/backend build
 
-# Install the standalone server's production dependencies in the AMD64 builder.
-# This reuses packages from the workspace install instead of downloading the
-# Medusa dependency graph again in the final image stage.
-WORKDIR /workspace/apps/backend/.medusa/server
-
-RUN --mount=type=cache,id=kaksekam-pnpm,target=/pnpm/store \
-    pnpm install --prod --no-frozen-lockfile --store-dir=/pnpm/store
-
 FROM node:20-bookworm-slim AS runner
 
 WORKDIR /app
@@ -47,6 +39,11 @@ ENV NODE_ENV=production \
     DISABLE_MEDUSA_ADMIN=true
 
 COPY --from=builder --chown=node:node /workspace/apps/backend/.medusa/server ./
+
+# npm creates a self-contained node_modules tree in the final image. Avoid
+# pnpm here because its links can point to a BuildKit cache that is unavailable
+# when the production container starts.
+RUN npm install --omit=dev
 
 USER node
 
