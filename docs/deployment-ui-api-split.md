@@ -81,9 +81,9 @@ image. Do not run migrations independently in every replica during startup.
 ### Docker Compose on the app server
 
 The root `docker-compose.yml` runs
-`kongsun/kaksekam-backend:latest` as a Linux AMD64 API container alongside the
-bundled PostgreSQL and Redis services. On the app server, copy the example
-environment file and replace all example values:
+`kongsun/kaksekam-backend:latest` as a Linux AMD64 API container. PostgreSQL
+and Redis are external services and are not started by Compose. On the app
+server, copy the example environment file and replace all example values:
 
 ```bash
 cp .env.compose.example .env
@@ -91,11 +91,10 @@ docker compose pull backend
 docker compose up -d
 ```
 
-Compose refuses to start the backend when its database URL, authentication
-secrets, or CORS origins are missing. The deployment `.env` file must remain
-uncommitted. If the production environment uses managed PostgreSQL or Redis,
-set `DATABASE_URL` and `REDIS_URL` to those services and use a deployment-specific
-Compose override that omits the bundled database or cache.
+Compose refuses to start the backend when its PostgreSQL URL, Redis URL,
+authentication secrets, or CORS origins are missing. Both external services
+must be reachable from the App server before the backend starts. The deployment
+`.env` file must remain uncommitted.
 
 The API image does not run database migrations automatically. Run the Medusa
 migration command as a controlled release step before updating the backend
