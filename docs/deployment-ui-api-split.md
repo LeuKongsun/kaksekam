@@ -69,6 +69,11 @@ docker run --rm \
 
 The image runs as the unprivileged `node` user and exposes a container health
 check against `/health`. It does not embed an `.env` file or the Medusa Admin.
+The build stages share a BuildKit pnpm cache and use retry backoff with reduced
+registry concurrency. Production dependencies are installed in the AMD64
+builder and copied into the final image, so the final image stage performs no
+package-registry requests. This reduces clean-build failures caused by npm
+registry `429 Too Many Requests` responses.
 
 Run migrations as a separate release step before switching traffic to the new
 image. Do not run migrations independently in every replica during startup.
