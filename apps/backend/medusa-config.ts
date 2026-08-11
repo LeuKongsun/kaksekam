@@ -10,7 +10,7 @@ if (!adminPath.startsWith("/")) {
 
 module.exports = defineConfig({
   admin: {
-    backendUrl: process.env.MEDUSA_BACKEND_URL || "http://localhost:9000",
+    backendUrl: process.env.MEDUSA_BACKEND_URL,
     path: adminPath as `/${string}`,
     disable: process.env.DISABLE_MEDUSA_ADMIN === "true",
   },

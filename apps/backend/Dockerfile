@@ -5,7 +5,6 @@ FROM node:20-bookworm-slim AS builder
 WORKDIR /workspace
 
 ENV CI=true \
-    DISABLE_MEDUSA_ADMIN=true \
     PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH
 
@@ -35,8 +34,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
-    PORT=9000 \
-    DISABLE_MEDUSA_ADMIN=true
+    PORT=9000
 
 RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 

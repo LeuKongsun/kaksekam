@@ -158,13 +158,12 @@ The storefront is configured via environment variables in `apps/storefront/.env.
 |----------|-------------|---------|
 | `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` | Publishable API key from the Kaksekam backend | — |
 | `NEXT_PUBLIC_MEDUSA_BACKEND_URL` | URL of the Kaksekam backend | `http://localhost:9000` |
-| `NEXT_PUBLIC_MEDUSA_ADMIN_URL` | URL of the separately deployed Medusa Admin UI | `NEXT_PUBLIC_MEDUSA_BACKEND_URL/app` |
 | `NEXT_PUBLIC_DEFAULT_REGION` | Default region country code | `dk` |
 | `NEXT_PUBLIC_BASE_URL` | Base URL of the storefront | `https://localhost:8000` |
 | `NEXT_PUBLIC_STRIPE_KEY` | Stripe publishable key (optional) | — |
 
-For production deployment with both UIs on Vercel and the API in a VPC, see
-[Split UI and API Deployment](docs/deployment-ui-api-split.md).
+For production deployment with the storefront on Vercel and the Medusa API and
+Admin together in a VPC, see [Production Deployment](docs/deployment.md).
 
 ## Technology resources
 

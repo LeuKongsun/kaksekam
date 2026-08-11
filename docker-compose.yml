@@ -15,6 +15,5 @@ services:
       STORE_CORS: ${STORE_CORS:?STORE_CORS is required}
       ADMIN_CORS: ${ADMIN_CORS:?ADMIN_CORS is required}
       AUTH_CORS: ${AUTH_CORS:?AUTH_CORS is required}
-      DISABLE_MEDUSA_ADMIN: "true"
     ports:
       - "${BACKEND_PORT:-9000}:9000"
