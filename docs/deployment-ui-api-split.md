@@ -70,9 +70,10 @@ docker run --rm \
 The image runs as the unprivileged `node` user and exposes a container health
 check against `/health`. It does not embed an `.env` file or the Medusa Admin.
 The builder uses a BuildKit pnpm cache with retry backoff and reduced registry
-concurrency. The runner uses `npm install --omit=dev` to create a physical,
-self-contained production `node_modules` directory. This avoids pnpm links that
-could otherwise point to a BuildKit cache unavailable in the running container.
+concurrency. The runner installs the standalone server's production dependencies
+with pnpm without a cache mount. This ensures its `node_modules` content is
+written into the final image layer and remains available when the container
+starts.
 
 Run migrations as a separate release step before switching traffic to the new
 image. Do not run migrations independently in every replica during startup.

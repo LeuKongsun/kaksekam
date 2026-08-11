@@ -38,12 +38,13 @@ ENV NODE_ENV=production \
     PORT=9000 \
     DISABLE_MEDUSA_ADMIN=true
 
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+
 COPY --from=builder --chown=node:node /workspace/apps/backend/.medusa/server ./
 
-# npm creates a self-contained node_modules tree in the final image. Avoid
-# pnpm here because its links can point to a BuildKit cache that is unavailable
-# when the production container starts.
-RUN npm install --omit=dev
+# Do not use a cache mount for this install. The production dependency files
+# must be written into the final image layer.
+RUN pnpm install --prod --no-frozen-lockfile
 
 USER node
 
@@ -52,4 +53,4 @@ EXPOSE 9000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:9000/health').then((response) => { if (!response.ok) process.exit(1) }).catch(() => process.exit(1))"
 
-CMD ["npm", "run", "start"]
+CMD ["pnpm", "start"]
