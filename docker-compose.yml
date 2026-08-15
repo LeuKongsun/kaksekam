@@ -1,7 +1,6 @@
 services:
   backend:
     image: kongsun/kaksekam-backend:latest
-    platform: linux/amd64
     container_name: kaksekam-backend
     restart: unless-stopped
     environment:
@@ -9,9 +8,12 @@ services:
       HOST: 0.0.0.0
       PORT: 9000
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      DATABASE_SSL: ${DATABASE_SSL:-false}
       REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       COOKIE_SECRET: ${COOKIE_SECRET:?COOKIE_SECRET is required}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:?MEDUSA_BACKEND_URL is required}
       STORE_CORS: ${STORE_CORS:?STORE_CORS is required}
       ADMIN_CORS: ${ADMIN_CORS:?ADMIN_CORS is required}
       AUTH_CORS: ${AUTH_CORS:?AUTH_CORS is required}

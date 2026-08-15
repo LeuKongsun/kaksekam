@@ -42,7 +42,8 @@ COPY --from=builder --chown=node:node /workspace/apps/backend/.medusa/server ./
 
 # Do not use a cache mount for this install. The production dependency files
 # must be written into the final image layer.
-RUN pnpm install --prod --no-frozen-lockfile
+RUN pnpm install --prod --no-frozen-lockfile && \
+    chown -R node:node /app
 
 USER node
 

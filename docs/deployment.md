@@ -26,9 +26,11 @@ Required production values include:
 
 ```env
 DATABASE_URL=postgres://...
+DATABASE_SSL=false
 REDIS_URL=redis://...
 JWT_SECRET=<strong-random-secret>
 COOKIE_SECRET=<different-strong-random-secret>
+COOKIE_SECURE=true
 
 STORE_CORS=https://store.example.com
 ADMIN_CORS=https://api.example.com
@@ -41,6 +43,19 @@ unset in production unless a different path is intentionally required.
 
 PostgreSQL and Redis are external and are not started by Compose. Both services
 must be reachable from the App server. Never commit the deployment `.env` file.
+Set `DATABASE_SSL=false` only when PostgreSQL is reached over a trusted private
+network or encrypted tunnel and the server does not support TLS. For a
+TLS-enabled PostgreSQL server with a trusted certificate, set it to `true`.
+
+`REDIS_URL` is wired into Medusa's project configuration. This removes the
+`redisUrl not found` fallback when the URL is present and reachable. The current
+application still uses local event-bus and in-memory locking providers; keep a
+single backend replica until dedicated Redis-backed providers are configured.
+
+For the normal HTTPS deployment, keep `COOKIE_SECURE=true`. If Admin must be
+tested temporarily through a plain HTTP IP address, set `COOKIE_SECURE=false`
+and use that exact HTTP origin in `ADMIN_CORS` and `AUTH_CORS`. Restore secure
+cookies as soon as the backend has an HTTPS domain.
 
 ## Linux AMD64 image
 
